@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: "If you use ARIA in your research, please cite it as below."
+title: "ARIA: Causal-Aware Reasoning for Materials Discovery"
+type: software
+authors:
+  - name: "ARIA Team"
+    affiliation: "Johns Hopkins University"
+repository-code: "https://github.com/yicao-elina/ARIA"
+url: "https://github.com/yicao-elina/ARIA"
+license: MIT
+version: 0.1.0
+date-released: "2026-06-02"
+keywords:
+  - materials-science
+  - knowledge-graph
+  - causal-reasoning
+  - llm
+  - rag
+  - psp-hierarchy
+abstract: >
+  ARIA is a causal evidence-gating framework that helps LLMs reason over
+  Processing-Structure-Property pathways for materials synthesis and property
+  prediction. Unlike standard RAG, ARIA activates retrieved evidence only
+  when it forms a causally complete PSP path.

@@ -1,0 +1,49 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+eggs/
+*.egg
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Environment
+.env
+
+# Model caches
+.cache/
+*.bin
+
+# Results (regenerated)
+results/
+*.log
+
+# Data (large files not in repo)
+data/aria_2d_kg_v1.json
+
+# Coverage
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml

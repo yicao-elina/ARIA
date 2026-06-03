@@ -1,0 +1,59 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aria-materials"
+version = "0.1.0"
+description = "ARIA: Causal-Aware Reasoning for Materials Discovery"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.9"
+authors = [
+    {name = "ARIA Team"},
+]
+keywords = ["materials-science", "knowledge-graph", "causal-reasoning", "llm", "rag"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Chemistry",
+    "Topic :: Scientific/Engineering :: Physics",
+]
+dependencies = [
+    "networkx>=3.0",
+    "numpy>=1.24",
+    "pandas>=2.0",
+    "scikit-learn>=1.3",
+    "sentence-transformers>=2.2",
+    "requests>=2.31",
+]
+
+[project.optional-dependencies]
+openai = ["openai>=1.0"]
+eval = ["spacy>=3.0"]
+viz = ["matplotlib>=3.7", "plotly>=5.0"]
+dev = ["pytest>=7.0", "pytest-cov", "ruff", "mypy", "jupyter"]
+all = ["aria-materials[openai,eval,viz,dev]"]
+
+[project.scripts]
+aria-benchmark = "aria.evaluation.benchmark:main"
+aria-diagnose = "aria.kg.diagnostics:main"
+
+[tool.setuptools.packages.find]
+include = ["aria*"]
+
+[tool.setuptools.package-data]
+aria = ["data/*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "slow: marks tests as slow (requires Ollama running)",
+    "integration: marks integration tests",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"

@@ -1,0 +1,1 @@
+"""ARIA data module."""

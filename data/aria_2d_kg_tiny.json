@@ -1,0 +1,80 @@
+{
+  "version": "1.0.0",
+  "description": "ARIA 2D Materials PSP Knowledge Graph (tiny example, 6 representative relationships)",
+  "schema": "PSPRelationship",
+  "total_relationships": 6,
+  "causal_relationships": [
+    {
+      "source": "Re presence at the MoS2 growth front",
+      "relation": "increases",
+      "target": "sulfur vacancy formation energy",
+      "psp_type": "Processing_to_Structure",
+      "material": "MoS2",
+      "evidence_text": "When Re is present at the growth front of a MoS2 grain, the energy of formation of edge sulfur vacancies is increased by ~1.4 eV, effectively suppressing vacancy formation.",
+      "paper_doi": null,
+      "confidence": 0.85,
+      "curation": "extracted",
+      "relationship_id": "tiny_rel_1"
+    },
+    {
+      "source": "Li intercalation (high electron doping)",
+      "relation": "induces",
+      "target": "CDW formation (Td_prime phase)",
+      "psp_type": "Processing_to_Structure",
+      "material": "WTe2",
+      "evidence_text": "This strongly suggests that the new phase we observe coincides with the predicted 2x2 CDW and that the CDW formation is driven by the extremely high levels of electron doping from Li intercalants.",
+      "paper_doi": null,
+      "confidence": 0.85,
+      "curation": "extracted",
+      "relationship_id": "tiny_rel_2"
+    },
+    {
+      "source": "vacancy arrangement with ns=2",
+      "relation": "increases",
+      "target": "thermal conductivity",
+      "psp_type": "Structure_to_Property",
+      "material": "graphene",
+      "evidence_text": "When the vacancies are arranged with periodicity ns=2, localized defect modes occur at higher frequencies, essentially realizing a phonon band gap that reduces scattering between acoustic and optical phonons, enhancing MFP.",
+      "paper_doi": null,
+      "confidence": 0.95,
+      "curation": "extracted",
+      "relationship_id": "tiny_rel_3"
+    },
+    {
+      "source": "Ising spin orbit coupling phase",
+      "relation": "determines",
+      "target": "magnetic exchange interaction (ferromagnetic vs antiferromagnetic)",
+      "psp_type": "Structure_to_Property",
+      "material": "MoSe2/WSe2",
+      "evidence_text": "A ferromagnetic coupling is realized in the range phi_SO in (pi/3, 5pi/3) while an antiferromagnetic coupling is found in the interval phi_SO in (-pi/3, pi/3).",
+      "paper_doi": null,
+      "confidence": 0.95,
+      "curation": "extracted",
+      "relationship_id": "tiny_rel_4"
+    },
+    {
+      "source": "Re doping (0.1 at%)",
+      "relation": "increases",
+      "target": "drain current by ~10x",
+      "psp_type": "Processing_to_Property",
+      "material": "MoS2",
+      "evidence_text": "The 0.1 at.% Re-MoS2 BGFET exhibits a maximum IDS of ~61.5 uA/um, nearly 10x higher than pristine MoS2 (~7.6 uA/um), which is attributed to reduced defect-related trap states.",
+      "paper_doi": null,
+      "confidence": 0.85,
+      "curation": "extracted",
+      "relationship_id": "tiny_rel_5"
+    },
+    {
+      "source": "increasing hole doping density",
+      "relation": "increases",
+      "target": "magnetic exchange coupling parameters and Curie temperature",
+      "psp_type": "Processing_to_Property",
+      "material": "2D_materials",
+      "evidence_text": "Hole doping increases spin splitting energy, magnetic anisotropy energy, and magnetic exchange coupling parameters, resulting in enhanced Curie temperatures.",
+      "paper_doi": null,
+      "confidence": 0.95,
+      "curation": "extracted",
+      "relationship_id": "tiny_rel_6"
+    }
+  ]
+}
