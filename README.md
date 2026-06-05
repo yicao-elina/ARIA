@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/figures/ARIA-logo.svg" alt="ARIA Logo" width="180"/>
+<img src="docs/figures/ARIA-logo.svg" alt="ARIA Logo" width="380"/>
 
 # ARIA: Causal-Aware Reasoning for Materials Discovery
 
@@ -28,7 +28,7 @@ We call this failure mode **contextual tunneling**: the model over-anchors on na
 **ARIA fixes this** by gating evidence activation on **causal completeness** — not retrieval confidence. It only lets KG evidence through when it forms a complete Processing → Structure → Property chain. Otherwise, it honestly falls back to parametric reasoning rather than misleading you with half-truths.
 
 <div align="center">
-<img src="docs/figures/KDD-Fig1.pdf" alt="ARIA architecture: three-tier causal cascade" width="700"/>
+<img src="docs/figures/KDD-Fig1.svg" alt="ARIA architecture: three-tier causal cascade" width="700"/>
 <p><em>ARIA's three-tier causal cascade. Evidence is activated only when causally complete (Tier 1), transferred from analogs with physical checks (Tier 2), or explicitly flagged as ungrounded (Tier 3).</em></p>
 </div>
 
@@ -57,14 +57,14 @@ A PSP-complete path spans all required layers — Processing, Structure, Propert
 - **Interpretability**: Naive KG collapses to 0.350; ARIA restores it to 0.833–0.912.
 
 <div align="center">
-<img src="docs/figures/KDD_Fig4.pdf" alt="ARIA performance comparison across tiers" width="700"/>
+<img src="docs/figures/KDD_Fig4.svg" alt="ARIA performance comparison across tiers" width="700"/>
 <p><em>Tier-specific performance. ARIA's selective evidence activation prevents contextual tunneling while naive KG amplifies it.</em></p>
 </div>
 
 ## How It Works
 
 <div align="center">
-<img src="docs/figures/KDD_Fig3-KG-workflow.pdf" alt="Knowledge graph construction pipeline" width="700"/>
+<img src="docs/figures/KDD_Fig3-KG-workflow.svg" alt="Knowledge graph construction pipeline" width="700"/>
 <p><em>CKG construction pipeline: from literature to PSP relationships.</em></p>
 </div>
 
