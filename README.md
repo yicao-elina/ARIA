@@ -247,17 +247,19 @@ ARIA is not a silver bullet. The paper identifies important caveats:
 
 ## Relationship to LLM4Chem
 
-This project builds on our earlier work from the [LLM4Chem hackathon](https://github.com/yicao-elina/LLM4Chem-Explainable-synthesis). ARIA represents a fundamental redesign: rather than naively injecting knowledge graph context into LLM prompts, ARIA gates evidence on causal completeness, preventing the contextual tunneling failure mode we identified in the LLM4Chem experiments. The PSP hierarchy and knowledge graph schema are evolved from that initial prototype.
+This project builds on our earlier work from the [ARIA](https://github.com/yicao-elina/LLM4Chem-Explainable-synthesis) where we also win the visionary award in the [LLM hackathon for Material and Chemistry]([https://github.com/yicao-elina/LLM4Chem-Explainable-synthesis](https://llmhackathon.github.io/)). ARIA gates evidence on causal completeness, preventing the contextual tunneling failure mode we identified in the LLM4Chem experiments. The PSP hierarchy and knowledge graph schema are evolved from that initial prototype and we have fundamentally extended the ARIA module design, PSP resoning chain, the experiments and ablation study to well characterize the tool we have been developing. 
+We will further explore the possibility of using 
 
 ## Citation
 
 ```bibtex
-@inproceedings{aria2026,
-  title={When Knowledge Hurts: Causal-Aware Reasoning for Materials Discovery},
-  author={Cao, Yi and Wang, Liaoyaqi and Chen, Jieneng and others},
-  booktitle={Proceedings of the 32nd ACM SIGKDD Conference on Knowledge Discovery and Data Mining (KDD '26)},
-  year={2026},
-  organization={ACM}
+@inproceedings{
+cao2026aria,
+title={{ARIA}: A Causal-Aware Framework for Rescuing {LLM} Reasoning in Trustworthy Materials Discovery},
+author={Yi Cao and Liaoyaqi Wang and Jieneng Chen and Benjamin Van Durme and Alan Yuille and Paulette Clancy},
+booktitle={32nd SIGKDD Conference on Knowledge Discovery and Data Mining - AI for Sciences Track},
+year={2026},
+url={https://openreview.net/forum?id=7LFRS69byw}
 }
 ```
 
