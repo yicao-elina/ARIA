@@ -1,0 +1,93 @@
+{
+  "queries": [
+    {
+      "id": "tier1_example",
+      "query": "What is the carrier mobility of CVD-grown MoS₂ at 750°C?",
+      "tier": 1,
+      "tier_name": "Direct Causal Path Reasoning",
+      "tier_color": "#1E88E5",
+      "confidence": 0.90,
+      "confidence_label": "HIGH",
+      "explanation": "Complete PSP chain found in the knowledge graph: CVD temperature 750°C → crystallinity → carrier mobility. All evidence is verified and causally connected.",
+      "entities": ["CVD temperature 750°C", "MoS₂", "carrier mobility"],
+      "kg_paths": [
+        {
+          "source": "CVD temperature 750°C",
+          "intermediate": "crystallinity",
+          "target": "carrier mobility",
+          "path_type": "P→S→P",
+          "edge1_confidence": 0.90,
+          "edge2_confidence": 0.92,
+          "path_confidence": 0.90,
+          "evidence1": "CVD growth at 750°C on SiO₂ substrate yields large-grain MoS₂ with improved crystallinity.",
+          "evidence2": "Improved crystallinity reduces charged impurity scattering, leading to carrier mobility exceeding 40 cm²/Vs."
+        }
+      ],
+      "naive_kg_result": {
+        "confidence": 0.76,
+        "issue": "Naive KG retrieves all MoS₂ edges (including P→P shortcuts like 'CVD 750°C increases carrier mobility'), over-anchoring on partial evidence without mechanistic explanation."
+      },
+      "baseline_result": {
+        "confidence": 0.65,
+        "answer": "CVD-grown MoS₂ typically achieves carrier mobility of 10-40 cm²/Vs depending on growth conditions."
+      }
+    },
+    {
+      "id": "tier2_example",
+      "query": "Predict the bandgap of MoSe₂ synthesized by CVD.",
+      "tier": 2,
+      "tier_name": "Analogical Mechanism Transfer",
+      "tier_color": "#FFC107",
+      "confidence": 0.72,
+      "confidence_label": "MEDIUM",
+      "explanation": "No complete PSP chain for MoSe₂ in the KG. ARIA finds MoS₂ as a structural analog (same 2H hexagonal phase) and transfers the mechanistic reasoning with physical constraint validation.",
+      "entities": ["MoSe₂", "CVD synthesis", "bandgap"],
+      "kg_paths": [
+        {
+          "source": "CVD temperature 750°C (MoS₂ analog)",
+          "intermediate": "crystallinity (transferred)",
+          "target": "direct band gap (estimated ~1.5 eV)",
+          "path_type": "P→S→P (analogical)",
+          "edge1_confidence": 0.85,
+          "edge2_confidence": 0.78,
+          "path_confidence": 0.72,
+          "evidence1": "MoS₂ analog: CVD at 750°C improves crystallinity. Structural class preserved: MoSe₂ shares 2H hexagonal phase.",
+          "evidence2": "Chalcogen substitution rule: S→Se reduces bandgap by ~15%. MoS₂ direct bandgap ~1.8 eV → MoSe₂ estimated ~1.5 eV."
+        }
+      ],
+      "constraints_checked": [
+        {"name": "Structural class preservation", "result": "✓ MoSe₂ shares 2H hexagonal phase with MoS₂"},
+        {"name": "Elemental substitution rule", "result": "✓ S→Se substitution reduces bandgap by ~15%"},
+        {"name": "Thermal stability window", "result": "✓ CVD temperature range overlaps for both materials"}
+      ],
+      "naive_kg_result": {
+        "confidence": 0.78,
+        "issue": "Naive KG retrieves MoS₂ edges and concatenates them with the query, but cannot explain the S→Se substitution effect. Error: 12.9%."
+      },
+      "baseline_result": {
+        "confidence": 0.60,
+        "answer": "MoSe₂ has a direct bandgap of approximately 1.5 eV in its monolayer form."
+      }
+    },
+    {
+      "id": "tier3_example",
+      "query": "Design a transparent conductor better than ITO for flexible electronics.",
+      "tier": 3,
+      "tier_name": "Parametric Fallback",
+      "tier_color": "#9E9E9E",
+      "confidence": 0.52,
+      "confidence_label": "LOW",
+      "explanation": "The KG contains no complete PSP paths, analogical materials, or sufficient evidence for this inverse design task. ARIA honestly flags the output as speculative and relies solely on parametric knowledge.",
+      "entities": ["transparent conductor", "ITO alternative", "flexible electronics"],
+      "kg_paths": [],
+      "naive_kg_result": {
+        "confidence": 0.76,
+        "issue": "Naive KG overconfidently retrieves partial ITO edges (processing conditions, some conductivity data) and presents them as evidence, despite the absence of a complete causal chain. Overconfidence: 0.76 vs. ARIA's honest 0.52."
+      },
+      "baseline_result": {
+        "confidence": 0.55,
+        "answer": "Candidates include doped ZnO, Ag nanowires, and graphene-based films, but specific synthesis conditions remain uncertain."
+      }
+    }
+  ]
+}

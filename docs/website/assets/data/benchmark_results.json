@@ -1,0 +1,89 @@
+{
+  "methods": [
+    {
+      "name": "Baseline LLM",
+      "short": "Baseline",
+      "color": "#9E9E9E",
+      "forward_in_domain": 0.333,
+      "forward_ood": 0.298,
+      "inverse_in_domain": 0.345,
+      "inverse_ood": 0.312,
+      "overall": 0.340,
+      "physical_consistency": 0.44,
+      "tier_distribution": null
+    },
+    {
+      "name": "Naive KG + LLM",
+      "short": "Naive KG",
+      "color": "#E53935",
+      "forward_in_domain": 0.337,
+      "forward_ood": 0.301,
+      "inverse_in_domain": 0.301,
+      "inverse_ood": 0.278,
+      "overall": 0.319,
+      "physical_consistency": 0.45,
+      "tier_distribution": null
+    },
+    {
+      "name": "Self-RAG",
+      "short": "Self-RAG",
+      "color": "#8E24AA",
+      "forward_in_domain": 0.402,
+      "forward_ood": 0.368,
+      "inverse_in_domain": 0.390,
+      "inverse_ood": 0.390,
+      "overall": 0.396,
+      "physical_consistency": 0.56,
+      "tier_distribution": null
+    },
+    {
+      "name": "ARIA-CORE",
+      "short": "ARIA-CORE",
+      "color": "#1E88E5",
+      "forward_in_domain": 0.410,
+      "forward_ood": 0.372,
+      "inverse_in_domain": 0.454,
+      "inverse_ood": 0.389,
+      "overall": 0.425,
+      "physical_consistency": 0.72,
+      "tier_distribution": {
+        "forward": {"tier1": 0.625, "tier2": 0.125, "tier3": 0.25},
+        "inverse": {"tier1": 0.0, "tier2": 0.20, "tier3": 0.80}
+      }
+    },
+    {
+      "name": "ARIA-FULL",
+      "short": "ARIA-FULL",
+      "color": "#002D72",
+      "forward_in_domain": 0.512,
+      "forward_ood": 0.465,
+      "inverse_in_domain": 0.498,
+      "inverse_ood": 0.513,
+      "overall": 0.512,
+      "physical_consistency": 0.81,
+      "tier_distribution": {
+        "forward": {"tier1": 0.625, "tier2": 0.125, "tier3": 0.25},
+        "inverse": {"tier1": 0.0, "tier2": 0.20, "tier3": 0.80}
+      }
+    }
+  ],
+  "robustness": {
+    "edge_deletion_pct": [0, 10, 20, 30, 40, 50, 60, 70, 80, 90],
+    "aria_full": [0.512, 0.498, 0.481, 0.465, 0.449, 0.420, 0.398, 0.372, 0.345, 0.302],
+    "aria_core": [0.425, 0.410, 0.395, 0.380, 0.365, 0.345, 0.325, 0.305, 0.280, 0.250],
+    "baseline": [0.340, 0.340, 0.340, 0.340, 0.340, 0.340, 0.340, 0.340, 0.340, 0.340],
+    "naive_kg": [0.319, 0.312, 0.305, 0.298, 0.290, 0.278, 0.265, 0.252, 0.238, 0.220]
+  },
+  "confidence_comparison": {
+    "tier1_example": {"tier": 1, "confidence": 0.90, "naive_kg_confidence": 0.76, "baseline_confidence": 0.65},
+    "tier2_example": {"tier": 2, "confidence": 0.72, "naive_kg_confidence": 0.78, "baseline_confidence": 0.60},
+    "tier3_example": {"tier": 3, "confidence": 0.52, "naive_kg_confidence": 0.76, "baseline_confidence": 0.55}
+  },
+  "hc3_scores": {
+    "aria_full": 0.777,
+    "aria_core": 0.689,
+    "naive_kg": 0.388,
+    "baseline": 0.355,
+    "self_rag": 0.512
+  }
+}

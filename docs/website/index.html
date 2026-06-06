@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ARIA: Causal-Aware Reasoning for Materials Science</title>
+  <meta name="description" content="ARIA prevents contextual tunneling in LLMs by gating knowledge graph evidence on causal completeness. An interactive exploration of the three-tier adaptive reasoning cascade.">
+  <meta name="citation_title" content="ARIA: Causal-Aware Reasoning for Intelligent Analysis">
+  <meta name="citation_author" content="Cao, Yi">
+  <meta name="citation_author" content="et al.">
+  <meta name="citation_publication_date" content="2026">
+  <meta name="citation_conference" content="KDD 2026">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600&family=Source+Sans+3:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
+
+  <!-- KaTeX -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true},{left: '$', right: '$', display: false}]});"></script>
+
+  <!-- D3.js -->
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+
+  <!-- ARIA CSS -->
+  <link rel="stylesheet" href="assets/css/aria.css">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="ARIA: Causal-Aware Reasoning for Materials Science">
+  <meta property="og:description" content="How gating knowledge on causal completeness prevents contextual tunneling in LLMs.">
+  <meta property="og:type" content="article">
+  <meta property="og:image" content="assets/figures/KDD-Fig1.svg">
+</head>
+
+<body>
+
+  <!-- ==================== HERO ==================== -->
+  <header class="hero">
+    <div class="hero-content">
+      <div class="hero-logo">
+        <img src="assets/figures/ARIA-logo.svg" alt="ARIA Logo" class="aria-logo">
+      </div>
+      <h1 class="hero-title">ARIA</h1>
+      <p class="hero-subtitle">Causal-Aware Reasoning for Materials Science</p>
+      <p class="hero-tagline">How gating knowledge on causal completeness prevents <em>contextual tunneling</em> in LLMs</p>
+      <div class="hero-authors">
+        <div class="author">
+          <span class="author-name">Yi Cao<sup>1</sup></span><span class="author-sep">,</span>
+          <span class="author-name">et al.</span>
+        </div>
+        <div class="affiliations">
+          <sup>1</sup> Johns Hopkins University
+        </div>
+      </div>
+      <div class="hero-badges">
+        <span class="badge badge-venue">KDD 2026</span>
+        <a href="https://github.com/yicao-elina/ARIA" class="badge badge-github" target="_blank" rel="noopener">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          Code
+        </a>
+      </div>
+    </div>
+    <div class="hero-scroll-hint">
+      <span>Explore the interactive article</span>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+    </div>
+  </header>
+
+  <!-- ==================== TABLE OF CONTENTS ==================== -->
+  <nav class="toc" id="toc">
+    <h3 class="toc-title">Contents</h3>
+    <ol class="toc-list">
+      <li class="toc-h2"><a href="#problem">The Problem</a></li>
+      <li class="toc-h2"><a href="#psp">The PSP Hierarchy</a></li>
+      <li class="toc-h2"><a href="#cascade">ARIA's Three-Tier Cascade</a></li>
+      <li class="toc-h2"><a href="#kg-explorer">Knowledge Graph Explorer</a></li>
+      <li class="toc-h2"><a href="#tier-deep-dive">Tier Deep Dives</a></li>
+      <li class="toc-h2"><a href="#results">Results</a></li>
+      <li class="toc-h2"><a href="#robustness">Robustness &amp; Ablation</a></li>
+      <li class="toc-h2"><a href="#trace-audit">Causal Trace Audit</a></li>
+      <li class="toc-h2"><a href="#conclusion">Conclusion</a></li>
+    </ol>
+  </nav>
+
+  <!-- ==================== ARTICLE BODY ==================== -->
+  <article class="article" id="article">
+
+    <!-- ======= SECTION 1: THE PROBLEM ======= -->
+    <section id="problem" class="section">
+      <div class="section-marker">§1</div>
+      <h2>The Problem: Why Adding Knowledge Can <em>Hurt</em></h2>
+
+      <p>
+        Large language models hold immense promise for materials science. They can reason about synthesis conditions, predict properties, and propose novel materials. But when we <strong>naively augment</strong> these models with knowledge graph evidence—retrieving relevant facts and concatenating them into the prompt—something unexpected happens: <em>performance degrades</em>.
+      </p>
+
+      <div class="callout insight">
+        <div class="callout-label">Key Insight</div>
+        <p>
+          <strong>Contextual tunneling</strong> is a newly identified failure mode where LLMs over-anchor on correct-but-incomplete evidence fragments from a knowledge graph, suppressing their broader parametric reasoning. Unlike the "Knowledge Paradox" (where retrieved evidence contradicts parametric knowledge), contextual tunneling occurs even when <em>all retrieved evidence is factually correct</em>—the problem is <em>mechanistic incompleteness</em> of the causal chain.
+        </p>
+      </div>
+
+      <p>
+        Consider a materials scientist asking: <em>"What are the electrical properties of CVD-grown MoS₂?"</em> A naive KG+LLM system retrieves every MoS₂-related edge from the knowledge graph—including <strong>Processing → Property shortcuts</strong> like <em>"CVD temperature 750°C increases carrier mobility"</em>—and anchors on these partial facts, bypassing the mechanistic chain through crystallinity. The result? Overconfident predictions without causal justification.
+      </p>
+
+      <!-- Interactive: Contextual Tunneling Demo -->
+      <d-figure class="figure-container" id="fig-tunneling">
+        <div class="figure-label">Figure 1</div>
+        <div id="tunneling-demo" class="interactive-figure"></div>
+        <figcaption>
+          <strong>Contextual tunneling in action.</strong> Compare how a baseline LLM and a naive KG+LLM system respond to the same materials query. The naive system over-anchors on partial KG evidence (highlighted in <span class="tunneling-highlight">orange</span>), producing overconfident but mechanistically incomplete answers.
+        </figcaption>
+      </d-figure>
+
+      <p>
+        Our evaluation on 149 expert-validated 2D materials synthesis tasks confirms this: naive KG integration <em>decreases</em> performance by up to 12.7% on inverse design tasks, despite the retrieved evidence being factually correct.
+      </p>
+
+      <div class="equation-block">
+        <div class="equation-label">Naive RAG Score</div>
+        $$\text{Score}_{\text{Naive KG}} = 0.301 \quad < \quad \text{Score}_{\text{Baseline}} = 0.345$$
+        <div class="equation-caption">Inverse design scores: adding knowledge without causal gating hurts.</div>
+      </div>
+    </section>
+
+    <!-- ======= SECTION 2: PSP HIERARCHY ======= -->
+    <section id="psp" class="section section-alt">
+      <div class="section-marker">§2</div>
+      <h2>The Processing–Structure–Property Hierarchy</h2>
+
+      <p>
+        The <strong>Processing–Structure–Property (PSP) causal hierarchy</strong> is the foundational model underlying ARIA's reasoning. It captures a fundamental truth in materials science: processing conditions <em>determine</em> structure, which <em>determines</em> properties. No causal claim about a material is complete unless it traces a full <strong>P→S→P chain</strong>.
+      </p>
+
+      <!-- Interactive: PSP Cascade -->
+      <d-figure class="figure-container" id="fig-psp">
+        <div class="figure-label">Figure 2</div>
+        <div id="psp-cascade" class="interactive-figure"></div>
+        <figcaption>
+          <strong>The PSP hierarchy.</strong> Click on any node to see its connections. Complete P→S→P chains are highlighted in <span style="color:#1E88E5">blue</span>; P→P shortcuts that cause contextual tunneling are shown in <span style="color:#E53935">dashed red</span>.
+        </figcaption>
+      </d-figure>
+
+      <p>
+        The PSP hierarchy defines what we mean by "causally complete" evidence. A query $q$ about a material's properties is <strong>PSP-complete</strong> if and only if there exists a path through the knowledge graph that connects processing conditions to properties through an intermediate structure node.
+      </p>
+
+      <div class="callout definition">
+        <div class="callout-label">Definition 1: PSP-Complete Path</div>
+        <p>
+          Given a causal knowledge graph $G = (V, E)$ with node partition $V = V_P \cup V_S \cup V_{Prop}$, a query $q = (\text{method}, \text{host}, \text{dopant})$ is <strong>PSP-complete</strong> if and only if there exists a path $p = (v_P, v_S, v_{Prop})$ satisfying:
+        </p>
+        <ol>
+          <li>$v_P$ matches the synthesis method and conditions</li>
+          <li>$v_S$ matches the host and dopant</li>
+          <li>$v_{Prop}$ is reachable from $v_S$</li>
+          <li>Both edges $(v_P, v_S)$ and $(v_S, v_{Prop})$ exist in $E$</li>
+          <li>The minimum edge confidence along $p$ is at least $\theta_1$</li>
+        </ol>
+      </div>
+
+      <p>
+        This formal criterion is the <em>gate</em> that determines whether external knowledge should be activated. It is not a generic retrieval score—it is a <strong>structural completeness check</strong> on a typed, directed causal graph.
+      </p>
+    </section>
+
+    <!-- ======= SECTION 3: THREE-TIER CASCADE ======= -->
+    <section id="cascade" class="section">
+      <div class="section-marker">§3</div>
+      <h2>ARIA's Three-Tier Adaptive Cascade</h2>
+
+      <p>
+        ARIA addresses contextual tunneling through a three-tier adaptive reasoning cascade that conditions knowledge integration on <em>mechanistic completeness</em>. Rather than always injecting retrieved evidence, ARIA checks whether the evidence forms a <em>complete causal chain</em> before using it.
+      </p>
+
+      <div class="tier-overview">
+        <div class="tier-card tier-1-card">
+          <div class="tier-badge" style="background:#1E88E5">Tier 1</div>
+          <h3>Direct Causal Path Reasoning</h3>
+          <p>A complete PSP path exists in the KG. Use verified causal mechanisms.</p>
+          <div class="tier-confidence">Confidence: <strong>HIGH</strong></div>
+        </div>
+        <div class="tier-card tier-2-card">
+          <div class="tier-badge" style="background:#FFC107;color:#000">Tier 2</div>
+          <h3>Analogical Mechanism Transfer</h3>
+          <p>No complete path, but analogous materials exist. Transfer mechanisms with physical constraint validation.</p>
+          <div class="tier-confidence">Confidence: <strong>MEDIUM</strong></div>
+        </div>
+        <div class="tier-card tier-3-card">
+          <div class="tier-badge" style="background:#9E9E9E">Tier 3</div>
+          <h3>Parametric Fallback</h3>
+          <p>Insufficient evidence. Disable retrieval, rely on LLM knowledge, explicitly flag uncertainty.</p>
+          <div class="tier-confidence">Confidence: <strong>LOW</strong></div>
+        </div>
+      </div>
+
+      <!-- Interactive: Tier Router -->
+      <d-figure class="figure-container" id="fig-tier-router">
+        <div class="figure-label">Figure 3</div>
+        <div id="tier-router" class="interactive-figure"></div>
+        <figcaption>
+          <strong>Interactive tier routing.</strong> Select or type a materials query and watch ARIA route it through the three-tier cascade. Observe how PSP completeness determines the tier.
+        </figcaption>
+      </d-figure>
+
+      <div class="callout insight">
+        <div class="callout-label">Key Insight</div>
+        <p>
+          ARIA's gating happens at the <strong>reasoning stage</strong>, not the retrieval stage. Existing RAG systems (Self-RAG, GIVE, GNN-RAG) operate at retrieval—deciding <em>what</em> to retrieve. ARIA decides <em>whether to use</em> retrieved evidence based on whether it forms a complete causal chain. This is a mechanistic criterion, not a semantic similarity one.
+        </p>
+      </div>
+    </section>
+
+    <!-- ======= SECTION 4: KG EXPLORER ======= -->
+    <section id="kg-explorer" class="section section-alt">
+      <div class="section-marker">§4</div>
+      <h2>Knowledge Graph Explorer</h2>
+
+      <p>
+        ARIA's Causal Knowledge Graph encodes verified <strong>Processing–Structure–Property</strong> relationships extracted from 1,531 full-text papers. The demo graph below contains 28 curated relationships spanning MoS₂ and WS₂, including complete P→S→P chains, P→P shortcuts (which cause contextual tunneling), and analogical transfer edges.
+      </p>
+
+      <div class="kg-filters" id="kg-filters">
+        <div class="filter-group">
+          <label>Material:</label>
+          <select id="kg-material-filter">
+            <option value="all">All</option>
+            <option value="MoS2">MoS₂</option>
+            <option value="WS2">WS₂</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Edge type:</label>
+          <label class="filter-checkbox"><input type="checkbox" id="kg-filter-ps" checked> P→S</label>
+          <label class="filter-checkbox"><input type="checkbox" id="kg-filter-sp" checked> S→P</label>
+          <label class="filter-checkbox"><input type="checkbox" id="kg-filter-pp" checked> P→P shortcut</label>
+        </div>
+        <div class="filter-group">
+          <label>Min confidence:</label>
+          <input type="range" id="kg-confidence-filter" min="0" max="100" value="0" step="5">
+          <span id="kg-confidence-value">0.00</span>
+        </div>
+      </div>
+
+      <!-- Interactive: KG Explorer -->
+      <d-figure class="figure-container" id="fig-kg">
+        <div class="figure-label">Figure 4</div>
+        <div id="kg-explorer" class="interactive-figure kg-viz"></div>
+        <figcaption>
+          <strong>Interactive knowledge graph.</strong> Hover on nodes to see connections. Click to highlight PSP paths. <span style="color:#1E88E5">Blue</span> = Processing, <span style="color:#FFC107">Amber</span> = Structure, <span style="color:#4CAF50">Green</span> = Property. Dashed red edges are P→P shortcuts that cause contextual tunneling.
+        </figcaption>
+      </d-figure>
+
+      <div class="kg-stats" id="kg-stats">
+        <div class="stat">
+          <span class="stat-number">28</span>
+          <span class="stat-label">Relationships</span>
+        </div>
+        <div class="stat">
+          <span class="stat-number">3</span>
+          <span class="stat-label">PSP Layers</span>
+        </div>
+        <div class="stat">
+          <span class="stat-number">4</span>
+          <span class="stat-label">Complete P→S→P Chains</span>
+        </div>
+        <div class="stat">
+          <span class="stat-number">4</span>
+          <span class="stat-label">P→P Shortcuts</span>
+        </div>
+      </div>
+
+      <p>
+        The knowledge graph reveals an important structural asymmetry. In the forward direction (processing → properties), 35.3% of queries find complete PSP paths. In the inverse direction (properties → processing), only 10.5% do—a <strong>3.4× asymmetry</strong> that explains why Tier 1 activates 62.5% of the time for forward prediction but 0% for inverse design.
+      </p>
+    </section>
+
+    <!-- ======= SECTION 5: TIER DEEP DIVES ======= -->
+    <section id="tier-deep-dive" class="section">
+      <div class="section-marker">§5</div>
+      <h2>Tier-by-Tier Deep Dives</h2>
+
+      <!-- Tier 1 -->
+      <div class="tier-detail tier-1-detail">
+        <div class="tier-detail-header">
+          <div class="tier-badge-large" style="background:#1E88E5">Tier 1</div>
+          <h3>Direct Causal Path Reasoning</h3>
+          <span class="confidence-badge confidence-high">HIGH confidence</span>
+        </div>
+
+        <p>
+          When a complete PSP chain exists in the knowledge graph, ARIA activates <strong>Tier 1</strong>. The system traces the full causal path from processing conditions through structural mediators to properties, formats the mechanistic evidence as context, and instructs the LLM to use <em>only verified causal mechanisms</em>.
+        </p>
+
+        <div class="tier-example">
+          <h4>Example: CVD-grown MoS₂ conductivity</h4>
+          <div class="tier-trace">
+            <div class="trace-node trace-processing">
+              <div class="trace-label">Processing</div>
+              <div class="trace-content">CVD temperature 750°C</div>
+              <div class="trace-confidence">confidence: 0.90</div>
+            </div>
+            <div class="trace-arrow">→ enables →</div>
+            <div class="trace-node trace-structure">
+              <div class="trace-label">Structure</div>
+              <div class="trace-content">crystallinity</div>
+              <div class="trace-confidence">confidence: 0.90</div>
+            </div>
+            <div class="trace-arrow">→ produces →</div>
+            <div class="trace-node trace-property">
+              <div class="trace-label">Property</div>
+              <div class="trace-content">carrier mobility >40 cm²/Vs</div>
+              <div class="trace-confidence">confidence: 0.92</div>
+            </div>
+          </div>
+          <div class="trace-mechanism">
+            <strong>Mechanism:</strong> CVD growth at 750°C on SiO₂ substrate yields large-grain MoS₂ with improved crystallinity → improved crystallinity reduces charged impurity scattering → carrier mobility exceeds 40 cm²/Vs.
+          </div>
+        </div>
+
+        <div class="callout success">
+          <div class="callout-label">✓ Result</div>
+          <p>ARIA achieves <strong>0.90 confidence</strong> with full source citations, compared to Naive KG's overconfident 0.76 (which lacks mechanistic justification).</p>
+        </div>
+      </div>
+
+      <!-- Tier 2 -->
+      <div class="tier-detail tier-2-detail">
+        <div class="tier-detail-header">
+          <div class="tier-badge-large" style="background:#FFC107;color:#000">Tier 2</div>
+          <h3>Analogical Mechanism Transfer</h3>
+          <span class="confidence-badge confidence-medium">MEDIUM confidence</span>
+        </div>
+
+        <p>
+          When no complete PSP path exists for the queried material, ARIA activates <strong>Tier 2</strong>. It finds the most semantically similar material in the KG and transfers its causal mechanisms—<em>but only after validating physical constraints</em>.
+        </p>
+
+        <div class="tier-example">
+          <h4>Example: MoSe₂ bandgap prediction via MoS₂ analogy</h4>
+          <div class="constraint-checks">
+            <div class="constraint-check passed">
+              <span class="check-icon">✓</span>
+              <span><strong>Structural class preservation</strong>: MoSe₂ shares 2H hexagonal phase with MoS₂</span>
+            </div>
+            <div class="constraint-check passed">
+              <span class="check-icon">✓</span>
+              <span><strong>Elemental substitution rule</strong>: S→Se substitution reduces bandgap by ~15%</span>
+            </div>
+            <div class="constraint-check passed">
+              <span class="check-icon">✓</span>
+              <span><strong>Thermal stability window</strong>: CVD temperature range overlaps for both materials</span>
+            </div>
+          </div>
+          <div class="analogical-transfer">
+            <div class="transfer-source">
+              <div class="transfer-label">Source (MoS₂)</div>
+              <div class="transfer-content">Direct bandgap: ~1.8 eV</div>
+            </div>
+            <div class="transfer-arrow">S→Se: −15%</div>
+            <div class="transfer-target">
+              <div class="transfer-label">Target (MoSe₂)</div>
+              <div class="transfer-content">Estimated bandgap: ~1.5 eV</div>
+            </div>
+          </div>
+          <div class="disclaimer">
+            <em>⚠ Analogy-based prediction. Mechanisms transferred from MoS₂ with S→Se substitution correction.</em>
+          </div>
+        </div>
+
+        <div class="callout success">
+          <div class="callout-label">✓ Result</div>
+          <p>ARIA achieves <strong>1.3% error</strong> on the MoSe₂ bandgap prediction via analogical transfer, compared to Naive KG's <strong>12.9% error</strong> (which retrieves irrelevant MoS₂ edges without substitution correction).</p>
+        </div>
+      </div>
+
+      <!-- Tier 3 -->
+      <div class="tier-detail tier-3-detail">
+        <div class="tier-detail-header">
+          <div class="tier-badge-large" style="background:#9E9E9E">Tier 3</div>
+          <h3>Parametric Fallback</h3>
+          <span class="confidence-badge confidence-low">LOW confidence</span>
+        </div>
+
+        <p>
+          When neither complete paths nor analogies are available, ARIA activates <strong>Tier 3</strong>. It <em>disables retrieval entirely</em>, relies on the LLM's parametric knowledge, and <strong>explicitly flags</strong> the output as speculative with reduced confidence.
+        </p>
+
+        <div class="tier-example">
+          <h4>Example: ITO alternative for transparent conductors</h4>
+          <div class="uncertainty-flag">
+            <div class="flag-icon">⚠️</div>
+            <div class="flag-content">
+              <strong>Uncertainty Flag:</strong> Insufficient causal evidence in the knowledge graph for this inverse design query. Output is based solely on parametric knowledge and should be treated as speculative.
+            </div>
+          </div>
+          <div class="confidence-comparison">
+            <div class="comparison-bar">
+              <span class="comparison-label">ARIA Confidence</span>
+              <div class="comparison-fill aria-fill" style="width:52%">0.52</div>
+            </div>
+            <div class="comparison-bar">
+              <span class="comparison-label">Naive KG Confidence</span>
+              <div class="comparison-fill naive-fill" style="width:76%">0.76</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout warning">
+          <div class="callout-label">⚠ Contrast</div>
+          <p>Naive KG+LLM assigns <strong>0.76 confidence</strong> to the same query by concatenating partial ITO edges—<em>despite no complete causal chain existing</em>. ARIA honestly reports <strong>0.52 confidence</strong>, a 32% reduction that signals real epistemic uncertainty.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======= SECTION 6: RESULTS ======= -->
+    <section id="results" class="section section-alt">
+      <div class="section-marker">§6</div>
+      <h2>Results</h2>
+
+      <p>
+        ARIA was evaluated on 149 expert-validated 2D materials synthesis tasks, covering forward prediction (given synthesis conditions, predict properties) and inverse design (given target properties, recommend synthesis conditions). Four independent LLM judge families confirmed the results with <strong>99.2% ARIA preference</strong> ($p < 10^{-30}$).
+      </p>
+
+      <div class="chart-toggles" id="results-toggles">
+        <button class="toggle-btn active" data-metric="overall">Overall</button>
+        <button class="toggle-btn" data-metric="forward">Forward Prediction</button>
+        <button class="toggle-btn" data-metric="inverse">Inverse Design</button>
+      </div>
+
+      <!-- Interactive: Results Chart -->
+      <d-figure class="figure-container" id="fig-results">
+        <div class="figure-label">Figure 5</div>
+        <div id="results-chart" class="interactive-figure"></div>
+        <figcaption>
+          <strong>Performance comparison across methods.</strong> Toggle between overall, forward prediction, and inverse design scores. ARIA-FULL achieves 57% improvement in forward prediction and 44% in inverse design over baselines.
+        </figcaption>
+      </d-figure>
+
+      <div class="key-findings">
+        <div class="finding">
+          <div class="finding-number">+57%</div>
+          <div class="finding-desc">Forward prediction improvement over baseline</div>
+        </div>
+        <div class="finding">
+          <div class="finding-number">+44%</div>
+          <div class="finding-desc">Inverse design improvement over baseline</div>
+        </div>
+        <div class="finding">
+          <div class="finding-number">93%</div>
+          <div class="finding-desc">Reduction in physical consistency violations</div>
+        </div>
+        <div class="finding">
+          <div class="finding-number">99.2%</div>
+          <div class="finding-desc">Judge preference rate ($p < 10^{-30}$)</div>
+        </div>
+      </div>
+
+      <p>
+        The tier activation statistics reveal a striking structural asymmetry. For forward prediction, Tier 1 activates 62.5% of the time—most queries find complete PSP paths. For inverse design, Tier 1 <em>never</em> activates because the CKG has only 10.5% reverse reachability. This means inverse design heavily relies on Tier 2 analogical transfer (20%) and Tier 3 fallback (80%).
+      </p>
+
+      <div id="tier-activation-charts" class="tier-activation-container"></div>
+    </section>
+
+    <!-- ======= SECTION 7: ROBUSTNESS ======= -->
+    <section id="robustness" class="section">
+      <div class="section-marker">§7</div>
+      <h2>Robustness &amp; Ablation</h2>
+
+      <p>
+        How does ARIA degrade when the knowledge graph loses edges? We progressively delete random edges from the CKG and measure performance. The results show that ARIA gracefully degrades, with <strong>Tier 2 absorbing Tier 1 loss up to ~80% deletion</strong>.
+      </p>
+
+      <!-- Interactive: Robustness Slider -->
+      <d-figure class="figure-container" id="fig-robustness">
+        <div class="figure-label">Figure 6</div>
+        <div id="robustness-slider" class="interactive-figure"></div>
+        <figcaption>
+          <strong>Edge deletion robustness.</strong> Drag the slider to simulate progressive KG degradation. ARIA maintains performance through Tier 2 absorption, while Naive KG performance collapses.
+        </figcaption>
+      </d-figure>
+    </section>
+
+    <!-- ======= SECTION 8: CAUSAL TRACE AUDIT ======= -->
+    <section id="trace-audit" class="section section-alt">
+      <div class="section-marker">§8</div>
+      <h2>Causal Trace Audit</h2>
+
+      <p>
+        Every ARIA result includes an <strong>auditable causal trace</strong>—a step-by-step record of how the answer was derived. This trace enables scientists to verify physical plausibility at each step, creating a chain of trust from evidence to conclusion.
+      </p>
+
+      <div class="trace-audit-demo" id="trace-audit">
+        <div class="trace-query">
+          <div class="trace-query-label">Query:</div>
+          <div class="trace-query-text">"What is the carrier mobility of CVD-grown MoS₂ at 750°C?"</div>
+        </div>
+
+        <div class="trace-steps">
+          <div class="trace-step" data-step="1">
+            <div class="trace-step-marker">1</div>
+            <div class="trace-step-content">
+              <h4>Entity Extraction</h4>
+              <p>Extracted entities: <span class="entity processing">CVD temperature 750°C</span>, <span class="entity structure">MoS₂</span>, <span class="entity property">carrier mobility</span></p>
+            </div>
+          </div>
+
+          <div class="trace-step" data-step="2">
+            <div class="trace-step-marker">2</div>
+            <div class="trace-step-content">
+              <h4>Knowledge Graph Matching</h4>
+              <p>Matched nodes: <span class="entity processing">CVD temperature 750°C</span>, <span class="entity structure">crystallinity</span>, <span class="entity property">carrier mobility</span></p>
+            </div>
+          </div>
+
+          <div class="trace-step" data-step="3">
+            <div class="trace-step-marker">3</div>
+            <div class="trace-step-content">
+              <h4>PSP Completeness Check</h4>
+              <div class="completeness-bar">
+                <div class="completeness-fill complete" style="width:100%">
+                  <span>COMPLETE — P→S→P chain found</span>
+                </div>
+              </div>
+              <p>Path: CVD 750°C <span class="arrow">→</span> crystallinity <span class="arrow">→</span> carrier mobility</p>
+              <p>Min edge confidence: $\min(0.90, 0.92) = 0.90 \geq \theta_1$ ✓</p>
+            </div>
+          </div>
+
+          <div class="trace-step" data-step="4">
+            <div class="trace-step-marker tier-1-marker">T1</div>
+            <div class="trace-step-content">
+              <h4>Tier 1: Direct Causal Path Reasoning</h4>
+              <p>Using verified causal mechanisms only.</p>
+              <div class="trace-evidence">
+                <div class="evidence-item">
+                  <span class="evidence-label">Evidence 1:</span>
+                  "CVD growth at 750°C on SiO₂ substrate yields large-grain MoS₂ with improved crystallinity" <span class="evidence-doi">DOI: 10.1038/nnano.2014.1</span>
+                </div>
+                <div class="evidence-item">
+                  <span class="evidence-label">Evidence 2:</span>
+                  "Improved crystallinity reduces charged impurity scattering, leading to carrier mobility exceeding 40 cm²/Vs" <span class="evidence-doi">DOI: 10.1038/nnano.2014.1</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="trace-step trace-result" data-step="5">
+            <div class="trace-step-marker result-marker">✓</div>
+            <div class="trace-step-content">
+              <h4>Result</h4>
+              <p>CVD-grown MoS₂ at 750°C achieves carrier mobility <strong>exceeding 40 cm²/Vs</strong> in monolayer form, mediated by improved crystallinity that reduces charged impurity scattering.</p>
+              <div class="result-meta">
+                <span class="result-confidence confidence-high">Confidence: 0.90</span>
+                <span class="result-tier">Tier 1</span>
+                <span class="result-sources">2 sources cited</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======= SECTION 9: CONCLUSION ======= -->
+    <section id="conclusion" class="section">
+      <div class="section-marker">§9</div>
+      <h2>Conclusion</h2>
+
+      <p>
+        ARIA demonstrates that <strong>knowledge can constrain reasoning unless gated by causal completeness</strong>. The key insight is not that knowledge graphs are unhelpful—they are essential—but that <em>when and how</em> evidence is integrated matters as much as <em>what</em> evidence is retrieved.
+      </p>
+
+      <p>
+        By routing queries through a three-tier adaptive cascade that checks for PSP-completeness before activating KG evidence, ARIA achieves a <strong>57% improvement in forward prediction</strong> and <strong>44% improvement in inverse design</strong> over baselines, while producing <strong>auditable causal traces</strong> that scientists can verify.
+      </p>
+
+      <p>
+        The contextual tunneling phenomenon that ARIA addresses is not unique to materials science. Any domain where causal completeness matters—medicine, climate science, engineering—could benefit from evidence-gating at the reasoning stage rather than the retrieval stage.
+      </p>
+
+      <div class="callout insight">
+        <div class="callout-label">Takeaway</div>
+        <p>
+          <strong>Retrieve broadly, reason carefully.</strong> The solution to contextual tunneling is not less knowledge, but <em>gated</em> knowledge: activating evidence only when it forms a complete causal chain, analogizing with physical constraints when it doesn't, and honestly flagging uncertainty when evidence is absent.
+        </p>
+      </div>
+
+      <div class="resources">
+        <h3>Resources</h3>
+        <div class="resource-links">
+          <a href="https://github.com/yicao-elina/ARIA" class="resource-link" target="_blank" rel="noopener">
+            <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            <span>GitHub Repository</span>
+          </a>
+          <a href="#" class="resource-link" id="paper-link">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            <span>Paper (PDF)</span>
+          </a>
+          <a href="#" class="resource-link copy-bibtex" id="copy-bibtex">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+            <span>Copy BibTeX</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- BibTeX (hidden) -->
+      <pre id="bibtex-content" style="display:none">@inproceedings{cao2026aria,
+  title={ARIA: Causal-Aware Reasoning for Intelligent Analysis},
+  author={Cao, Yi and others},
+  booktitle={Proceedings of the 32nd ACM SIGKDD Conference on Knowledge Discovery and Data Mining},
+  year={2026}
+}</pre>
+    </section>
+
+  </article>
+
+  <!-- ==================== FOOTER ==================== -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-credits">
+        <p>ARIA: Causal-Aware Reasoning for Intelligent Analysis</p>
+        <p>Johns Hopkins University · KDD 2026</p>
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/yicao-elina/ARIA">GitHub</a>
+        <a href="mailto:ycao@jhu.edu">Contact</a>
+      </div>
+      <div class="footer-license">
+        <p>Interactive article built with <a href="https://distill.pub">Distill</a> patterns. Content © 2026 the authors.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ==================== SCRIPTS ==================== -->
+  <script src="assets/js/psp-cascade.js"></script>
+  <script src="assets/js/tunneling-demo.js"></script>
+  <script src="assets/js/kg-explorer.js"></script>
+  <script src="assets/js/tier-router.js"></script>
+  <script src="assets/js/results-chart.js"></script>
+  <script src="assets/js/robustness-slider.js"></script>
+  <script src="assets/js/main.js"></script>
+
+</body>
+</html>
