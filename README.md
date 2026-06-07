@@ -14,6 +14,9 @@
 
 </div>
 
+> > 🌟 Original project
+> 
+> This project is an evolution of **[LLM4Chem-Explainable-synthesis](https://github.com/yicao-elina/LLM4Chem-Explainable-synthesis)**, an early prototype awarded the Horizon Award at the 2025 LLM Hackathon. ARIA expands upon this initial idea with rigorous structural and theoretical improvements.
 ---
 
 ## Why ARIA?
