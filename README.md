@@ -4,6 +4,10 @@
 
 # ARIA: Causal-Aware Reasoning for Materials Discovery
 
+> ⚠️ Original project — please cite
+>
+> This repository is derived from the original implementation **LLM4Chem-Explainable-synthesis**: https://github.com/yicao-elina/LLM4Chem-Explainable-synthesis (original repo; previously had 17★). If you reference, cite, or link this work in papers (for example, the KDD submission), please include the original repository URL.
+
 **A**utonomous **R**easoning **I**ntelligence for **A**tomics
 
 [![Paper](https://img.shields.io/badge/KDD_2026-Paper-blue)](https://github.com/yicao-elina/ARIA)
