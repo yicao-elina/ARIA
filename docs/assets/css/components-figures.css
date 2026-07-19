@@ -1,0 +1,231 @@
+/* ==========================================================================
+   ARIA — Figures & Lightbox
+
+   Apple-style figure viewer: full-bleed figure with caption, click-to-zoom
+   for the high-resolution PNG version, and clickable guidance hotspots
+   that smooth-scroll to the matching section.
+   ========================================================================== */
+
+.figure-block {
+  margin: var(--sp-xl) 0;
+}
+
+.figure-block__stage {
+  position: relative;
+  background: var(--apple-canvas);
+  border: 1px solid var(--apple-divider-soft);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  overflow: hidden;
+}
+
+.figure-block__image {
+  display: block;
+  width: 100%;
+  height: auto;
+  cursor: zoom-in;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.figure-block__caption {
+  margin-top: var(--sp-sm);
+  font-size: var(--text-caption);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-caption);
+  letter-spacing: var(--tracking-caption);
+  color: var(--apple-ink-muted-48);
+  text-align: center;
+}
+
+.figure-block__caption strong {
+  color: var(--apple-ink);
+  font-weight: var(--weight-semibold);
+}
+
+.figure-block__caption a {
+  color: var(--apple-primary);
+  text-decoration: none;
+  margin-left: 4px;
+  font-weight: var(--weight-semibold);
+}
+
+.figure-block__caption a:hover {
+  text-decoration: underline;
+}
+
+/* Clickable guidance hotspots overlaid on the figure */
+.fig-hotspot {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--apple-primary);
+  color: var(--apple-on-primary);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: var(--weight-semibold);
+  border: 2px solid var(--apple-canvas);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  z-index: 2;
+}
+
+.fig-hotspot:hover,
+.fig-hotspot:focus-visible {
+  transform: translate(-50%, -50%) scale(1.15);
+  background: var(--apple-primary-focus);
+  box-shadow: 0 4px 16px rgba(0, 102, 204, 0.35);
+  outline: none;
+}
+
+.fig-hotspot:active {
+  transform: translate(-50%, -50%) scale(0.95);
+}
+
+.fig-hotspot--pulse::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 2px solid var(--apple-primary);
+  opacity: 0.6;
+  animation: fig-hotspot-pulse 2.2s ease-out infinite;
+  pointer-events: none;
+}
+
+@keyframes fig-hotspot-pulse {
+  0%   { transform: scale(0.7); opacity: 0.7; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+
+.fig-hotspot__label {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 12px);
+  transform: translateY(-50%);
+  background: rgba(29, 29, 31, 0.94);
+  color: #fff;
+  font-size: 12px;
+  line-height: 1.4;
+  font-weight: var(--weight-regular);
+  letter-spacing: 0;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 3;
+}
+
+.fig-hotspot:hover .fig-hotspot__label,
+.fig-hotspot:focus-visible .fig-hotspot__label {
+  opacity: 1;
+  transform: translateY(-50%) translateX(4px);
+}
+
+/* Mobile: hotspots stay visible but smaller; tooltip shows on tap */
+@media (max-width: 640px) {
+  .fig-hotspot { width: 24px; height: 24px; font-size: 12px; }
+  .fig-hotspot__label {
+    position: fixed;
+    top: auto;
+    bottom: 24px;
+    left: 24px;
+    right: 24px;
+    transform: none;
+    white-space: normal;
+  }
+  .fig-hotspot:hover .fig-hotspot__label,
+  .fig-hotspot:focus-visible .fig-hotspot__label {
+    transform: none;
+  }
+}
+
+/* Lightbox (click-to-zoom full-size view) */
+.fig-lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.86);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 5vh 5vw;
+  cursor: zoom-out;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.fig-lightbox.is-open {
+  display: flex;
+  opacity: 1;
+}
+
+.fig-lightbox__image {
+  max-width: 96vw;
+  max-height: 92vh;
+  object-fit: contain;
+  background: #fff;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 10px 60px rgba(0, 0, 0, 0.4);
+  cursor: default;
+}
+
+.fig-lightbox__caption {
+  position: absolute;
+  bottom: 4vh;
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: #f5f5f7;
+  font-size: var(--text-caption);
+  letter-spacing: var(--tracking-caption);
+  padding: 0 24px;
+}
+
+.fig-lightbox__close {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border: none;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.fig-lightbox__close:hover {
+  background: rgba(255, 255, 255, 0.24);
+  transform: scale(1.05);
+}
+
+.fig-lightbox__close:active {
+  transform: scale(0.95);
+}
+
+/* Pulse on the section a hotspot links to */
+@keyframes fig-pulse-target {
+  0%   { box-shadow: 0 0 0 0   rgba(0, 102, 204, 0.45); }
+  50%  { box-shadow: 0 0 0 12px rgba(0, 102, 204, 0.18); }
+  100% { box-shadow: 0 0 0 0   rgba(0, 102, 204, 0); }
+}
+
+.fig-pulse-target {
+  animation: fig-pulse-target 1.4s ease-out 2;
+  border-radius: 8px;
+}

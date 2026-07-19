@@ -1,0 +1,143 @@
+/* ==========================================================================
+   ARIA — Navigation
+
+   Single frosted-glass navigation bar with ARIA branding,
+   section links, and CTA button. Apple design tokens.
+   ========================================================================== */
+
+/* ── Navigation Bar ── */
+.sub-nav-frosted {
+  background: rgba(245, 245, 247, 0.8);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  height: var(--subnav-height);                  /* 52px */
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--apple-divider-soft);
+}
+
+.sub-nav__title {
+  font-family: var(--font-display);
+  font-size: var(--text-tagline);                /* 21px */
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-tagline);
+  letter-spacing: var(--tracking-tagline);
+  color: var(--apple-ink);
+  margin-right: 32px;
+  white-space: nowrap;
+}
+
+.sub-nav__links {
+  display: flex;
+  gap: 12px;
+  flex: 1;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.sub-nav__links::-webkit-scrollbar {
+  display: none;
+}
+
+.sub-nav__link {
+  font-family: var(--font-body);
+  font-size: var(--text-button-utility);         /* 14px */
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-caption-strong);
+  letter-spacing: var(--tracking-caption);
+  color: var(--apple-ink-muted-80);
+  text-decoration: none;
+  padding: 8px 12px;
+  border-radius: var(--radius-xs);
+  transition: color 0.2s ease, background 0.2s ease;
+  white-space: nowrap;
+}
+
+.sub-nav__link:hover {
+  color: var(--apple-ink);
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.sub-nav__link:active {
+  transform: scale(0.95);
+}
+
+.sub-nav__link.active {
+  color: var(--apple-primary);
+  font-weight: var(--weight-semibold);
+}
+
+.sub-nav__link:focus-visible {
+  outline: 2px solid var(--apple-primary-focus);
+  outline-offset: 2px;
+}
+
+/* CTA button — Apple pill CTA
+   TEMPORARY: subagent C will replace .sub-nav__cta with the floating pill
+   header. This rule is kept as a fallback but its visual weight is reduced
+   so the upcoming pill will dominate. */
+.sub-nav__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--apple-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-button-utility);
+  font-weight: var(--weight-regular);
+  letter-spacing: var(--tracking-caption);
+  border: 1px solid var(--apple-primary);
+  border-radius: var(--radius-pill);              /* 9999px pill */
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.2s ease, color 0.2s ease;
+  text-decoration: none;
+  white-space: nowrap;
+  margin-left: auto;
+  opacity: 0.65;
+}
+
+.sub-nav__cta:hover {
+  background: rgba(0, 102, 204, 0.06);
+  color: var(--apple-primary);
+  opacity: 1;
+}
+
+.sub-nav__cta:active {
+  transform: scale(0.95);
+}
+
+.sub-nav__cta:focus-visible {
+  outline: 2px solid var(--mint);
+  outline-offset: 2px;
+}
+
+/* ── Mobile hamburger ── */
+.nav-hamburger {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--apple-ink);
+  cursor: pointer;
+  padding: 8px;
+}
+
+.nav-hamburger-line {
+  display: block;
+  width: 18px;
+  height: 1.5px;
+  background: var(--apple-ink);
+  margin: 4px 0;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+/* ── Body offset for fixed nav ── */
+.main-content {
+  margin-top: var(--subnav-height);               /* 52px */
+}
