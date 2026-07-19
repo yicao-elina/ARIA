@@ -1,0 +1,141 @@
+/* ============================================================
+   Floating glass icon-pill header (ARIA paper site)
+   Mirrors the yicao-elina header.css; selectors renamed to
+   .hp-* to avoid collisions with the rest of the site.
+   Self-contained. Loads after tokens.css.
+   ============================================================ */
+
+.app-header {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  background: var(--pearl-glass-strong, rgba(255, 255, 255, 0.7));
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.6));
+  border-radius: var(--radius-pill, 9999px);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  box-shadow: var(--shadow-header-pill, 0 8px 32px rgba(20, 30, 45, 0.08));
+}
+
+/* Avatar: 40px circular, mint border, hosts the ARIA logo */
+.hp-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid var(--mint);
+  cursor: pointer;
+  object-fit: cover;
+  transition: transform 200ms var(--ease-spring);
+  text-decoration: none;
+  display: inline-block;
+  overflow: hidden;
+  flex: 0 0 40px;
+}
+.hp-avatar img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+.hp-avatar:hover,
+.hp-avatar:focus-visible {
+  transform: scale(1.06);
+  outline: none;
+}
+
+/* Standard icon: 36px circular, graphite, mint on hover, lift */
+.hp-icon {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: var(--graphite);
+  position: relative;
+  transition: color 180ms ease, transform 180ms var(--ease-spring);
+  text-decoration: none;
+}
+.hp-icon:hover,
+.hp-icon:focus-visible {
+  color: var(--mint);
+  transform: translateY(-2px);
+  outline: none;
+}
+.hp-icon[aria-current="page"] {
+  color: var(--mint);
+}
+
+/* Tooltip: absolute, below the icon, spring translateY reveal */
+.hp-tooltip {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-4px);
+  background: #fff;
+  color: var(--ink-deep);
+  font: 600 11px/1 var(--font-text, "SF Pro Text", -apple-system, BlinkMacSystemFont, sans-serif);
+  padding: 4px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 200ms ease, transform 200ms var(--ease-spring);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  z-index: 1001;
+}
+.hp-icon:hover .hp-tooltip,
+.hp-icon:focus-visible .hp-tooltip {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* CTA icon: GitHub link, mint by default */
+.hp-icon--cta {
+  color: var(--mint);
+}
+.hp-icon--cta:hover,
+.hp-icon--cta:focus-visible {
+  color: var(--mint-bright);
+}
+
+/* Mobile: hide middle icons, keep avatar + first nav + CTA */
+@media (max-width: 768px) {
+  .app-header .hp-icon:nth-child(n+5):not(.hp-avatar):not(.hp-icon--cta) {
+    display: none;
+  }
+  .app-header {
+    position: relative;
+    top: 0;
+    transform: none;
+    left: 0;
+    max-width: calc(100% - 24px);
+    margin: 12px auto;
+  }
+}
+
+/* Reduced motion: kill the spring/lift */
+@media (prefers-reduced-motion: reduce) {
+  .hp-icon,
+  .hp-avatar,
+  .hp-tooltip {
+    transition: none;
+  }
+}
+body.no-motion .hp-icon:hover,
+body.no-motion .hp-avatar:hover {
+  transform: none;
+}
+
+/* Fallback when backdrop-filter is unsupported */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .app-header {
+    background: rgba(255, 255, 255, 0.95);
+  }
+}
