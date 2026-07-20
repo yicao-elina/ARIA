@@ -1,10 +1,12 @@
 /**
- * ARIA - Main Initialization Script
- * Distill.pub-style interactive website
+ * ARIA — Main Initialization Script
+ * Apple Design System Edition
  *
- * Handles scroll animations, sticky TOC, collapsible sections,
+ * Handles scroll animations, sub-nav highlighting,
  * interactive figure initialization, BibTeX copy, math rendering,
  * mobile menu, and smooth scrolling.
+ *
+ * No longer depends on Distill template.
  */
 
 (function () {
@@ -15,7 +17,7 @@
   // ---------------------------------------------------------------------------
   window.ARIA = window.ARIA || {};
 
-  const components = [
+  var components = [
     'KGExplorer',
     'TierRouter',
     'PSPCascade',
@@ -34,37 +36,19 @@
   // Utility helpers
   // ---------------------------------------------------------------------------
 
-  /**
-   * Shorthand for querySelector.
-   * @param {string} sel - CSS selector
-   * @param {Element} [ctx=document] - Context element
-   * @returns {Element|null}
-   */
   function qs(sel, ctx) {
     return (ctx || document).querySelector(sel);
   }
 
-  /**
-   * Shorthand for querySelectorAll (returns real Array).
-   * @param {string} sel - CSS selector
-   * @param {Element} [ctx=document] - Context element
-   * @returns {Element[]}
-   */
   function qsa(sel, ctx) {
     return Array.from((ctx || document).querySelectorAll(sel));
   }
 
-  /**
-   * Debounce a function by the given delay in milliseconds.
-   * @param {Function} fn
-   * @param {number} delay
-   * @returns {Function}
-   */
   function debounce(fn, delay) {
-    let timer;
+    var timer;
     return function () {
-      const args = arguments;
-      const self = this;
+      var args = arguments;
+      var self = this;
       clearTimeout(timer);
       timer = setTimeout(function () {
         fn.apply(self, args);
@@ -72,14 +56,9 @@
     };
   }
 
-  /**
-   * Safe JSON fetch that returns null on failure.
-   * @param {string} url
-   * @returns {Promise<Object|null>}
-   */
   async function fetchJSON(url) {
     try {
-      const res = await fetch(url);
+      var res = await fetch(url);
       if (!res.ok) throw new Error('HTTP ' + res.status + ' for ' + url);
       return await res.json();
     } catch (err) {
@@ -93,14 +72,12 @@
   // ---------------------------------------------------------------------------
 
   function initScrollAnimations() {
-    // Default threshold and rootMargin for preloading
-    const observerOptions = {
+    var observerOptions = {
       threshold: 0.1,
       rootMargin: '0px 0px -40px 0px',
     };
 
-    // --- .fade-in elements ---
-    const fadeObserver = new IntersectionObserver(function (entries) {
+    var fadeObserver = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
         if (entry.isIntersecting) {
           entry.target.classList.add('visible');
@@ -113,45 +90,9 @@
       fadeObserver.observe(el);
     });
 
-    // --- .slide-up elements ---
-    const slideObserver = new IntersectionObserver(function (entries) {
-      entries.forEach(function (entry) {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-          slideObserver.unobserve(entry.target);
-        }
-      });
-    }, observerOptions);
-
-    qsa('.slide-up').forEach(function (el) {
-      slideObserver.observe(el);
-    });
-
-    // --- d-figure sticky / scroll-triggered figures ---
-    const figureObserver = new IntersectionObserver(
-      function (entries) {
-        entries.forEach(function (entry) {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('onscreen');
-            entry.target.classList.remove('offscreen');
-            entry.target.dispatchEvent(new CustomEvent('onscreen'));
-          } else {
-            entry.target.classList.remove('onscreen');
-            entry.target.classList.add('offscreen');
-            entry.target.dispatchEvent(new CustomEvent('offscreen'));
-          }
-        });
-      },
-      { threshold: 0.5 }
-    );
-
-    qsa('.d-figure').forEach(function (fig) {
-      figureObserver.observe(fig);
-    });
-
-    // --- Stagger animation delays for grouped elements ---
+    // Stagger animation delays for grouped elements
     qsa('[data-stagger]').forEach(function (group) {
-      const children = qsa('.fade-in, .slide-up', group);
+      var children = qsa('.fade-in, .slide-up', group);
       children.forEach(function (child, i) {
         child.style.transitionDelay = i * 80 + 'ms';
       });
@@ -159,115 +100,38 @@
   }
 
   // ---------------------------------------------------------------------------
-  // 2. Sticky Table of Contents
+  // 2. Sub-nav section highlighting
   // ---------------------------------------------------------------------------
 
-  function initTOC() {
-    const article = qs('d-article') || qs('article');
-    if (!article) return;
+  function initSubNavHighlighting() {
+    var subNavLinks = qsa('.sub-nav__link');
+    var sections = qsa('section.tile[id]');
+    if (!subNavLinks.length || !sections.length) return;
 
-    const tocContainer = qs('nav.d-toc') || qs('.d-toc');
-    if (!tocContainer) return;
+    var headerOffset = 80; // 52px nav + some margin
 
-    const headings = qsa('h2, h3', article);
-    if (headings.length === 0) return;
+    function updateActiveSection() {
+      var scrollY = window.scrollY;
+      var activeId = '';
 
-    // Build TOC list
-    const tocList = document.createElement('ol');
-    tocList.classList.add('toc-list');
-
-    let currentH2Item = null;
-    let h2Sublist = null;
-
-    headings.forEach(function (heading, idx) {
-      // Assign an id if missing
-      if (!heading.id) {
-        heading.id = 'toc-section-' + idx;
-      }
-
-      const li = document.createElement('li');
-      const a = document.createElement('a');
-      a.href = '#' + heading.id;
-      a.textContent = heading.textContent;
-      a.classList.add('toc-link');
-      li.appendChild(a);
-
-      if (heading.tagName === 'H2') {
-        li.classList.add('toc-h2');
-        tocList.appendChild(li);
-        currentH2Item = li;
-        h2Sublist = null;
-      } else if (heading.tagName === 'H3') {
-        li.classList.add('toc-h3');
-        if (currentH2Item && !h2Sublist) {
-          h2Sublist = document.createElement('ol');
-          h2Sublist.classList.add('toc-sublist');
-          currentH2Item.appendChild(h2Sublist);
-        }
-        if (h2Sublist) {
-          h2Sublist.appendChild(li);
-        } else {
-          tocList.appendChild(li);
-        }
-      }
-    });
-
-    tocContainer.appendChild(tocList);
-
-    // Highlight current section on scroll
-    const tocLinks = qsa('.toc-link', tocContainer);
-
-    function updateActiveTOC() {
-      const scrollY = window.scrollY;
-      const headerOffset = 80;
-      let activeIndex = 0;
-
-      headings.forEach(function (heading, i) {
-        if (heading.getBoundingClientRect().top + scrollY - headerOffset <= scrollY) {
-          activeIndex = i;
+      sections.forEach(function (section) {
+        var top = section.getBoundingClientRect().top + scrollY - headerOffset;
+        if (scrollY >= top) {
+          activeId = section.id;
         }
       });
 
-      tocLinks.forEach(function (link) {
+      subNavLinks.forEach(function (link) {
         link.classList.remove('active');
-      });
-
-      if (tocLinks[activeIndex]) {
-        tocLinks[activeIndex].classList.add('active');
-      }
-    }
-
-    window.addEventListener('scroll', debounce(updateActiveTOC, 50));
-    updateActiveTOC();
-
-    // Smooth scroll on TOC link click
-    tocList.addEventListener('click', function (e) {
-      if (e.target.matches('.toc-link')) {
-        e.preventDefault();
-        const targetId = e.target.getAttribute('href').slice(1);
-        const targetEl = document.getElementById(targetId);
-        if (targetEl) {
-          const yOffset = -80; // sticky header offset
-          const y = targetEl.getBoundingClientRect().top + window.pageYOffset + yOffset;
-          window.scrollTo({ top: y, behavior: 'smooth' });
+        var href = link.getAttribute('href');
+        if (href && href === '#' + activeId) {
+          link.classList.add('active');
         }
-        // Close mobile TOC if open
-        const mobileToggle = qs('.d-toc-toggle');
-        if (mobileToggle && tocContainer.classList.contains('open')) {
-          tocContainer.classList.remove('open');
-          mobileToggle.classList.remove('open');
-        }
-      }
-    });
-
-    // Mobile collapsible toggle
-    const toggleBtn = qs('.d-toc-toggle');
-    if (toggleBtn) {
-      toggleBtn.addEventListener('click', function () {
-        tocContainer.classList.toggle('open');
-        toggleBtn.classList.toggle('open');
       });
     }
+
+    window.addEventListener('scroll', debounce(updateActiveSection, 50));
+    updateActiveSection();
   }
 
   // ---------------------------------------------------------------------------
@@ -276,10 +140,9 @@
 
   function initCollapsibles() {
     qsa('.collapsible-header').forEach(function (header) {
-      const content = header.nextElementSibling;
+      var content = header.nextElementSibling;
       if (!content || !content.classList.contains('collapsible-content')) return;
 
-      // Set initial state
       if (header.classList.contains('open')) {
         content.style.maxHeight = content.scrollHeight + 'px';
       } else {
@@ -287,19 +150,16 @@
       }
 
       header.addEventListener('click', function () {
-        const isOpen = header.classList.toggle('open');
+        var isOpen = header.classList.toggle('open');
 
-        // Rotate arrow icon
-        const arrow = qs('.collapsible-arrow', header);
+        var arrow = qs('.collapsible-arrow', header);
         if (arrow) {
           arrow.style.transform = isOpen ? 'rotate(180deg)' : 'rotate(0deg)';
         }
 
-        // Animate content height
         if (isOpen) {
           content.style.maxHeight = content.scrollHeight + 'px';
-          // After transition, allow dynamic height
-          const onEnd = function () {
+          var onEnd = function () {
             if (header.classList.contains('open')) {
               content.style.maxHeight = 'none';
             }
@@ -307,10 +167,8 @@
           };
           content.addEventListener('transitionend', onEnd);
         } else {
-          // First set to scrollHeight so we can animate from a known value
           content.style.maxHeight = content.scrollHeight + 'px';
-          // Force reflow
-          content.offsetHeight; // eslint-disable-line no-unused-expressions
+          content.offsetHeight; // force reflow
           content.style.maxHeight = '0px';
         }
       });
@@ -321,18 +179,11 @@
   // 4. Interactive figure initialization (lazy-loaded)
   // ---------------------------------------------------------------------------
 
-  /**
-   * Create an IntersectionObserver that initializes a component when its
-   * container scrolls into view. Uses 2x viewport rootMargin for preloading.
-   *
-   * @param {string} containerSel - CSS selector for the figure container
-   * @param {Function} initFn - Async or sync initialization function
-   */
   function lazyInit(containerSel, initFn) {
-    const container = qs(containerSel);
-    if (!container) return; // Component not present on this page
+    var container = qs(containerSel);
+    if (!container) return;
 
-    const observer = new IntersectionObserver(
+    var observer = new IntersectionObserver(
       function (entries) {
         entries.forEach(function (entry) {
           if (entry.isIntersecting) {
@@ -346,7 +197,6 @@
         });
       },
       {
-        // 2x viewport height for preloading before element is visible
         rootMargin: '200% 0px',
         threshold: 0,
       }
@@ -356,14 +206,11 @@
   }
 
   async function initInteractiveFigures() {
-    // --- Load data files in parallel ---
-    const [kgData, queryData] = await Promise.all([
-      fetchJSON('assets/data/aria_2d_kg_demo.json'),
-      fetchJSON('assets/data/example_queries.json'),
-    ]);
+    var kgData = await fetchJSON('assets/data/aria_2d_kg_demo.json');
+    var queryData = await fetchJSON('assets/data/example_queries.json');
 
-    // --- KGExplorer ---
-    lazyInit('#kg-explorer-container', function (container) {
+    // KGExplorer — note: ID matches HTML, no "-container" suffix
+    lazyInit('#kg-explorer', function (container) {
       if (!kgData) {
         console.error('[ARIA] KG data not available, skipping KGExplorer');
         return;
@@ -381,17 +228,17 @@
       }
     });
 
-    // --- TierRouter ---
-    lazyInit('#tier-router-container', function (container) {
+    // TierRouter — TierRouter takes a container id string
+    lazyInit('#tier-router', function (container) {
       if (!queryData) {
         console.error('[ARIA] Query data not available, skipping TierRouter');
         return;
       }
       try {
         if (typeof window.ARIA._TierRouter === 'function') {
-          window.ARIA.TierRouter = new window.ARIA._TierRouter(queryData, container);
+          window.ARIA.TierRouter = new window.ARIA._TierRouter('tier-router', queryData);
         } else if (typeof TierRouter === 'function') {
-          window.ARIA.TierRouter = new TierRouter(queryData, container);
+          window.ARIA.TierRouter = new TierRouter('tier-router', queryData);
         } else {
           console.warn('[ARIA] TierRouter class not found');
         }
@@ -400,8 +247,8 @@
       }
     });
 
-    // --- PSPCascade ---
-    lazyInit('#psp-cascade-container', function (container) {
+    // PSPCascade
+    lazyInit('#psp-cascade', function (container) {
       try {
         if (typeof window.ARIA._PSPCascade === 'function') {
           window.ARIA.PSPCascade = new window.ARIA._PSPCascade(container);
@@ -415,8 +262,8 @@
       }
     });
 
-    // --- TunnelingDemo ---
-    lazyInit('#tunneling-demo-container', function (container) {
+    // TunnelingDemo
+    lazyInit('#tunneling-demo', function (container) {
       try {
         if (typeof window.ARIA._TunnelingDemo === 'function') {
           window.ARIA.TunnelingDemo = new window.ARIA._TunnelingDemo(container);
@@ -430,8 +277,8 @@
       }
     });
 
-    // --- ResultsChart ---
-    lazyInit('#results-chart-container', function (container) {
+    // ResultsChart
+    lazyInit('#results-chart', function (container) {
       try {
         if (typeof window.ARIA._ResultsChart === 'function') {
           window.ARIA.ResultsChart = new window.ARIA._ResultsChart(container);
@@ -445,8 +292,8 @@
       }
     });
 
-    // --- RobustnessSlider ---
-    lazyInit('#robustness-slider-container', function (container) {
+    // RobustnessSlider
+    lazyInit('#robustness-slider', function (container) {
       try {
         if (typeof window.ARIA._RobustnessSlider === 'function') {
           window.ARIA.RobustnessSlider = new window.ARIA._RobustnessSlider(container);
@@ -466,90 +313,63 @@
   // ---------------------------------------------------------------------------
 
   function initCopyBibtex() {
-    qsa('.copy-bibtex').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        // Find the BibTeX content; could be a sibling or nearby element
-        const bibtexEl =
-          btn.closest('.bibtex-entry') ||
-          btn.nextElementSibling ||
-          qs('#bibtex-content');
+    var copyBtn = qs('#copy-bibtex');
+    if (!copyBtn) return;
 
-        let text = '';
-        if (bibtexEl) {
-          if (bibtexEl.tagName === 'TEXTAREA' || bibtexEl.tagName === 'INPUT') {
-            text = bibtexEl.value;
-          } else {
-            text = bibtexEl.textContent.trim();
+    copyBtn.addEventListener('click', function (e) {
+      e.preventDefault();
+      var bibtexEl = qs('#bibtex-content');
+      if (!bibtexEl) return;
+
+      var text = bibtexEl.textContent.trim();
+      navigator.clipboard
+        .writeText(text)
+        .then(function () {
+          var original = copyBtn.textContent;
+          copyBtn.textContent = 'Copied!';
+          copyBtn.classList.add('copied');
+          setTimeout(function () {
+            copyBtn.textContent = original;
+            copyBtn.classList.remove('copied');
+          }, 2000);
+        })
+        .catch(function () {
+          // Fallback for older browsers
+          var textarea = document.createElement('textarea');
+          textarea.value = text;
+          textarea.style.position = 'fixed';
+          textarea.style.opacity = '0';
+          document.body.appendChild(textarea);
+          textarea.select();
+          try {
+            document.execCommand('copy');
+            var original = copyBtn.textContent;
+            copyBtn.textContent = 'Copied!';
+            setTimeout(function () {
+              copyBtn.textContent = original;
+            }, 2000);
+          } catch (err) {
+            console.error('[ARIA] Clipboard copy failed', err);
           }
-        } else {
-          // Fallback: use data attribute
-          text = btn.getAttribute('data-bibtex') || '';
-        }
-
-        if (!text) {
-          console.warn('[ARIA] No BibTeX content found for copy button');
-          return;
-        }
-
-        // Copy to clipboard
-        navigator.clipboard
-          .writeText(text)
-          .then(function () {
-            showCopyToast(btn);
-          })
-          .catch(function () {
-            // Fallback for older browsers
-            const textarea = document.createElement('textarea');
-            textarea.value = text;
-            textarea.style.position = 'fixed';
-            textarea.style.opacity = '0';
-            document.body.appendChild(textarea);
-            textarea.select();
-            try {
-              document.execCommand('copy');
-              showCopyToast(btn);
-            } catch (err) {
-              console.error('[ARIA] Clipboard copy failed', err);
-            }
-            document.body.removeChild(textarea);
-          });
-      });
+          document.body.removeChild(textarea);
+        });
     });
   }
 
-  /**
-   * Show a brief "Copied!" toast on a button.
-   * @param {Element} btn
-   */
-  function showCopyToast(btn) {
-    const original = btn.textContent;
-    btn.textContent = 'Copied!';
-    btn.classList.add('copied');
-    setTimeout(function () {
-      btn.textContent = original;
-      btn.classList.remove('copied');
-    }, 2000);
-  }
-
   // ---------------------------------------------------------------------------
-  // 6. Math rendering (KaTeX fallback)
+  // 6. Math rendering (KaTeX)
   // ---------------------------------------------------------------------------
 
   function initMathRendering() {
-    // If Distill's built-in math rendering is present, skip
-    if (qs('d-math') || qs('script[type="math/tex"]')) return;
-
-    // Check if KaTeX is available
     if (typeof katex === 'undefined') return;
 
-    // Render block-level math ($$...$$)
-    qsa('d-article, article, .post-body').forEach(function (container) {
+    qsa('main, .main-content, .tile__content').forEach(function (container) {
       if (!container) return;
 
-      const html = container.innerHTML;
+      var html = container.innerHTML;
 
-      // Match $$...$$ blocks (including multiline)
-      const rendered = html.replace(/\$\$([\s\S]*?)\$\$/g, function (match, tex) {
+      // Block math: $$...$$
+      var rendered = html.replace(/\$\$([\s\S]*?)\$\$/g, function (match, tex) {
         try {
           return (
             '<span class="katex-display">' +
@@ -565,8 +385,8 @@
         }
       });
 
-      // Match inline $...$
-      const finalHtml = rendered.replace(/\$([^\$]+?)\$/g, function (match, tex) {
+      // Inline math: $...$
+      var finalHtml = rendered.replace(/\$([^\$]+?)\$/g, function (match, tex) {
         try {
           return katex.renderToString(tex.trim(), {
             displayMode: false,
@@ -589,63 +409,51 @@
   // ---------------------------------------------------------------------------
 
   function initMobileMenu() {
-    const menuBtn = qs('.mobile-menu-btn') || qs('.hamburger');
-    const mobileNav = qs('.mobile-nav') || qs('.d-toc');
+    var menuBtn = qs('.global-nav__hamburger');
+    var subNavLinks = qs('.sub-nav__links');
 
-    if (!menuBtn || !mobileNav) return;
+    if (!menuBtn) return;
 
     menuBtn.addEventListener('click', function () {
-      mobileNav.classList.toggle('open');
-      menuBtn.classList.toggle('active');
-      // Toggle aria-expanded for accessibility
-      const expanded = menuBtn.getAttribute('aria-expanded') === 'true';
+      var expanded = menuBtn.getAttribute('aria-expanded') === 'true';
       menuBtn.setAttribute('aria-expanded', String(!expanded));
-    });
 
-    // Close menu when clicking outside
-    document.addEventListener('click', function (e) {
-      if (!mobileNav.contains(e.target) && !menuBtn.contains(e.target)) {
-        mobileNav.classList.remove('open');
-        menuBtn.classList.remove('active');
-        menuBtn.setAttribute('aria-expanded', 'false');
-      }
-    });
-
-    // Close on escape
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && mobileNav.classList.contains('open')) {
-        mobileNav.classList.remove('open');
-        menuBtn.classList.remove('active');
-        menuBtn.setAttribute('aria-expanded', 'false');
-        menuBtn.focus();
+      if (subNavLinks) {
+        subNavLinks.style.display = subNavLinks.style.display === 'flex' ? 'none' : 'flex';
+        subNavLinks.style.flexDirection = 'column';
+        subNavLinks.style.position = 'absolute';
+        subNavLinks.style.top = '100%';
+        subNavLinks.style.left = '0';
+        subNavLinks.style.right = '0';
+        subNavLinks.style.background = 'var(--apple-parchment)';
+        subNavLinks.style.padding = '12px';
+        subNavLinks.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
       }
     });
   }
 
   // ---------------------------------------------------------------------------
-  // 8. Smooth scroll behavior & header offset
+  // 8. Smooth scroll with header offset
   // ---------------------------------------------------------------------------
 
   function initSmoothScroll() {
-    // Enable smooth scrolling on the html element
     document.documentElement.style.scrollBehavior = 'smooth';
 
-    // Intercept anchor clicks to apply header offset
     document.addEventListener('click', function (e) {
-      const anchor = e.target.closest('a[href^="#"]');
+      var anchor = e.target.closest('a[href^="#"]');
       if (!anchor) return;
 
-      const targetId = anchor.getAttribute('href').slice(1);
+      var targetId = anchor.getAttribute('href').slice(1);
       if (!targetId) return;
 
-      const targetEl = document.getElementById(targetId);
+      var targetEl = document.getElementById(targetId);
       if (!targetEl) return;
 
       e.preventDefault();
 
-      const headerOffset = 80; // matches sticky header height
-      const y =
-        targetEl.getBoundingClientRect().top + window.pageYOffset - headerOffset;
+      // Header offset = 52px (sub-nav only)
+      var headerOffset = 52;
+      var y = targetEl.getBoundingClientRect().top + window.pageYOffset - headerOffset;
 
       window.scrollTo({ top: y, behavior: 'smooth' });
 
@@ -655,75 +463,89 @@
   }
 
   // ---------------------------------------------------------------------------
-  // Boot sequence
+  // 9. Results table toggle
   // ---------------------------------------------------------------------------
 
-  async function boot() {
-    // 1. Scroll animations (no async dependencies)
-    try {
-      initScrollAnimations();
-    } catch (err) {
-      console.error('[ARIA] Scroll animations init failed', err);
-    }
+  function initResultsToggle() {
+    var btn = qs('#results-toggle-btn');
+    var container = qs('#results-table-container');
+    if (!btn || !container) return;
 
-    // 2. Sticky TOC
-    try {
-      initTOC();
-    } catch (err) {
-      console.error('[ARIA] TOC init failed', err);
-    }
-
-    // 3. Collapsible sections
-    try {
-      initCollapsibles();
-    } catch (err) {
-      console.error('[ARIA] Collapsibles init failed', err);
-    }
-
-    // 4. Interactive figures (async - loads data)
-    try {
-      await initInteractiveFigures();
-    } catch (err) {
-      console.error('[ARIA] Interactive figures init failed', err);
-    }
-
-    // 5. Copy BibTeX
-    try {
-      initCopyBibtex();
-    } catch (err) {
-      console.error('[ARIA] Copy BibTeX init failed', err);
-    }
-
-    // 6. Math rendering
-    try {
-      initMathRendering();
-    } catch (err) {
-      console.error('[ARIA] Math rendering init failed', err);
-    }
-
-    // 7. Mobile menu
-    try {
-      initMobileMenu();
-    } catch (err) {
-      console.error('[ARIA] Mobile menu init failed', err);
-    }
-
-    // 8. Smooth scroll
-    try {
-      initSmoothScroll();
-    } catch (err) {
-      console.error('[ARIA] Smooth scroll init failed', err);
-    }
+    btn.addEventListener('click', function () {
+      var isOpen = container.classList.toggle('open');
+      btn.classList.toggle('open', isOpen);
+      btn.setAttribute('aria-expanded', String(isOpen));
+    });
   }
 
   // ---------------------------------------------------------------------------
-  // DOMContentLoaded
+  // Boot sequence
   // ---------------------------------------------------------------------------
+
+
+  // Local helper: render only block + inline math in a single root.
+  function renderMathIn(root) {
+    if (typeof katex === 'undefined' || !root) return;
+    var html = root.innerHTML;
+    var rendered = html.replace(/\$\$([\s\S]*?)\$\$/g, function (m, tex) {
+      try { return '<span class="katex-display">' + katex.renderToString(tex.trim(), {displayMode:true, throwOnError:false}) + '</span>'; }
+      catch (e) { return m; }
+    });
+    var finalHtml = rendered.replace(/\$([^\$]+?)\$/g, function (m, tex) {
+      try { return katex.renderToString(tex.trim(), {displayMode:false, throwOnError:false}); }
+      catch (e) { return m; }
+    });
+    if (finalHtml !== html) root.innerHTML = finalHtml;
+  }
+
+  async function boot() {
+    // ARIA style-lift: trigger hero entrance + mesh tab-pause + reduced-motion / touch detection
+    try {
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          document.body.classList.add('hero-ready');
+        });
+      });
+      document.addEventListener('visibilitychange', function () {
+        document.querySelectorAll('.mesh').forEach(function (m) {
+          if (document.hidden) m.classList.add('is-paused');
+          else m.classList.remove('is-paused');
+        });
+      });
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        document.body.classList.add('no-motion');
+      }
+      if (window.matchMedia('(hover: none)').matches) {
+        document.body.classList.add('no-spotlight');
+      }
+      console.log('[ARIA] site init complete');
+    } catch (err) { console.error('[ARIA] style-lift init failed', err); }
+
+    try { initScrollAnimations(); } catch (err) { console.error('[ARIA] Scroll animations init failed', err); }
+    try { initSubNavHighlighting(); } catch (err) { console.error('[ARIA] Sub-nav highlighting failed', err); }
+    try { initCollapsibles(); } catch (err) { console.error('[ARIA] Collapsibles init failed', err); }
+    try { initCopyBibtex(); } catch (err) { console.error('[ARIA] Copy BibTeX init failed', err); }
+    try { initMobileMenu(); } catch (err) { console.error('[ARIA] Mobile menu init failed', err); }
+    try { initSmoothScroll(); } catch (err) { console.error('[ARIA] Smooth scroll init failed', err); }
+    try { initMathRendering(); } catch (err) { console.error('[ARIA] Math rendering init failed', err); }
+    try { await initInteractiveFigures(); } catch (err) { console.error('[ARIA] Interactive figures init failed', err); }
+    try { initResultsToggle(); } catch (err) { console.error('[ARIA] Results toggle init failed', err); }
+    try { if (window.ARIA && window.ARIA.figureViewer) window.ARIA.figureViewer.init(); } catch (err) { console.error('[ARIA] Figure viewer init failed', err); }
+    try { if (window.ARIA && window.ARIA.mainTable) window.ARIA.mainTable.init(); } catch (err) { console.error('[ARIA] Main table init failed', err); }
+    // Re-render math inside JS-injected sections (main-table, figure hotspots, etc.)
+    try {
+      ['#mt-table-host','#mt-column-charts','#mt-stat-tests','#mt-tier-donut'].forEach(function (sel) {
+        var root = qs(sel);
+        if (root && !root.querySelector('.katex')) {
+          try { renderMathIn(root); } catch (e) {}
+        }
+      });
+    } catch (err) { /* noop */ }
+  }
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', boot);
   } else {
-    // DOM already ready (script loaded with defer or at end of body)
     boot();
   }
 })();

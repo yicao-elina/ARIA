@@ -24,26 +24,29 @@ class TierRouter {
     this.animationTimers = [];
     this.isRunning = false;
 
-    // Color palette (JHU-inspired)
-    this.colors = {
-      tier1: '#1E88E5',
-      tier2: '#FFC107',
-      tier3: '#9E9E9E',
-      processing: '#1565C0',
-      structure: '#E65100',
-      property: '#2E7D32',
-      successGreen: '#43A047',
-      warningAmber: '#FFA000',
-      insufficientGrey: '#9E9E9E',
-      bgDark: '#0A1929',
-      bgCard: '#112240',
-      bgCardHover: '#1A3050',
-      border: '#1D3557',
-      textPrimary: '#E6F1FF',
-      textSecondary: '#8892B0',
-      textMuted: '#5A6A8A',
-      accentBlue: '#64FFDA',
-    };
+    // Color palette from Apple design theme
+    this.colors = ARIA.theme.getColors(this.container);
+    // Dark tile overrides (tier-router lives in a dark tile)
+    const c = this.colors;
+    this.colors = Object.assign({}, c, {
+      tier1:       c.tier1,
+      tier2:       c.tier2,
+      tier3:       c.tier3,
+      processing:  c.tier1,
+      structure:   c.warning,
+      property:    c.success,
+      successGreen: c.success,
+      warningAmber: c.warning,
+      insufficientGrey: c.tier3,
+      bgDark:      c.surfaceTile1,
+      bgCard:      c.surfaceTile2,
+      bgCardHover: c.surfaceTile3,
+      border:      c.border,
+      textPrimary: c.text,
+      textSecondary: c.textMuted,
+      textMuted:   c.textMuted,
+      accentBlue:  c.accent,
+    });
 
     this.stepDefs = [
       { num: 1, label: 'Entity Extraction', icon: 'search' },
@@ -61,7 +64,7 @@ class TierRouter {
 
   async _loadData() {
     try {
-      const resp = await fetch('../data/example_queries.json');
+      const resp = await fetch('assets/data/example_queries.json');
       const data = await resp.json();
       this.queries = data.queries || [];
     } catch (err) {
@@ -78,7 +81,7 @@ class TierRouter {
         query: 'What is the carrier mobility of CVD-grown MoS₂ at 750°C?',
         tier: 1,
         tier_name: 'Direct Causal Path Reasoning',
-        tier_color: '#1E88E5',
+        tier_color: this.colors.tier1,
         confidence: 0.90,
         confidence_label: 'HIGH',
         explanation: 'Complete PSP chain found in the knowledge graph: CVD temperature 750°C → crystallinity → carrier mobility. All evidence is verified and causally connected.',
@@ -110,7 +113,7 @@ class TierRouter {
         query: 'Predict the bandgap of MoSe₂ synthesized by CVD.',
         tier: 2,
         tier_name: 'Analogical Mechanism Transfer',
-        tier_color: '#FFC107',
+        tier_color: this.colors.tier2,
         confidence: 0.72,
         confidence_label: 'MEDIUM',
         explanation: 'No complete PSP chain for MoSe₂ in the KG. ARIA finds MoS₂ as a structural analog (same 2H hexagonal phase) and transfers the mechanistic reasoning with physical constraint validation.',
@@ -147,7 +150,7 @@ class TierRouter {
         query: 'Design a transparent conductor better than ITO for flexible electronics.',
         tier: 3,
         tier_name: 'Parametric Fallback',
-        tier_color: '#9E9E9E',
+        tier_color: this.colors.tier3,
         confidence: 0.52,
         confidence_label: 'LOW',
         explanation: 'The KG contains no complete PSP paths, analogical materials, or sufficient evidence for this inverse design task. ARIA honestly flags the output as speculative and relies solely on parametric knowledge.',
@@ -238,26 +241,27 @@ class TierRouter {
     if (document.getElementById('tr-styles')) return;
     const style = document.createElement('style');
     style.id = 'tr-styles';
+    const c = this.colors;
     style.textContent = `
 .tr-root {
-  --tr-tier1: #1E88E5;
-  --tr-tier2: #FFC107;
-  --tr-tier3: #9E9E9E;
-  --tr-bg-dark: #0A1929;
-  --tr-bg-card: #112240;
-  --tr-bg-card-hover: #1A3050;
-  --tr-border: #1D3557;
-  --tr-text-primary: #E6F1FF;
-  --tr-text-secondary: #8892B0;
-  --tr-text-muted: #5A6A8A;
-  --tr-accent: #64FFDA;
-  --tr-success: #43A047;
-  --tr-warning: #FFA000;
-  --tr-processing: #1565C0;
-  --tr-structure: #E65100;
-  --tr-property: #2E7D32;
+  --tr-tier1: ${c.tier1};
+  --tr-tier2: ${c.tier2};
+  --tr-tier3: ${c.tier3};
+  --tr-bg-dark: ${c.bgDark};
+  --tr-bg-card: ${c.bgCard};
+  --tr-bg-card-hover: ${c.bgCardHover};
+  --tr-border: ${c.border};
+  --tr-text-primary: ${c.textPrimary};
+  --tr-text-secondary: ${c.textSecondary};
+  --tr-text-muted: ${c.textMuted};
+  --tr-accent: ${c.accentBlue};
+  --tr-success: ${c.successGreen};
+  --tr-warning: ${c.warningAmber};
+  --tr-processing: ${c.processing};
+  --tr-structure: ${c.structure};
+  --tr-property: ${c.property};
 
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: ${ARIA.theme.fontStack};
   color: var(--tr-text-primary);
   background: var(--tr-bg-dark);
   border-radius: 12px;
@@ -308,7 +312,7 @@ class TierRouter {
 .tr-step-circle.active {
   border-color: var(--tr-accent);
   color: var(--tr-accent);
-  box-shadow: 0 0 12px rgba(100, 255, 218, 0.3);
+  box-shadow: 0 0 12px rgba(41, 151, 255, 0.3);
   animation: tr-pulse 1.5s ease-in-out infinite;
 }
 
@@ -352,8 +356,8 @@ class TierRouter {
 }
 
 @keyframes tr-pulse {
-  0%, 100% { box-shadow: 0 0 12px rgba(100, 255, 218, 0.3); }
-  50% { box-shadow: 0 0 24px rgba(100, 255, 218, 0.6); }
+  0%, 100% { box-shadow: 0 0 12px rgba(41, 151, 255, 0.3); }
+  50% { box-shadow: 0 0 24px rgba(41, 151, 255, 0.6); }
 }
 
 /* ---- Main Content ---- */
@@ -394,7 +398,7 @@ class TierRouter {
 
 .tr-input-field:focus {
   border-color: var(--tr-accent);
-  box-shadow: 0 0 0 3px rgba(100, 255, 218, 0.1);
+  box-shadow: 0 0 0 3px rgba(41, 151, 255, 0.1);
 }
 
 .tr-input-field::placeholder {
@@ -403,7 +407,7 @@ class TierRouter {
 
 .tr-run-btn {
   padding: 12px 20px;
-  background: linear-gradient(135deg, #1565C0, #1E88E5);
+  background: linear-gradient(135deg, var(--tr-processing), var(--tr-tier1));
   border: none;
   border-radius: 8px;
   color: #fff;
@@ -416,7 +420,7 @@ class TierRouter {
 
 .tr-run-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(30, 136, 229, 0.4);
+  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.4);
 }
 
 .tr-run-btn:active {
@@ -503,7 +507,7 @@ class TierRouter {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: rgba(100, 255, 218, 0.15);
+  background: rgba(41, 151, 255, 0.15);
   color: var(--tr-accent);
   font-size: 11px;
   font-weight: 700;
@@ -513,7 +517,7 @@ class TierRouter {
 .tr-entity-highlight {
   color: var(--tr-accent);
   font-weight: 700;
-  border-bottom: 2px solid rgba(100, 255, 218, 0.4);
+  border-bottom: 2px solid rgba(41, 151, 255, 0.4);
   padding: 0 2px;
 }
 
@@ -590,13 +594,13 @@ class TierRouter {
 }
 
 .tr-completeness-bar-fill.green {
-  background: linear-gradient(90deg, #2E7D32, #43A047);
+  background: linear-gradient(90deg, var(--tr-property), var(--tr-success));
 }
 .tr-completeness-bar-fill.amber {
-  background: linear-gradient(90deg, #E65100, #FFA000);
+  background: linear-gradient(90deg, var(--tr-structure), var(--tr-warning));
 }
 .tr-completeness-bar-fill.grey {
-  background: linear-gradient(90deg, #424242, #757575);
+  background: linear-gradient(90deg, var(--tr-tier3), var(--tr-text-muted));
 }
 
 .tr-completeness-label {
@@ -618,37 +622,37 @@ class TierRouter {
 }
 
 .tr-tier-badge.t1 {
-  background: rgba(30, 136, 229, 0.15);
+  background: var(--tr-tier1-bg);
   border: 2px solid var(--tr-tier1);
   color: var(--tr-tier1);
   animation: tr-badge-pulse-t1 1.2s ease-in-out 3;
 }
 
 .tr-tier-badge.t2 {
-  background: rgba(255, 193, 7, 0.15);
+  background: var(--tr-tier2-bg);
   border: 2px solid var(--tr-tier2);
   color: var(--tr-tier2);
   animation: tr-badge-pulse-t2 1.2s ease-in-out 3;
 }
 
 .tr-tier-badge.t3 {
-  background: rgba(158, 158, 158, 0.15);
+  background: var(--tr-tier3-bg);
   border: 2px solid var(--tr-tier3);
   color: var(--tr-text-secondary);
   animation: tr-badge-pulse-t3 1.2s ease-in-out 3;
 }
 
 @keyframes tr-badge-pulse-t1 {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(30, 136, 229, 0.4); }
-  50% { box-shadow: 0 0 20px 4px rgba(30, 136, 229, 0.3); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 102, 204, 0.4); }
+  50% { box-shadow: 0 0 20px 4px rgba(0, 102, 204, 0.3); }
 }
 @keyframes tr-badge-pulse-t2 {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.4); }
-  50% { box-shadow: 0 0 20px 4px rgba(255, 193, 7, 0.3); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(201, 147, 10, 0.4); }
+  50% { box-shadow: 0 0 20px 4px rgba(201, 147, 10, 0.3); }
 }
 @keyframes tr-badge-pulse-t3 {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(158, 158, 158, 0.4); }
-  50% { box-shadow: 0 0 20px 4px rgba(158, 158, 158, 0.3); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(134, 134, 139, 0.4); }
+  50% { box-shadow: 0 0 20px 4px rgba(134, 134, 139, 0.3); }
 }
 
 .tr-confidence-score {
@@ -725,21 +729,21 @@ class TierRouter {
 }
 
 .tr-psp-node.processing {
-  background: rgba(21, 101, 192, 0.2);
+  background: rgba(var(--tr-tier1-rgb, 0, 102, 204), 0.2);
   border: 1px solid var(--tr-processing);
-  color: #90CAF9;
+  color: var(--tr-text-primary);
 }
 
 .tr-psp-node.structure {
-  background: rgba(230, 81, 0, 0.2);
+  background: rgba(var(--tr-structure-rgb, 201, 147, 10), 0.2);
   border: 1px solid var(--tr-structure);
-  color: #FFCC80;
+  color: var(--tr-text-primary);
 }
 
 .tr-psp-node.property {
-  background: rgba(46, 125, 50, 0.2);
+  background: rgba(var(--tr-property-rgb, 52, 199, 89), 0.2);
   border: 1px solid var(--tr-property);
-  color: #A5D6A7;
+  color: var(--tr-text-primary);
 }
 
 .tr-psp-edge {
@@ -792,7 +796,7 @@ class TierRouter {
 }
 
 .tr-constraint-icon.fail {
-  color: #EF5350;
+  color: #ff3b30;
   font-weight: 700;
 }
 
@@ -832,7 +836,8 @@ class TierRouter {
 }
 
 .tr-comparison-card.overconfident {
-  border-top: 3px solid #EF5350;
+  border-top: 3px solid var(--tr-accent);
+  border-top-color: #ff3b30;
 }
 
 .tr-comparison-card.calibrated {
@@ -848,7 +853,7 @@ class TierRouter {
 }
 
 .tr-comparison-card.overconfident .tr-comparison-label {
-  color: #EF5350;
+  color: #ff3b30;
 }
 
 .tr-comparison-card.calibrated .tr-comparison-label {
@@ -1104,7 +1109,7 @@ class TierRouter {
       .append('rect')
       .attr('width', width)
       .attr('height', height)
-      .attr('fill', '#0A1929')
+      .attr('fill', this.colors.bgDark)
       .attr('rx', 8);
 
     // Node data
@@ -1114,7 +1119,7 @@ class TierRouter {
       { id: 'target', label: this._shortenLabel(path.target), layer: 'P', x: 260, y: 100 },
     ];
 
-    const layerColors = { P: '#1565C0', S: '#E65100', X: '#2E7D32' };
+    const layerColors = { P: this.colors.processing, S: this.colors.structure, X: this.colors.property };
     // Property nodes also get green
     if (path.path_type && path.path_type.includes('S→P')) {
       nodes[2].layer = 'X'; // Property output node
@@ -1170,7 +1175,7 @@ class TierRouter {
         .attr('y1', s.y)
         .attr('x2', t.x)
         .attr('y2', t.y)
-        .attr('stroke', e.dashed ? '#FFC107' : '#5A6A8A')
+        .attr('stroke', e.dashed ? this.colors.tier2 : this.colors.textMuted)
         .attr('stroke-opacity', 0);
 
       // Animate edge
@@ -1200,7 +1205,7 @@ class TierRouter {
 
     // Draw nodes (on top of edges)
     nodes.forEach((n, i) => {
-      const color = layerColors[n.layer] || '#1565C0';
+      const color = layerColors[n.layer] || this.colors.processing;
       const g = svg.append('g');
 
       // Circle
@@ -1255,7 +1260,7 @@ class TierRouter {
       .attr('y', height - 12)
       .attr('text-anchor', 'middle')
       .attr('font-size', '10px')
-      .attr('fill', '#5A6A8A')
+      .attr('fill', this.colors.textMuted)
       .attr('opacity', 0)
       .text(`Path type: ${path.path_type}`)
       .transition()
@@ -1550,7 +1555,7 @@ class TierRouter {
 
     const flag = this._el('div');
     flag.style.cssText =
-      'display:flex;align-items:center;gap:8px;font-size:14px;color:#EF5350;margin-bottom:8px;';
+      'display:flex;align-items:center;gap:8px;font-size:14px;color:#ff3b30;margin-bottom:8px;';
     flag.innerHTML = '<span style="font-size:18px">⚠</span> <strong>High Uncertainty</strong> — No causal evidence available';
     section.appendChild(flag);
 
@@ -1578,7 +1583,7 @@ class TierRouter {
     naiveLabel.textContent = 'Naive KG (Overconfident)';
     naive.appendChild(naiveLabel);
     const naiveConf = this._el('div', 'tr-comparison-conf');
-    naiveConf.style.color = '#EF5350';
+    naiveConf.style.color = this.colors.danger;
     naiveConf.textContent = `${(q.naive_kg_result.confidence * 100).toFixed(0)}%`;
     naive.appendChild(naiveConf);
     const naiveIssue = this._el('div', 'tr-comparison-issue');
@@ -1592,7 +1597,7 @@ class TierRouter {
     ariaLabel.textContent = 'ARIA (Calibrated)';
     aria.appendChild(ariaLabel);
     const ariaConf = this._el('div', 'tr-comparison-conf');
-    ariaConf.style.color = '#43A047';
+    ariaConf.style.color = this.colors.successGreen;
     ariaConf.textContent = `${(q.confidence * 100).toFixed(0)}%`;
     aria.appendChild(ariaConf);
     const ariaIssue = this._el('div', 'tr-comparison-issue');
@@ -1619,7 +1624,7 @@ class TierRouter {
       query: queryText,
       tier: 3,
       tier_name: 'Parametric Fallback',
-      tier_color: '#9E9E9E',
+      tier_color: this.colors.tier3,
       confidence: 0.45,
       confidence_label: 'LOW',
       explanation: `No complete PSP paths, analogical materials, or sufficient evidence found for this query. ARIA honestly flags the output as speculative.`,

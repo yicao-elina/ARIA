@@ -1,0 +1,173 @@
+/* ============================================================
+   Mesh Gradient Backdrop
+   Two variants: .mesh--page (body-level, fixed) and .mesh--hero
+   (scrolling with a section). Both render the same dual-blob
+   radial-gradient drift animation. Token references assumed to
+   exist on :root (--mint, --pearl, --ease-out-expo, --ease-spring).
+   ============================================================ */
+
+/* ---------- Page-level mesh (fixed, behind everything) ---------- */
+
+.mesh--page {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+  background: var(--pearl, #fafafc);
+}
+
+.mesh--page::before,
+.mesh--page::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  will-change: transform;
+}
+
+.mesh--page::before {
+  top: -10%;
+  left: -10%;
+  width: 60vw;
+  height: 60vw;
+  background: radial-gradient(circle, rgba(73, 191, 157, 0.14) 0%, rgba(73, 191, 157, 0) 70%);
+  animation: mesh-drift-a 32s ease-in-out infinite alternate;
+}
+
+.mesh--page::after {
+  bottom: -15%;
+  right: -15%;
+  width: 70vw;
+  height: 70vw;
+  background: radial-gradient(circle, rgba(245, 185, 66, 0.12) 0%, rgba(245, 185, 66, 0) 70%);
+  filter: blur(100px);
+  animation: mesh-drift-b 40s ease-in-out infinite alternate;
+}
+
+/* ---------- Hero-local mesh (scrolls with its section) ---------- */
+
+.mesh--hero {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  background: transparent;
+}
+
+.mesh--hero::before,
+.mesh--hero::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  will-change: transform;
+}
+
+.mesh--hero::before {
+  top: -10%;
+  left: -10%;
+  width: 60vw;
+  height: 60vw;
+  background: radial-gradient(circle, rgba(73, 191, 157, 0.14) 0%, rgba(73, 191, 157, 0) 70%);
+  animation: mesh-drift-a 32s ease-in-out infinite alternate;
+}
+
+.mesh--hero::after {
+  bottom: -15%;
+  right: -15%;
+  width: 70vw;
+  height: 70vw;
+  background: radial-gradient(circle, rgba(245, 185, 66, 0.12) 0%, rgba(245, 185, 66, 0) 70%);
+  filter: blur(100px);
+  animation: mesh-drift-b 40s ease-in-out infinite alternate;
+}
+
+/* ---------- Keyframes (shared by both variants) ---------- */
+
+@keyframes mesh-drift-a {
+  from { transform: translate(0, 0); }
+  to   { transform: translate(40px, 20px); }
+}
+
+@keyframes mesh-drift-b {
+  from { transform: translate(0, 0); }
+  to   { transform: translate(-50px, 30px); }
+}
+
+/* ---------- Pause animation when tab is hidden ---------- */
+
+.mesh--page.is-paused::before,
+.mesh--page.is-paused::after,
+.mesh--hero.is-paused::before,
+.mesh--hero.is-paused::after {
+  animation-play-state: paused;
+}
+
+/* ---------- Reduced motion: CSS-native media query ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .mesh--page::before,
+  .mesh--page::after,
+  .mesh--hero::before,
+  .mesh--hero::after {
+    animation: none;
+  }
+}
+
+/* ---------- Reduced motion: JS-driven fallback (body.no-motion) ---------- */
+
+body.no-motion .mesh--page::before,
+body.no-motion .mesh--page::after,
+body.no-motion .mesh--hero::before,
+body.no-motion .mesh--hero::after {
+  animation: none;
+}
+
+/* ---------- Browser fallback (no backdrop-filter support) ---------- */
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .mesh--page::before,
+  .mesh--page::after,
+  .mesh--hero::before,
+  .mesh--hero::after {
+    display: none;
+  }
+}
+
+/* ============================================================
+   Reveal-on-scroll entrance
+   Paired with assets/js/reveal.js. Elements marked .reveal
+   start hidden and translate down 24px; .is-visible settles
+   them. Uses --ease-out-expo when defined.
+   ============================================================ */
+
+.reveal {
+  opacity: 0;
+  translate: 0 24px;
+  transition:
+    opacity 700ms var(--ease-out-expo, cubic-bezier(.16, 1, .3, 1)),
+    translate 800ms var(--ease-out-expo, cubic-bezier(.16, 1, .3, 1));
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  translate: 0 0;
+}
+
+/* Reduced motion: native media query */
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .reveal.is-visible {
+    opacity: 1;
+    translate: 0 0;
+    transition: none;
+  }
+}
+
+/* Reduced motion: JS-driven fallback (body.no-motion) */
+body.no-motion .reveal {
+  opacity: 1;
+  translate: 0 0;
+}

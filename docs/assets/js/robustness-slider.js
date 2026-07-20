@@ -1,7 +1,7 @@
 /**
  * RobustnessSlider — Interactive edge-deletion robustness visualization.
  *
- * Loads data from '../data/benchmark_results.json' (robustness section),
+ * Loads data from 'assets/data/benchmark_results.json' (robustness section),
  * falls back to built-in defaults.
  *
  * Exposes global class: RobustnessSlider
@@ -9,20 +9,7 @@
 (function () {
   'use strict';
 
-  /* ── colour palette ─────────────────────────────────────────────── */
-  const COLORS = {
-    jhuBlue:   '#002D72',
-    accent:    '#E8600A',
-    ariaFull:  '#002D72',
-    ariaCore:  '#5B9BD5',
-    baseline:  '#9E9E9E',
-    naiveKG:   '#E53935',
-    gridLine:  '#E0E0E0',
-    text:      '#333333',
-    labelGrey: '#666666',
-    trackBg:   '#E0E0E0',
-    sliderBg:  '#002D72',
-  };
+  /* ── colour palette loaded per-instance from ARIA.theme ──────────── */
 
   /* ── default robustness data ──────────────────────────────────────── */
   const DEFAULT_ROBUSTNESS = {
@@ -35,12 +22,7 @@
     },
   };
 
-  const METHOD_STYLES = {
-    'ARIA-FULL': { color: COLORS.ariaFull,  width: 3.5, dash: null,       label: 'ARIA-FULL' },
-    'ARIA-CORE': { color: COLORS.ariaCore,  width: 2.5, dash: null,       label: 'ARIA-CORE' },
-    'Baseline':  { color: COLORS.baseline,  width: 2,   dash: '6 3',      label: 'Baseline' },
-    'Naive KG':  { color: COLORS.naiveKG,   width: 2,   dash: null,       label: 'Naive KG' },
-  };
+  /* this.METHOD_STYLES will be built per-instance from theme colors in constructor */
 
   /* ── explanatory text at different deletion levels ────────────────── */
   const EXPLANATIONS = [
@@ -83,7 +65,15 @@
      */
     constructor(selector, opts = {}) {
       this.container = d3.select(selector);
-      this.dataPath = opts.dataPath || '../data/benchmark_results.json';
+      this.colors = ARIA.theme.getColors(this.container.node());
+      const c = this.colors;
+      this.METHOD_STYLES = {
+        'ARIA-FULL': { color: c.primary,       width: 3.5, dash: null,    label: 'ARIA-FULL' },
+        'ARIA-CORE': { color: c.primaryFocus,  width: 2.5, dash: null,    label: 'ARIA-CORE' },
+        'Baseline':  { color: c.inkMuted48,     width: 2,   dash: '6 3',   label: 'Baseline' },
+        'Naive KG':  { color: c.danger,         width: 2,   dash: null,    label: 'Naive KG' },
+      };
+      this.dataPath = opts.dataPath || 'assets/data/benchmark_results.json';
       this.currentDeletion = opts.initialDeletion || 0;
       this.data = null;
       this._loadData().then(() => this._build());
@@ -105,7 +95,7 @@
 
       this.root = this.container.append('div')
         .attr('class', 'robustness-slider-root')
-        .style('font-family', "'Inter', 'Helvetica Neue', Arial, sans-serif")
+        .style('font-family', ARIA.theme.fontStack)
         .style('max-width', '720px')
         .style('margin', '0 auto');
 
@@ -151,7 +141,7 @@
         this.g.append('line')
           .attr('x1', 0).attr('x2', W)
           .attr('y1', y(t)).attr('y2', y(t))
-          .attr('stroke', COLORS.gridLine)
+          .attr('stroke', this.colors.gridLine)
           .attr('stroke-dasharray', '3 3')
           .attr('stroke-width', 0.5);
       });
@@ -161,21 +151,21 @@
         .attr('class', 'x-axis')
         .attr('transform', `translate(0,${H})`)
         .call(d3.axisBottom(x).ticks(9).tickFormat(d => d + '%'))
-        .call(g => g.select('.domain').attr('stroke', COLORS.gridLine))
-        .call(g => g.selectAll('text').attr('fill', COLORS.labelGrey).attr('font-size', 11));
+        .call(g => g.select('.domain').attr('stroke', this.colors.gridLine))
+        .call(g => g.selectAll('text').attr('fill', this.colors.inkMuted80).attr('font-size', 11));
 
       this.g.append('g')
         .attr('class', 'y-axis')
         .call(d3.axisLeft(y).ticks(6).tickFormat(d3.format('.1f')))
         .call(g => g.select('.domain').remove())
-        .call(g => g.selectAll('text').attr('fill', COLORS.labelGrey).attr('font-size', 11));
+        .call(g => g.selectAll('text').attr('fill', this.colors.inkMuted80).attr('font-size', 11));
 
       /* Axis labels */
       this.g.append('text')
         .attr('x', W / 2).attr('y', H + 36)
         .attr('text-anchor', 'middle')
         .attr('font-size', 12)
-        .attr('fill', COLORS.text)
+        .attr('fill', this.colors.ink)
         .text('Edges Deleted (%)');
 
       this.g.append('text')
@@ -183,7 +173,7 @@
         .attr('x', -H / 2).attr('y', -36)
         .attr('text-anchor', 'middle')
         .attr('font-size', 12)
-        .attr('fill', COLORS.text)
+        .attr('fill', this.colors.ink)
         .text('Overall Score');
 
       /* Line group (drawn before vertical line so it's behind) */
@@ -194,7 +184,7 @@
       const methodNames = Object.keys(data.methods);
 
       methodNames.forEach(name => {
-        const style = METHOD_STYLES[name] || { color: '#666', width: 2, dash: null };
+        const style = this.METHOD_STYLES[name] || { color: '#666', width: 2, dash: null };
         const scores = data.methods[name];
         const points = deletionLevels.map((d, i) => [x(d), y(scores[i])]);
 
@@ -230,7 +220,7 @@
       this.g.append('line')
         .attr('x1', annX).attr('x2', annX)
         .attr('y1', H).attr('y2', y(0.58))
-        .attr('stroke', COLORS.accent)
+        .attr('stroke', this.colors.warning)
         .attr('stroke-width', 1)
         .attr('stroke-dasharray', '4 2')
         .attr('opacity', 0.7);
@@ -240,7 +230,7 @@
         .attr('y', y(0.58) - 6)
         .attr('text-anchor', 'middle')
         .attr('font-size', 9)
-        .attr('fill', COLORS.accent)
+        .attr('fill', this.colors.warning)
         .attr('font-weight', 600)
         .text('Tier 2 absorbs')
         .attr('opacity', 0)
@@ -251,7 +241,7 @@
         .attr('y', y(0.58) + 6)
         .attr('text-anchor', 'middle')
         .attr('font-size', 9)
-        .attr('fill', COLORS.accent)
+        .attr('fill', this.colors.warning)
         .attr('font-weight', 600)
         .text('Tier 1 loss up to ~80%')
         .attr('opacity', 0)
@@ -261,7 +251,7 @@
       this._vLine = this.g.append('line')
         .attr('class', 'vline')
         .attr('y1', 0).attr('y2', H)
-        .attr('stroke', COLORS.accent)
+        .attr('stroke', this.colors.warning)
         .attr('stroke-width', 2)
         .attr('stroke-dasharray', '6 3')
         .attr('opacity', 0.8);
@@ -280,7 +270,7 @@
         .style('margin-top', '8px')
         .style('justify-content', 'center');
 
-      Object.entries(METHOD_STYLES).forEach(([name, style]) => {
+      Object.entries(this.METHOD_STYLES).forEach(([name, style]) => {
         const item = legend.append('div')
           .style('display', 'flex')
           .style('align-items', 'center')
@@ -297,7 +287,7 @@
 
         item.append('span')
           .style('font-size', '11px')
-          .style('color', COLORS.labelGrey)
+          .style('color', this.colors.inkMuted80)
           .style('font-weight', style.width > 3 ? 700 : 400)
           .text(style.label);
       });
@@ -313,7 +303,7 @@
         .attr('for', 'robustness-slider')
         .style('font-size', '13px')
         .style('font-weight', 600)
-        .style('color', COLORS.text)
+        .style('color', this.colors.ink)
         .style('display', 'block')
         .style('margin-bottom', '6px')
         .text('Edge Deletion Level:');
@@ -325,7 +315,7 @@
 
       sliderRow.append('span')
         .style('font-size', '12px')
-        .style('color', COLORS.labelGrey)
+        .style('color', this.colors.inkMuted80)
         .text('0%');
 
       this._slider = sliderRow.append('input')
@@ -340,10 +330,10 @@
         .style('appearance', 'none')
         .style('height', '8px')
         .style('border-radius', '4px')
-        .style('background', `linear-gradient(to right, ${COLORS.jhuBlue} 0%, ${COLORS.jhuBlue} ${this.currentDeletion / 0.9}%, ${COLORS.trackBg} ${this.currentDeletion / 0.9}%, ${COLORS.trackBg} 100%)`)
+        .style('background', `linear-gradient(to right, ${this.colors.primary} 0%, ${this.colors.primary} ${this.currentDeletion / 0.9}%, ${this.colors.hairline} ${this.currentDeletion / 0.9}%, ${this.colors.hairline} 100%)`)
         .style('outline', 'none')
         .style('cursor', 'pointer')
-        .style('accent-color', COLORS.jhuBlue);
+        .style('accent-color', this.colors.primary);
 
       /* Custom slider thumb via style injection */
       const thumbStyle = `
@@ -353,7 +343,7 @@
           width: 20px;
           height: 20px;
           border-radius: 50%;
-          background: ${COLORS.jhuBlue};
+          background: ${this.colors.primary};
           border: 3px solid #fff;
           box-shadow: 0 1px 4px rgba(0,0,0,0.25);
           cursor: pointer;
@@ -362,7 +352,7 @@
           width: 20px;
           height: 20px;
           border-radius: 50%;
-          background: ${COLORS.jhuBlue};
+          background: ${this.colors.primary};
           border: 3px solid #fff;
           box-shadow: 0 1px 4px rgba(0,0,0,0.25);
           cursor: pointer;
@@ -375,13 +365,13 @@
       this._sliderLabel = sliderRow.append('span')
         .style('font-size', '13px')
         .style('font-weight', 700)
-        .style('color', COLORS.jhuBlue)
+        .style('color', this.colors.primary)
         .style('min-width', '36px')
         .text(this.currentDeletion + '%');
 
       sliderRow.append('span')
         .style('font-size', '12px')
-        .style('color', COLORS.labelGrey)
+        .style('color', this.colors.inkMuted80)
         .text('90%');
 
       /* Event handler */
@@ -391,7 +381,7 @@
         self.currentDeletion = val;
         self._sliderLabel.text(val + '%');
         self._slider.style('background',
-          `linear-gradient(to right, ${COLORS.jhuBlue} 0%, ${COLORS.jhuBlue} ${val / 0.9}%, ${COLORS.trackBg} ${val / 0.9}%, ${COLORS.trackBg} 100%)`
+          `linear-gradient(to right, ${this.colors.primary} 0%, ${this.colors.primary} ${val / 0.9}%, ${this.colors.hairline} ${val / 0.9}%, ${this.colors.hairline} 100%)`
         );
         self._update(val);
       });
@@ -403,11 +393,11 @@
         .style('margin-top', '12px')
         .style('padding', '12px 16px')
         .style('background', '#f5f7fa')
-        .style('border-left', `4px solid ${COLORS.jhuBlue}`)
+        .style('border-left', `4px solid ${this.colors.primary}`)
         .style('border-radius', '0 6px 6px 0')
         .style('font-size', '13px')
         .style('line-height', '1.6')
-        .style('color', COLORS.text);
+        .style('color', this.colors.ink);
     }
 
     /* ── update on slider change ─────────────────────────────────────── */
@@ -428,7 +418,7 @@
       const dotsData = methodNames.map(name => ({
         name,
         value: interpolateValue(data.deletion_levels, data.methods[name], pct),
-        style: METHOD_STYLES[name],
+        style: this.METHOD_STYLES[name],
       }));
 
       const dots = this._dots.selectAll('circle')
@@ -468,7 +458,7 @@
         .attr('height', dotsData.length * 18 + 10)
         .attr('rx', 4)
         .attr('fill', '#fff')
-        .attr('stroke', COLORS.gridLine)
+        .attr('stroke', this.colors.gridLine)
         .attr('opacity', 0.92);
 
       dotsData.forEach((d, i) => {

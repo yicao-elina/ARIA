@@ -1,0 +1,177 @@
+/* ==========================================================================
+   ARIA — Apple Design Tokens
+
+   All design decisions expressed as CSS custom properties.
+   Based on DESIGN-apple.md — Apple's web presence design system.
+
+   EVERY other CSS file MUST reference these tokens via var(--apple-*)
+   or var(--tier-*). Never inline hex values elsewhere.
+   ========================================================================== */
+
+:root {
+  /* ── Colors: Brand & Accent ── */
+  --apple-primary:            #0066cc;   /* Action Blue — single interactive color */
+  --apple-primary-focus:       #0071e3;   /* Focus ring */
+  --apple-primary-on-dark:     #2997ff;   /* Sky Link Blue — links/buttons on dark tiles */
+  --apple-ink:                 #1d1d1f;   /* Near-black for all text on light surfaces */
+  --apple-body:                #1d1d1f;   /* Same as ink — one near-black for text */
+  --apple-body-on-dark:        #ffffff;   /* White text on dark tiles */
+  --apple-body-muted:          #cccccc;   /* Secondary copy on dark tiles */
+  --apple-ink-muted-80:        #333333;   /* Body on pearl/surface-pearl */
+  --apple-ink-muted-48:        #7a7a7a;   /* Disabled + fine-print */
+  --apple-canvas:              #ffffff;   /* Pure white — primary canvas */
+  --apple-parchment:           #f5f5f7;   /* Off-white alternating canvas */
+  --apple-surface-pearl:       #fafafc;   /* Ghost button fill */
+  --apple-surface-tile-1:     #272729;   /* Primary dark tile */
+  --apple-surface-tile-2:     #2a2a2c;   /* Dark tile micro-step lighter */
+  --apple-surface-tile-3:     #252527;   /* Dark tile micro-step darker */
+  --apple-surface-black:       #000000;   /* True black — nav bar only */
+  --apple-surface-chip:        #d2d2d7;   /* Translucent chip gray (64% alpha in use) */
+  --apple-divider-soft:        #f0f0f0;   /* Soft border on secondary buttons */
+  --apple-hairline:            #e0e0e0;   /* 1px hairline border */
+  --apple-on-primary:          #ffffff;   /* White on Action Blue */
+  --apple-on-dark:             #ffffff;   /* White on dark surfaces */
+
+  /* ── Tier Colors (semantic, derived from Apple palette) ── */
+  --tier-1:                    #0066cc;   /* Tier 1 Direct = Action Blue */
+  --tier-1-bg:                 rgba(0, 102, 204, 0.08);
+  --tier-1-border:             #0066cc;
+  --tier-2:                    #c9930a;   /* Tier 2 Analogical = Warm gold */
+  --tier-2-bg:                 rgba(201, 147, 10, 0.10);
+  --tier-2-border:             #c9930a;
+  --tier-3:                    #86868b;   /* Tier 3 Fallback = Apple grey */
+  --tier-3-bg:                 rgba(134, 134, 139, 0.08);
+  --tier-3-border:             #86868b;
+
+  /* ── Semantic Accents ── */
+  --aria-success:              #34c759;   /* Apple system green */
+  --aria-success-bg:           rgba(52, 199, 89, 0.08);
+  --aria-warning:              #ff9f0a;   /* Apple system orange */
+  --aria-warning-bg:           rgba(255, 159, 10, 0.10);
+  --aria-danger:               #ff3b30;   /* Apple system red */
+  --aria-danger-bg:            rgba(255, 59, 48, 0.08);
+
+  /* ── Typography: Font Families ── */
+  --font-display:  "SF Pro Display", "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body:     "SF Pro Text", "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* ── Typography: Size Scale ── */
+  --text-hero:           56px;
+  --text-display-lg:     40px;
+  --text-display-md:     34px;
+  --text-lead:           28px;
+  --text-lead-airy:      24px;
+  --text-tagline:        21px;
+  --text-body:           17px;
+  --text-body-strong:    17px;
+  --text-dense-link:     17px;
+  --text-caption:        14px;
+  --text-caption-strong: 14px;
+  --text-button-large:   18px;
+  --text-button-utility: 14px;
+  --text-fine-print:     12px;
+  --text-micro-legal:    10px;
+  --text-nav-link:       12px;
+
+  /* ── Typography: Weight ── */
+  --weight-light:     300;
+  --weight-regular:   400;
+  --weight-semibold:  600;
+  --weight-bold:      700;
+
+  /* ── Typography: Line Height ── */
+  --leading-hero:          1.07;
+  --leading-display-lg:   1.10;
+  --leading-display-md:   1.47;
+  --leading-lead:         1.14;
+  --leading-lead-airy:    1.50;
+  --leading-tagline:      1.19;
+  --leading-body:         1.47;
+  --leading-body-strong:  1.24;
+  --leading-dense-link:   2.41;
+  --leading-caption:      1.43;
+  --leading-caption-strong: 1.29;
+  --leading-fine-print:   1.0;
+  --leading-nav-link:     1.0;
+
+  /* ── Typography: Letter Spacing ── */
+  --tracking-hero:         -0.28px;
+  --tracking-display-lg:   0;
+  --tracking-display-md:   -0.374px;
+  --tracking-lead:         0.196px;
+  --tracking-lead-airy:    0;
+  --tracking-tagline:      0.231px;
+  --tracking-body:         -0.374px;
+  --tracking-caption:      -0.224px;
+  --tracking-fine-print:   -0.12px;
+  --tracking-nav-link:     -0.12px;
+
+  /* ── Spacing ── */
+  --sp-xxs:     4px;
+  --sp-xs:      8px;
+  --sp-sm:     12px;
+  --sp-md:     17px;
+  --sp-lg:     24px;
+  --sp-xl:     32px;
+  --sp-xxl:    48px;
+  --sp-section: 80px;
+
+  /* ── Border Radius ── */
+  --radius-none:   0px;
+  --radius-xs:     5px;
+  --radius-sm:     8px;
+  --radius-md:    11px;
+  --radius-lg:   18px;
+  --radius-pill:  9999px;
+  --radius-full:  9999px;
+
+  /* ── Elevation ── */
+  /* Apple uses exactly ONE shadow — for product imagery only */
+  --shadow-product:  0 3px 30px rgba(0, 0, 0, 0.22);
+  /* NO other shadows. Elevation = surface color change. */
+
+  /* ── Layout ── */
+  --content-width:      980px;
+  --content-width-wide: 1440px;
+  --nav-height:         44px;
+  --subnav-height:      52px;
+  --header-offset:      96px;  /* nav-height + subnav-height */
+}
+
+/* ==========================================================================
+   Personal Accent + Glassmorphic Tokens
+
+   The mint system is a PERSONAL accent that lives ALONGSIDE the Apple +
+   tier system. It is the bridge to the yicao-elina personal site aesthetic.
+   All visual rules may reference these tokens by name. Existing --apple-*
+   and --tier-* tokens are NOT replaced — only supplemented.
+   ========================================================================== */
+
+:root {
+  /* ── Mint accent (personal) ── */
+  --mint:              #49bf9d;                       /* Personal accent (links, glass focus rings) */
+  --mint-bright:       #49bf9d;                       /* Brighter mint for hover */
+  --mint-soft:         rgba(73, 191, 157, 0.10);      /* Soft mint wash */
+  --mint-glow:         rgba(73, 191, 157, 0.18);      /* Spotlight glow */
+  --mint-shadow:       rgba(73, 191, 157, 0.20);      /* CTA shadow on hover */
+
+  /* ── Ink / graphite (personal) ── */
+  --ink-deep:          #141e2d;                       /* Deep ink for hero text on light bg */
+  --graphite:          #4a5568;                       /* Graphite for muted nav/header */
+
+  /* ── Pearl & glass (personal) ── */
+  --pearl:             #fafafc;                       /* Pearl — page-level backdrop under mesh */
+  --pearl-glass:       rgba(255, 255, 255, 0.55);
+  --pearl-glass-strong: rgba(255, 255, 255, 0.7);
+  --glass-border:      rgba(255, 255, 255, 0.6);
+  --glass-border-strong: rgba(20, 30, 45, 0.08);
+
+  /* ── Motion (personal) ── */
+  --ease-spring:       cubic-bezier(.34, 1.56, .64, 1);  /* bouncy spring */
+  --ease-out-expo:     cubic-bezier(.16, 1, .3, 1);       /* hero entrance */
+
+  /* ── Glass elevation (personal) ── */
+  --shadow-glass:        0 8px 32px rgba(0, 0, 0, 0.06);
+  --shadow-glass-hover:  0 20px 48px rgba(0, 0, 0, 0.10);
+  --shadow-header-pill:  0 8px 32px rgba(20, 30, 45, 0.08);
+}

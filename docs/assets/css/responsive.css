@@ -1,0 +1,212 @@
+/* ==========================================================================
+   ARIA — Responsive Breakpoints
+
+   Apple breakpoint system from DESIGN-apple.md:
+   ≤419px  small phone
+   420–640px  phone
+   641–735px  large phone
+   736–833px  tablet portrait
+   834–1023px tablet landscape
+   1024–1068px small desktop
+   1069–1440px desktop (full layout)
+   ≥1441px  wide desktop (content locks at 980px)
+   ========================================================================== */
+
+/* ── Desktop (default) ── */
+/* All base styles apply at >= 1069px. No media query needed. */
+
+/* ── Wide Desktop: ≥1441px ── */
+@media (min-width: 1441px) {
+  .tile__content {
+    max-width: var(--content-width);               /* 980px lock */
+  }
+}
+
+/* ── Small Desktop: 1024–1068px ── */
+@media (max-width: 1068px) {
+  .tile {
+    padding: var(--sp-xxl) var(--sp-md);           /* 48px 17px */
+  }
+
+  h1, .h1 {
+    font-size: var(--text-display-lg);             /* 40px */
+  }
+
+  .tile--hero {
+    padding: var(--sp-xxl) var(--sp-md);
+  }
+}
+
+/* ── Tablet Landscape: 834–1023px ── */
+@media (max-width: 1023px) {
+  .tier-overview {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ── Tablet Portrait: 736–833px ── */
+@media (max-width: 833px) {
+  /* Nav: hide section links, keep title + CTA */
+  .sub-nav__links {
+    display: none;
+  }
+
+  .sub-nav__cta {
+    margin-left: auto;
+  }
+
+  .nav-hamburger {
+    display: block;
+  }
+
+  h1, .h1 {
+    font-size: var(--text-display-lg);             /* 40px */
+  }
+
+  h2, .h2 {
+    font-size: var(--text-lead);                   /* 28px */
+  }
+
+  .tier-overview {
+    grid-template-columns: 1fr;
+  }
+
+  .kg-filters {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* ── Large Phone: 641–735px ── */
+@media (max-width: 735px) {
+  .tile {
+    padding: var(--sp-xxl) var(--sp-md);           /* 48px 17px */
+  }
+
+  .tile--hero {
+    padding: var(--sp-xxl) var(--sp-md);
+  }
+
+  h2, .h2 {
+    font-size: 28px;
+  }
+
+  .tier-trace {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .trace-arrow {
+    transform: rotate(90deg);
+  }
+
+  .analogical-transfer {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+
+/* ── Phone: 420–640px ── */
+@media (max-width: 640px) {
+  .sub-nav-frosted {
+    padding: 0 var(--sp-sm);
+  }
+
+  .interactive-figure {
+    min-height: 250px;
+  }
+
+  .tier-detail {
+    padding: var(--sp-md);
+  }
+
+  .tier-detail-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--sp-xs);
+  }
+
+  .comparison-fill {
+    height: 24px;
+    font-size: var(--text-caption);
+  }
+
+  .trace-step {
+    flex-direction: column;
+    gap: var(--sp-xs);
+  }
+
+  .trace-step-marker {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    font-size: var(--text-caption);
+  }
+}
+
+/* ── Small Phone: ≤419px ── */
+@media (max-width: 419px) {
+  h1, .h1 {
+    font-size: var(--text-lead);                   /* 28px */
+  }
+
+  h2, .h2 {
+    font-size: 28px;
+  }
+
+  .tile {
+    padding: 48px var(--sp-sm);                    /* Tighter padding */
+  }
+
+  .tile--hero {
+    padding: 48px var(--sp-sm);
+  }
+
+  .tile__content {
+    max-width: 100%;
+  }
+
+  .sub-nav__title {
+    font-size: var(--text-body-strong);
+  }
+
+  .tier-overview {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-toggles {
+    flex-direction: column;
+  }
+
+  .toggle-btn {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* ── Print Styles ── */
+@media print {
+  .sub-nav-frosted {
+    position: static;
+    background: white;
+    color: black;
+    border-bottom: 1px solid #ccc;
+  }
+
+  .tile {
+    padding: 24px 0;
+  }
+
+  .interactive-figure {
+    min-height: auto;
+    border: 1px solid #ccc;
+  }
+
+  section.tile {
+    animation: none;
+  }
+
+  .fade-in {
+    opacity: 1;
+  }
+}

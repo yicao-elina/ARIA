@@ -1,0 +1,199 @@
+/* ==========================================================================
+   ARIA — Interactive Figure Styles
+
+   Shared styles for D3 visualization containers, filter controls,
+   and SVG elements. All sections use light backgrounds.
+   Distill-style figure layout with centered captions.
+   ========================================================================== */
+
+/* ── Interactive Figure Container ── */
+.interactive-figure {
+  min-height: 300px;
+  border: 1px solid var(--apple-divider-soft);
+  border-radius: var(--radius-sm);                /* 8px */
+  background: var(--apple-parchment);
+  overflow: hidden;
+  margin: 12px 0;
+}
+
+/* ── SVG Text ── */
+.interactive-figure text {
+  font-family: var(--font-body);
+  fill: var(--apple-ink);
+}
+
+/* ── KG Filter Bar ── */
+.kg-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 12px 0;
+  padding: 12px 17px;
+  background: var(--apple-parchment);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+  align-items: center;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filter-group label {
+  font-weight: var(--weight-semibold);
+}
+
+.filter-group select {
+  padding: 2px 8px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--apple-hairline);
+  background: var(--apple-canvas);
+  font-family: var(--font-body);
+  font-size: var(--text-caption);
+}
+
+.filter-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+}
+
+.filter-group input[type="range"] {
+  accent-color: var(--apple-primary);
+}
+
+/* ── KG Stats Row ── */
+.kg-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 17px;
+  margin: 24px 0;
+  text-align: center;
+}
+
+.stat {
+  background: var(--apple-parchment);
+  padding: 17px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--apple-divider-soft);
+}
+
+.stat-number {
+  display: block;
+  font-size: var(--text-display-md);               /* 34px */
+  font-weight: var(--weight-semibold);
+  color: var(--apple-primary);
+  line-height: 1.2;
+}
+
+.stat-label {
+  font-size: var(--text-caption);
+  color: var(--apple-ink-muted-48);
+  line-height: var(--leading-caption);
+}
+
+/* ── Tier Activation Container ── */
+.tier-activation-container {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  flex-wrap: wrap;
+  margin: 24px 0;
+}
+
+/* ── Figcaption (Distill-style figure caption) ── */
+figcaption, .figure-caption {
+  font-size: var(--text-caption);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-caption);
+  letter-spacing: var(--tracking-caption);
+  color: var(--apple-ink-muted-48);
+  margin-top: 8px;
+  text-align: center;
+  max-width: 680px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ── Animation ── */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  opacity: 0;
+  animation: fadeInUp 0.6s ease forwards;
+}
+
+section.tile {
+  animation: fadeInUp 0.4s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fade-in {
+    animation: none;
+    opacity: 1;
+  }
+  section.tile {
+    animation: none;
+  }
+}
+
+/* ── KG Explorer (built dynamically by kg-explorer.js) ── */
+.kg-viz {
+  position: relative;
+  min-height: 540px;
+  background: var(--apple-canvas);
+}
+
+.kg-controls {
+  padding: 12px 16px;
+  background: var(--apple-parchment);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--apple-divider-soft);
+  margin-bottom: 8px;
+  color: var(--apple-ink);
+}
+
+.kg-controls select {
+  background: var(--apple-canvas);
+  color: var(--apple-ink);
+  border: 1px solid var(--apple-hairline);
+}
+
+.kg-svg {
+  background: var(--apple-canvas) !important;
+  border: 1px solid var(--apple-divider-soft) !important;
+}
+
+.kg-tooltip {
+  background: rgba(29, 29, 31, 0.94) !important;
+  color: #fff !important;
+  font-family: var(--font-body);
+}
+
+.kg-legend {
+  padding: 8px 12px;
+  background: var(--apple-parchment);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--apple-divider-soft);
+  color: var(--apple-ink-muted-80);
+}
+
+.kg-detail-panel {
+  background: var(--apple-canvas) !important;
+  color: var(--apple-ink) !important;
+  border: 1px solid var(--apple-hairline) !important;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12) !important;
+}
