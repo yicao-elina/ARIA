@@ -192,6 +192,10 @@
     MASK_FADE_IN_MS: 800,   // slow fade-in: shadow "descends" softly
     MASK_FADE_OUT_MS: 500,
     CHIP_ENTRANCE_MS: 320,
+    // Holes bloom in one at a time, AFTER the shadow has finished
+    // descending (base delay = MASK_FADE_IN_MS), then staggered by
+    // this many ms each, so they "flow" in rather than pop together.
+    HOLE_STAGGER_MS: 130,
     BREATH_PERIOD_MS: 2000,
     NEXT_BREATH_PERIOD_MS: 2400,
     // Auto-play pacing
@@ -408,6 +412,11 @@
         hole.setAttribute("y", y);
         hole.setAttribute("width", w);
         hole.setAttribute("height", hgt);
+        // Stagger: shadow finishes descending first, then holes
+        // bloom in one at a time, flowing left-to-right / top-to-
+        // bottom in the order they were defined for the section.
+        const staggerDelay =
+          CONSTANTS.MASK_FADE_IN_MS + i * CONSTANTS.HOLE_STAGGER_MS;
         if (reduced) {
           hole.setAttribute("rx", 12);
           hole.setAttribute("ry", 12);
@@ -415,6 +424,8 @@
           hole.setAttribute("rx", 4);
           hole.setAttribute("ry", 4);
           hole.classList.add("hole--blooming");
+          hole.style.animationDelay =
+            staggerDelay + "ms, " + (staggerDelay + 320) + "ms";
         }
         hole.setAttribute("fill", "black");
         mask.appendChild(hole);
@@ -434,7 +445,10 @@
         glow.setAttribute("stroke", "rgba(104, 172, 229, 0.7)");
         glow.setAttribute("stroke-width", "2");
         glow.setAttribute("pointer-events", "none");
-        if (!reduced) glow.classList.add("hole-glow--blooming");
+        if (!reduced) {
+          glow.classList.add("hole-glow--blooming");
+          glow.style.animationDelay = staggerDelay + "ms";
+        }
         // Append AFTER the dimmed layer so the ring sits on top of
         // the mask and is clearly visible around the cutout.
         root.appendChild(glow);
@@ -752,8 +766,25 @@
     root.appendChild(controls);
 
     function render(state) {
-      progress.textContent =
-        "Step " + state.stepNumber + " of " + state.totalSteps;
+      progress.innerHTML = "";
+      const badge = document.createElement("span");
+      badge.className = "tour-panel__badge";
+      const cur = document.createElement("span");
+      cur.textContent = String(state.stepNumber);
+      const sep = document.createElement("span");
+      sep.className = "tour-panel__badge-sep";
+      sep.textContent = " / ";
+      const total = document.createElement("span");
+      total.className = "tour-panel__badge-total";
+      total.textContent = String(state.totalSteps);
+      badge.appendChild(cur);
+      badge.appendChild(sep);
+      badge.appendChild(total);
+      progress.appendChild(badge);
+      const progLabel = document.createElement("span");
+      progLabel.className = "tour-panel__progress-label";
+      progLabel.textContent = "Guided Tour";
+      progress.appendChild(progLabel);
       title.textContent = state.sectionTitle;
       if (state.hint) {
         hint.textContent = state.hint;
@@ -883,24 +914,14 @@
       this._active = false;
     }
 
-    // Panel "Next" handler. Only advances if the section is in the
-    // "ready to advance" state (i.e. user has clicked all holes
-    // and the post-clear beat is over).
+    // Panel "Next" handler. Always works in one click: whatever is
+    // left unrevealed in the current section is instantly completed
+    // (same as Skip) and the tour advances immediately — no second
+    // click to dismiss the mask first, no dead-end nudge.
     next() {
       if (!this._active) return;
-      // Allow Next from either "dismiss-wait" (mask visible) or
-      // "clearing" (mask dismissed). From "dismiss-wait" we dismiss
-      // the mask first, then advance on the next click.
-      if (this._mode === "dismiss-wait") {
-        this._dismissMask();
-        this._nudgePanel();
-        return;
-      }
-      if (this._mode !== "clearing") {
-        // Nudge: pulse the panel a bit so the user knows to wait.
-        this._nudgePanel();
-        return;
-      }
+      this._cancelAutoPlay();
+      this._clearTimers();
       if (this._index >= this.stops.length - 1) {
         this.end();
         return;
@@ -967,7 +988,27 @@
 
     skipAutoPlay() {
       this._cancelAutoPlay();
-      this._settleAllHoles();
+      // Skip means "show me the finished state right now": every
+      // callout revealed and settled, shadow gone immediately — no
+      // dismiss-wait beat, no waiting for a click on the dimmed area.
+      this._revealAllCallouts();
+      this._mode = "clearing";
+      this._mask.fadeOut();
+      this._setHintOnStop(this.stops[this._index], "clearing");
+      this._refreshPanel();
+    }
+
+    // Force every hole's callout to its final, revealed + settled
+    // state immediately. Used by Skip (and by Next, which fast-
+    // forwards through whatever is left of the current section
+    // before advancing) so nothing is left half-shown.
+    _revealAllCallouts() {
+      this._holes.forEach((h) => this._mask.settleHole(h.el));
+      this._labels.forEach((l) => {
+        if (!l.isCalloutRevealed()) l.revealCallout();
+        if (!l.root.classList.contains("is-settled")) l.settle();
+      });
+      this._reposition();
     }
 
     isActive() {
@@ -1184,8 +1225,16 @@
       this._setHintOnStop(this.stops[this._index], "revealing");
       // Build labels.
       this._holeListeners = [];
-      this._holes.forEach((h) => {
+      const reducedEntrance = utils.reducedMotion();
+      this._holes.forEach((h, i) => {
         const label = createHoleLabel(h.el, h.label, h.text);
+        if (!reducedEntrance) {
+          // Match the hole's own stagger so the chip flows in right
+          // as its cutout finishes blooming, not before.
+          const staggerDelay =
+            CONSTANTS.MASK_FADE_IN_MS + i * CONSTANTS.HOLE_STAGGER_MS;
+          label.root.style.animationDelay = staggerDelay + "ms";
+        }
         // Click on the label's chip also fires the action — same as
         // clicking the hole itself.
         label.root.addEventListener("click", (e) => {
@@ -1533,15 +1582,6 @@
       this._panel.setState(this._panelState(this.stops[this._index]));
     }
 
-    _nudgePanel() {
-      if (!this._panel) return;
-      const root = this._panel.root;
-      root.classList.remove("is-nudge");
-      // force reflow
-      void root.offsetWidth;
-      root.classList.add("is-nudge");
-    }
-
     _reposition() {
       if (this._rafScheduled) return;
       const self = this;
@@ -1831,20 +1871,53 @@
   gap: 6px;
   transition: transform 0.18s ${CONSTANTS.SPRING};
 }
-.tour-panel.is-nudge {
-  animation: tour-panel-nudge 0.42s ${CONSTANTS.SPRING};
-}
-@keyframes tour-panel-nudge {
-  0%, 100% { transform: translateY(0); }
-  40%      { transform: translateY(-6px); }
-}
 .tour-panel__progress {
-  font-size: 11.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+.tour-panel__badge {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+  padding: 3px 11px;
+  border-radius: 9999px;
+  font-family: var(--font-display, inherit);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+  color: var(--apple-text-primary, #002D72);
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(14px) saturate(180%);
+  -webkit-backdrop-filter: blur(14px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow: 0 2px 10px -3px rgba(4, 8, 18, 0.22),
+              inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+.tour-panel__badge-sep {
+  opacity: 0.45;
+  font-weight: 500;
+}
+.tour-panel__badge-total {
+  opacity: 0.6;
   font-weight: 600;
-  letter-spacing: 0.04em;
+}
+.tour-panel__progress-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--apple-primary-on-dark, #68ACE5);
-  opacity: 0.85;
+  opacity: 0.75;
+}
+@media (prefers-color-scheme: dark) {
+  .tour-panel__badge {
+    color: var(--apple-text-primary, #E8EEF7);
+    background: rgba(20, 26, 40, 0.55);
+    border-color: rgba(255, 255, 255, 0.16);
+  }
 }
 .tour-panel__title {
   font-family: var(--font-display, inherit);
