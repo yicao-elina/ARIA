@@ -1355,24 +1355,18 @@
           });
         }
 
-        // Default: center the section as a whole, same as before. Only
-        // correct the scroll afterward if that leaves one of this
-        // stop's hole targets off-screen or behind the sticky header —
-        // e.g. a very tall section like Results, where a hole near the
-        // top and one much lower can't both be "centered" at once.
+        // Default: center the section as a whole. But for a very tall,
+        // uneven section (e.g. Results, where a hole near the top and
+        // one much lower can't both be "centered" at once), scroll
+        // straight to fit the holes instead — decided up front from
+        // the current (pre-scroll) rects so only ONE scroll ever runs.
+        // Centering-then-correcting would read as the page swinging
+        // down to the section's middle and then back up to the first
+        // hole — exactly the back-and-forth this avoids.
         // Skipped for stops whose target is fixed-position chrome
         // (e.g. the nav rail) rather than part of the document flow.
         if (!stop.noScroll) {
-          sectionEl.scrollIntoView({
-            behavior: reduced ? "auto" : "smooth",
-            block: "center",
-          });
-          if (holes.length > 0) {
-            this._scheduleHoleVisibilityCorrection(
-              holes.map((h) => h.el),
-              reduced
-            );
-          }
+          this._scrollToStop(sectionEl, holes.map((h) => h.el), reduced);
         }
 
         // Build the canvas frame, mask, and panel up front so the
@@ -1457,42 +1451,50 @@
       window.setTimeout(retry, RETRY_MS);
     }
 
-    // After the default section-centered scroll, check whether it
-    // actually left any of this stop's holes off-screen (or tucked
-    // behind the sticky header) and only THEN correct the scroll
-    // position. Most sections fit fine as-is — this is a fallback
-    // for the rare tall/uneven ones (e.g. Results).
-    _scheduleHoleVisibilityCorrection(elements, reduced) {
-      const HEADER_CLEARANCE = 110;
-      const BOTTOM_MARGIN = 24;
-      let done = false;
-      const check = () => {
-        if (done || !this._active) return;
-        done = true;
-        const viewportH = window.innerHeight;
-        const offscreen = elements.some((el) => {
-          const r = el.getBoundingClientRect();
-          if (r.width === 0 || r.height === 0) return false; // hidden
-          return r.top < HEADER_CLEARANCE || r.bottom > viewportH - BOTTOM_MARGIN;
+    // Picks ONE scroll destination for this stop: center the section
+    // as a whole by default, or — if that would leave a hole
+    // off-screen / behind the sticky header — scroll straight to fit
+    // the holes instead. Decided from the current (pre-scroll)
+    // element rects, so it never has to scroll, look, and correct.
+    _scrollToStop(sectionEl, holeEls, reduced) {
+      const centerSection = () =>
+        sectionEl.scrollIntoView({
+          behavior: reduced ? "auto" : "smooth",
+          block: "center",
         });
-        if (offscreen) this._scrollToFitHoles(elements, reduced);
-      };
-      if (reduced) {
-        // No smooth-scroll animation to wait for.
-        check();
+
+      if (holeEls.length === 0) {
+        centerSection();
         return;
       }
-      // 'scrollend' is the accurate signal where supported; a timed
-      // fallback covers browsers/scroll paths that never fire it.
-      if ("onscrollend" in window) {
-        const handler = () => {
-          window.removeEventListener("scrollend", handler);
-          check();
-        };
-        window.addEventListener("scrollend", handler);
-        this._addTimer(window.setTimeout(handler, 900));
+      const visible = holeEls.filter((el) => {
+        const r = el.getBoundingClientRect();
+        return r.width > 0 && r.height > 0;
+      });
+      if (visible.length === 0) {
+        centerSection();
+        return;
+      }
+
+      // Predict where the holes would land if we centered the
+      // section, without actually scrolling there first.
+      const HEADER_CLEARANCE = 110;
+      const BOTTOM_MARGIN = 24;
+      const viewportH = window.innerHeight;
+      const sectionRect = sectionEl.getBoundingClientRect();
+      const sectionCenterY = sectionRect.top + sectionRect.height / 2;
+      const predictedDelta = sectionCenterY - viewportH / 2;
+      const wouldBeOffscreen = visible.some((el) => {
+        const r = el.getBoundingClientRect();
+        const top = r.top - predictedDelta;
+        const bottom = r.bottom - predictedDelta;
+        return top < HEADER_CLEARANCE || bottom > viewportH - BOTTOM_MARGIN;
+      });
+
+      if (wouldBeOffscreen) {
+        this._scrollToFitHoles(visible, reduced);
       } else {
-        this._addTimer(window.setTimeout(check, 650));
+        centerSection();
       }
     }
 

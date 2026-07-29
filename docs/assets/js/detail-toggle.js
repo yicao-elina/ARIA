@@ -21,12 +21,29 @@
     var hoverTimer = null;
     var closeListener = null;
 
+    function syncOpenHeight() {
+      if (details.open && body.classList.contains('is-open')) {
+        body.style.maxHeight = body.scrollHeight + 'px';
+      }
+    }
+
     // Start already-open panels (e.g. Tier 1's default-open example)
     // in the open state with no transition, so nothing animates in
     // on first paint.
     if (details.hasAttribute('open')) {
       body.classList.add('is-open');
       body.style.maxHeight = body.scrollHeight + 'px';
+    }
+
+    // The open height is a pixel value pinned at open time — anything
+    // that reflows the body's content afterward (a webfont finishing
+    // its swap, a term-tooltip wrapping text, a narrower viewport
+    // rewrapping lines) leaves that pinned max-height shorter than the
+    // real content, clipping the last line. A ResizeObserver on the
+    // body catches every such reflow (not just window resize) and
+    // re-pins the height to match, so it's never possible to be stale.
+    if (typeof ResizeObserver === 'function') {
+      new ResizeObserver(syncOpenHeight).observe(body);
     }
 
     function openPanel() {
@@ -80,14 +97,6 @@
 
     summary.addEventListener('focus', function () {
       openPanel();
-    });
-
-    // Keep an open panel's max-height accurate if content or layout
-    // reflows (e.g. window resize, webfont load) after it settles.
-    window.addEventListener('resize', function () {
-      if (details.open && body.classList.contains('is-open')) {
-        body.style.maxHeight = body.scrollHeight + 'px';
-      }
     });
   });
 })();
