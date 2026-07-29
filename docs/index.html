@@ -87,7 +87,14 @@
   <div class="tile__content">
     <h1 class="hero-title reveal">ARIA: A Causal-Aware Framework for Rescuing LLM Reasoning in Materials Discovery</h1>
     <p class="hero-subtitle reveal">Gating knowledge on causal completeness to prevent <em>contextual tunneling</em> in LLMs</p>
-    <p class="hero-authors reveal">Yi Cao, Liaoyaqi Wang, Jieneng Chen, Benjamin Van Durme, Alan Yuille, Paulette Clancy</p>
+    <p class="hero-authors reveal">
+      <a class="term-tip term-tip--below" href="https://yicao-elina.github.io/yicao-elina/" target="_blank" rel="noopener" data-tip="Chemical and Biomolecular Engineering, Johns Hopkins University · ycao73@jh.edu · Equal contribution">Yi Cao</a>,
+      <a class="term-tip term-tip--below" href="https://scholar.google.com/citations?user=RPw7AlUAAAAJ&amp;hl=zh-CN" target="_blank" rel="noopener" data-tip="Computer Science, Johns Hopkins University · lwang240@jh.edu · Equal contribution">Liaoyaqi Wang</a>,
+      <a class="term-tip term-tip--below" href="http://www.jienengchen.com/" target="_blank" rel="noopener" data-tip="Computer Science, Johns Hopkins University · jchen293@jhu.edu">Jieneng Chen</a>,
+      <a class="term-tip term-tip--below" href="https://www.cs.jhu.edu/~vandurme/" target="_blank" rel="noopener" data-tip="Computer Science, Johns Hopkins University · vandurme@jhu.edu · Corresponding author">Benjamin Van Durme</a>,
+      <a class="term-tip term-tip--below" href="https://www.cs.jhu.edu/~ayuille/" target="_blank" rel="noopener" data-tip="Computer Science, Johns Hopkins University · ayuille1@jhu.edu">Alan Yuille</a>,
+      <a class="term-tip term-tip--below" href="https://engineering.jhu.edu/chembe/faculty/paulette-clancy/" target="_blank" rel="noopener" data-tip="Chemical and Biomolecular Engineering, Johns Hopkins University · pclancy3@jhu.edu">Paulette Clancy</a>
+    </p>
     <p class="hero-date reveal">KDD 2026 · AI for Sciences Track</p>
     <div class="hero-cta reveal">
       <a href="https://github.com/yicao-elina/aria" class="sub-nav__cta" target="_blank" rel="noopener">Code &amp; Data</a>
@@ -473,8 +480,10 @@
       <div id="mt-controls-host"></div>
       <div id="mt-table-host"></div>
       <div id="mt-column-charts"></div>
-      <div id="mt-stat-tests"></div>
-      <div id="mt-tier-donut"></div>
+      <div class="mt-bottom-row">
+        <div id="mt-stat-tests"></div>
+        <div id="mt-tier-donut"></div>
+      </div>
       <div id="main-table-root"></div>
     </div>
     <p class="paper-fig-link">
@@ -714,6 +723,18 @@ year={2026},
 url={https://openreview.net/forum?id=7LFRS69byw}
 }</pre>
 
+    <h3>Early Demo &amp; Hackathon Origins</h3>
+    <p>
+      Before the KDD submission, an early concept version of this work was prototyped at an LLM hackathon. These are kept here as historical context — they predate this paper and don't reflect its methodology or results.
+    </p>
+    <p>
+      <a href="https://www.linkedin.com/posts/yi-cao-1368ab292_introducing-aria-autonomous-reasoning-activity-7372352361094193152-U6Jx?utm_source=share&amp;utm_medium=member_desktop&amp;rcm=ACoAAEb3tPoBgmt_8xQYwQpEY2DbQllFRcSwlU4" target="_blank" rel="noopener">Early concept promo animation (LinkedIn)</a>
+      &nbsp;·&nbsp;
+      <a href="https://www.linkedin.com/posts/yi-cao-1368ab292_github-yicao-elinallm4chem-explainable-synthesis-activity-7372331154709905408-1Hyq?utm_source=share&amp;utm_medium=member_desktop&amp;rcm=ACoAAEb3tPoBgmt_8xQYwQpEY2DbQllFRcSwlU4" target="_blank" rel="noopener">Hackathon project post (LinkedIn)</a>
+      &nbsp;·&nbsp;
+      <a href="https://arxiv.org/abs/2605.03205" target="_blank" rel="noopener">Hackathon compilation (arXiv)</a>
+    </p>
+
     <h3>Acknowledgments</h3>
     <p>
       This interactive article was built with Apple-inspired design principles and D3.js visualizations.
@@ -723,7 +744,30 @@ url={https://openreview.net/forum?id=7LFRS69byw}
 
 <!-- ==================== FOOTER ==================== -->
 <footer class="site-footer">
-  <div class="tile__content">
+  <div class="tile__content footer-grid">
+    <div class="footer-brand">
+      <img src="assets/figures/ARIA-logo.svg" alt="ARIA" class="footer-logo" />
+      <p class="footer-tagline">Causal-aware evidence gating for materials discovery.</p>
+    </div>
+    <div class="footer-links">
+      <div class="footer-col">
+        <h3>Paper</h3>
+        <a href="https://arxiv.org/abs/2606.22375" target="_blank" rel="noopener">arXiv</a>
+        <a href="https://openreview.net/forum?id=7LFRS69byw" target="_blank" rel="noopener">OpenReview</a>
+        <a href="#appendix">BibTeX</a>
+      </div>
+      <div class="footer-col">
+        <h3>Code</h3>
+        <a href="https://github.com/yicao-elina/aria" target="_blank" rel="noopener">GitHub</a>
+      </div>
+      <div class="footer-col">
+        <h3>Conference</h3>
+        <a href="https://kdd2026.kdd.org/" target="_blank" rel="noopener">KDD 2026</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-divider"></div>
+  <div class="tile__content footer-bottom">
     ARIA: A Causal-Aware Framework for Rescuing LLM Reasoning in Materials Discovery · KDD 2026 · AI for Sciences Track
   </div>
 </footer>

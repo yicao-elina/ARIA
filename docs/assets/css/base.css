@@ -23,6 +23,10 @@
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
+  /* Match body's background so elastic overscroll (trackpad rubber-band
+     at the very top of the page) reveals pearl, not the browser's
+     default white canvas, as a seam above the hero. */
+  background: var(--pearl);
 }
 
 body {

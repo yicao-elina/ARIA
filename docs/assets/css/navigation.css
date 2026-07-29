@@ -137,7 +137,8 @@
   transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
-/* ── Body offset for fixed nav ── */
-.main-content {
-  margin-top: var(--subnav-height);               /* 52px */
-}
+/* .main-content has no top offset — the header is a side rail
+   (.app-header, header-pill.css), not a fixed top bar, so content
+   should start flush with the viewport top. (Previously offset by
+   --subnav-height for a top pill nav that no longer exists; that
+   left a gap above .tile--hero exposing the html background.) */

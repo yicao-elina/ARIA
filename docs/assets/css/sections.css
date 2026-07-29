@@ -78,9 +78,18 @@
    Distill-style title block: large title, subtitle, centered,
    with the ARIA logo above. */
 .tile--hero {
-  padding: 0 24px 80px;                         /* No top padding — hero parchment extends to viewport top so there's no pearl strip behind the floating pill header. The pill header is translucent, so we want it sitting over parchment, not over the body bg. The hero content reserves its own top space via the .tile__content margin below. */
+  padding: 0 24px 80px;                         /* No top padding — hero background extends to viewport top so there's no seam behind the floating pill header. The pill header is translucent, so we want it sitting over the glow, not over the body bg. The hero content reserves its own top space via the .tile__content margin below. */
   text-align: center;
-  position: relative;                            /* Anchor for ::before watermark */
+  position: relative;                            /* Anchor for the glow background below */
+  /* Apple-style soft blue glow, painted directly on the tile so it fully
+     covers the viewport top edge (no gap before .mesh--page's blurred
+     blobs kick in). A bright wash centered above the title, a quieter
+     Heritage-Blue murmur to the upper right for depth, parchment as the
+     opaque base so there's no seam with the section below. */
+  background:
+    radial-gradient(ellipse 130% 62% at 50% -6%, rgba(104, 172, 229, 0.38) 0%, rgba(104, 172, 229, 0.16) 40%, rgba(104, 172, 229, 0) 74%),
+    radial-gradient(ellipse 85% 45% at 88% 18%, rgba(0, 45, 114, 0.07) 0%, rgba(0, 45, 114, 0) 62%),
+    var(--apple-parchment);
 }
 
 .tile--hero .tile__content {
@@ -90,28 +99,13 @@
   margin-top: 104px;                             /* Reserve top space: pill header bottom (~72px) + 32px breathing room. Pushes the content below the fixed pill header. */
 }
 
-/* Hero logo as decorative watermark (Option B — CSS pseudo-element).
-   Sits behind the title text; pointer-events disabled so it never
-   intercepts clicks/selection. */
-.tile--hero::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 60vw;
-  max-width: 600px;
-  transform: translate(-50%, -50%) scale(1.05);
-  aspect-ratio: 1007.25 / 462.75;                 /* Match SVG viewBox */
-  background-image: url("../figures/ARIA-logo.svg");
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: contain;
-  opacity: 0.07;
-  pointer-events: none;
-  z-index: 0;
-  filter: blur(0.5px);
-  mix-blend-mode: multiply;
-}
+/* The hero previously carried a large centered ARIA-logo watermark here
+   (Option B — CSS pseudo-element, ::before). It sat directly behind the
+   title/subtitle/byline text and used mix-blend-mode: multiply, which
+   darkened the text it overlapped and read as muddy rather than premium.
+   Removed in favor of the glow-only background above (var(--mint), see
+   the .tile--hero background rule) — the ARIA mark already appears as
+   the nav-pill avatar, so no branding is lost. */
 
 .tile--hero .hero-title {
   font-size: var(--text-hero);                  /* 56px */
@@ -195,7 +189,7 @@
 .site-footer {
   background: var(--apple-parchment);
   color: var(--apple-ink-muted-80);
-  padding: 64px 24px;
+  padding: 56px 24px 32px;
   font-size: var(--text-fine-print);
   font-weight: var(--weight-regular);
   line-height: var(--leading-fine-print);
@@ -218,4 +212,74 @@
   font-size: var(--text-caption-strong);
   font-weight: var(--weight-semibold);
   margin-bottom: 12px;
+}
+
+/* Top row: brand mark + tagline on the left, link columns on the right
+   (Anthropic-style footer layout). */
+.footer-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 40px;
+  text-align: left;
+}
+
+.footer-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 260px;
+}
+
+.footer-logo {
+  width: 84px;
+  height: auto;
+  opacity: 0.9;
+}
+
+.footer-tagline {
+  margin: 0;
+  font-size: var(--text-fine-print);
+  color: var(--apple-ink-muted-48);
+}
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 56px;
+}
+
+.footer-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.footer-col a {
+  display: block;
+  font-size: var(--text-fine-print);
+  line-height: var(--leading-caption);
+}
+
+.footer-divider {
+  border-top: 1px solid var(--apple-hairline);
+  max-width: 980px;
+  margin: 40px auto 20px;
+}
+
+.footer-bottom {
+  text-align: center;
+  font-size: var(--text-fine-print);
+  color: var(--apple-ink-muted-48);
+}
+
+@media (max-width: 640px) {
+  .footer-grid {
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  .footer-links {
+    gap: 32px;
+  }
 }

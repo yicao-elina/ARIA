@@ -114,6 +114,23 @@
   }
 }
 
+/* Author bylines reuse .term-tip for the hover popover, but they're real
+   links (to homepages/scholar profiles) rather than glossary jargon, so
+   the cursor should read as a link, not "help". The color/border also
+   need repeating here at matching specificity — .hero-authors sets a
+   muted gray on all text that would otherwise win over plain .term-tip. */
+.hero-authors .term-tip {
+  cursor: pointer;
+  color: var(--apple-primary, #002D72);
+  border-bottom: 1px dotted var(--mint, #68ACE5);
+}
+
+.hero-authors .term-tip:hover,
+.hero-authors .term-tip:focus-visible {
+  color: var(--mint, #68ACE5);
+  border-bottom-color: var(--apple-primary, #002D72);
+}
+
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .term-tip::after { background: rgba(255, 255, 255, 0.97); }
 }
