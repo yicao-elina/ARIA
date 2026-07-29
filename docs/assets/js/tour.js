@@ -14,10 +14,11 @@
  *   - "Do it for me" reveals each callout in sequence (one at a
  *     time, each connected to its hole by a dashed line) and then
  *     fires the action.
- *   - After all holes are clicked, the mask STAYS visible. The
- *     user dismisses the mask by clicking anywhere on the dimmed
- *     (non-cutout) area of the section; then the mask fades out
- *     and the panel "Next" button becomes the next action.
+ *   - After all holes are clicked, the mask stays up just long enough
+ *     for the last action to register, then auto-fades — leaving only
+ *     the pinned callouts — and the panel "Next" button becomes the
+ *     next action. Clicking the dimmed area during that beat dismisses
+ *     it immediately instead of waiting.
  *
  * Self-contained page chrome. No dependencies. Self-initializes on
  * DOMContentLoaded (guarded for the case the script executes after
@@ -155,16 +156,18 @@
       id: "results",
       title: "Results",
       body: "The full benchmark results — chart and table — live here. Worth a scan, but we'll keep moving since the next sections are more hands-on.",
+      // Order matches page order (figure sits above the table), so
+      // the numbered badges read top-to-bottom: 1 = figure, 2 = table.
       focusPoints: [
         {
-          selector: "#results .mt-td--best",
-          label: "Cells highlighted like this mark the best score in that column.",
+          selector: "#fig-results",
+          label: "This is where the tier asymmetry really shows — forward prediction vs. inverse design.",
+          action: { kind: "click" },
         },
       ],
       actionPoint: {
-        selector: "#fig-results",
-        label: "This is where the tier asymmetry really shows — forward prediction vs. inverse design.",
-        action: { kind: "click" },
+        selector: "#results .mt-td--best",
+        label: "Cells highlighted like this mark the best score in that column.",
       },
     },
     {
@@ -298,8 +301,21 @@
       const details = summaryEl.closest("details");
       if (!details) return;
       if (!details.open) {
-        details.open = true;
-        details.dispatchEvent(new Event("toggle"));
+        // Fire a real click instead of setting `details.open` directly.
+        // detail-toggle.js owns the actual open/close animation (an
+        // `.is-open` class + explicit max-height on .detail-toggle__body)
+        // and only runs it in response to a click on <summary> — setting
+        // `.open` here would flip the native attribute while leaving the
+        // body visually collapsed (max-height: 0), desyncing the two and
+        // making the NEXT manual click toggle backwards (close instead
+        // of open) since detail-toggle.js reads `details.open` to decide
+        // which way to go.
+        if (typeof summaryEl.click === "function") {
+          summaryEl.click();
+        } else {
+          details.open = true;
+          details.dispatchEvent(new Event("toggle"));
+        }
       }
     },
     dispatchChange(el) {
@@ -722,6 +738,13 @@
       }
       const r = targetEl.getBoundingClientRect();
       if (r.width === 0 || r.height === 0) return false;
+      // Off-screen (scrolled past, above or below the viewport): the
+      // callout has nothing to point at anymore, so hide it instead
+      // of clamping its position to the viewport edge, which would
+      // otherwise leave it floating over unrelated content further
+      // down the page.
+      if (r.bottom < 0 || r.top > window.innerHeight) return false;
+      if (r.right < 0 || r.left > window.innerWidth) return false;
       return true;
     }
 
@@ -1900,13 +1923,20 @@
         this._mode === "idle"
       )
         return;
-      // Mask STAYS visible. The user dismisses the mask by clicking
-      // anywhere on the dimmed (non-cutout) area of the section.
-      // Holes and callouts stay on screen so the user can keep
-      // reading them while they look at the section.
+      // The shadow's job was to draw the eye to what's clickable —
+      // once the user has expanded/clicked everything, it has nothing
+      // left to point at, so it auto-fades shortly after (same pacing
+      // as "Do it for me"), leaving just the pinned callouts. A click
+      // on the dimmed area during that beat still dismisses it early.
       this._mode = "dismiss-wait";
       this._setHintOnStop(this.stops[this._index], "dismiss-wait");
       this._refreshPanel();
+      this._addTimer(
+        window.setTimeout(
+          () => this._dismissMask(),
+          CONSTANTS.AUTO_PLAY_SETTLE_MS
+        )
+      );
     }
 
     _dismissMask() {
