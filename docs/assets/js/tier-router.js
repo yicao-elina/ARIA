@@ -462,9 +462,13 @@ class TierRouter {
   color: var(--tr-text-primary);
 }
 
-.tr-example-btn.t1 { border-left: 3px solid var(--tr-tier1); }
-.tr-example-btn.t2 { border-left: 3px solid var(--tr-tier2); }
-.tr-example-btn.t3 { border-left: 3px solid var(--tr-tier3); }
+.tr-example-btn.t1 { border-color: var(--tr-tier1); border-color: color-mix(in srgb, var(--tr-tier1) 45%, var(--tr-border)); }
+.tr-example-btn.t2 { border-color: var(--tr-tier2); border-color: color-mix(in srgb, var(--tr-tier2) 45%, var(--tr-border)); }
+.tr-example-btn.t3 { border-color: var(--tr-tier3); border-color: color-mix(in srgb, var(--tr-tier3) 45%, var(--tr-border)); }
+
+.tr-example-btn.t1:hover { border-color: var(--tr-tier1); }
+.tr-example-btn.t2:hover { border-color: var(--tr-tier2); }
+.tr-example-btn.t3:hover { border-color: var(--tr-tier3); }
 
 /* ---- Step Content ---- */
 .tr-step-content {

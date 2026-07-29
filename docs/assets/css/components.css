@@ -203,35 +203,30 @@
 }
 
 /* ── Tier Example (sub-block) ──
-   Each Example 1/2/3 is its OWN visually distinct glass card — frosted
-   translucent surface, soft shadow, corner badge "EXAMPLE 01/02/03",
-   and a subtle hover lift so the user can tell at a glance these are
-   separate, self-contained moments. */
+   Each Example 1/2/3 no longer carries its own full-block frosted
+   glass panel (it already sits inside a .detail-toggle glass card,
+   so a second layer of blur was redundant and visually heavy). It
+   keeps only a light surface tint, a corner badge "EXAMPLE 01/02/03",
+   and the SAME calm hover-lift recipe used elsewhere on the site
+   (translateY + border/shadow highlight, no bounce) so the
+   interaction feels unified across the page. */
 .tier-example {
   position: relative;
   margin: 28px 0;
   padding: 28px 26px 24px;
   border-radius: var(--radius-lg, 18px);
-  background: var(--pearl-glass, rgba(255, 255, 255, 0.6));
-  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.6));
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.75),
-    0 2px 6px rgba(0, 45, 114, 0.04),
-    0 10px 28px rgba(0, 45, 114, 0.08);
+  background: rgba(255, 255, 255, 0.35);
+  border: 1px solid var(--apple-divider-soft, rgba(0, 45, 114, 0.08));
   transition:
-    transform 320ms cubic-bezier(.16, 1, .3, 1),
-    box-shadow 320ms ease,
-    border-color 320ms ease;
+    transform 280ms cubic-bezier(.16, 1, .3, 1),
+    box-shadow 280ms ease,
+    border-color 280ms ease;
 }
 
 .tier-example:hover {
   transform: translateY(-3px);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 1),
-    0 4px 10px rgba(0, 45, 114, 0.06),
-    0 18px 40px rgba(0, 45, 114, 0.12);
+  border-color: rgba(104, 172, 229, 0.30);
+  box-shadow: 0 12px 32px rgba(0, 45, 114, 0.10);
 }
 
 /* "EXAMPLE 0X" corner badge — gives each block its own identity */
