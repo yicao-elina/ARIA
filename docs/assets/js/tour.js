@@ -1,15 +1,17 @@
 /**
  * tour.js — Guided, operational walkthrough of the ARIA site.
  *
- * v2 (2026-07-29): rewritten as a section-as-canvas tour.
- *   - First frame of each section shows the section in its natural layout,
- *     with a thin "Tour mode" frame, sub-step progress strip, and End button.
- *   - Each "Next" press "un-covers" one element against an SVG mask with
- *     springy bloom and a flowing callout.
- *   - "Do it for me" plays through the section at ~1s/element, firing
- *     each element's action (click / open-details / change).
- *   - Pause / Resume / Back / Next all work mid-play.
- *   - Reduced-motion, keyboard, and responsive resize all honored.
+ * v2 (2026-07-29, revised): "all-holes-at-once" tour.
+ *   - Section enters fully clear for 2s (no mask, no callouts, no panel noise).
+ *   - After 2s, ALL clickable elements in the section are revealed
+ *     simultaneously: each gets an SVG-mask cutout, a dashed-leader
+ *     label chip (1, 2, 3...), and a soft breathing ring.
+ *   - User clicks each hole (or hits "Do it for me" to automate the
+ *     same sequence). Clicking fires the element's action
+ *     (open-details / click / change) and the hole settles.
+ *   - When all holes are clicked, the mask fades out, the section
+ *     returns to fully clear for 3s, then the panel "Next" breathes
+ *     to prompt the user to advance.
  *
  * Self-contained page chrome. No dependencies. Self-initializes on
  * DOMContentLoaded (guarded for the case the script executes after
@@ -20,6 +22,10 @@
 
   // ════════════════════════════════════════════════════════════════
   // DATA: stops
+  // Each stop is a section. The section's `focusPoints` (plus the
+  // `actionPoint`, treated as the last hole) are the clickable
+  // elements that get revealed together after a 2s "look at the
+  // section first" beat.
   // ════════════════════════════════════════════════════════════════
   const STOPS = [
     {
@@ -29,16 +35,16 @@
       focusPoints: [
         {
           selector: "#problem .tunneling-panel--naive-kg .tunneling-segment--error",
-          label: "This is contextual tunneling: a plausible-sounding claim built by over-anchoring on partial KG evidence.",
+          label: "Contextual tunneling: a plausible-sounding claim built by over-anchoring on partial KG evidence.",
         },
         {
           selector: "#problem .tunneling-panel--baseline",
-          label: "The baseline LLM, using only parametric knowledge, avoids this trap — but has no causal grounding at all.",
+          label: "The baseline LLM avoids the trap — but has no causal grounding at all.",
         },
       ],
       actionPoint: {
         selector: "#problem .tunneling-example-btn:nth-of-type(2)",
-        label: "Try Example 2 to see the same failure mode show up on a different query.",
+        label: "Try Example 2 to see the same failure mode on a different query.",
         action: { kind: "click" },
       },
     },
@@ -50,7 +56,7 @@
     {
       id: "cascade",
       title: "Three-Tier Adaptive Cascade",
-      body: "This is ARIA's core mechanism. Try clicking “Route Query” or one of the example pills below to watch a query get routed through Tier 1, 2, or 3 based on causal completeness.",
+      body: "This is ARIA's core mechanism. Try clicking example pills and “Route Query” to watch a query get routed through Tier 1, 2, or 3 based on causal completeness.",
       focusPoints: [
         {
           selector: "#cascade .tr-example-btns .tr-example-btn",
@@ -97,11 +103,11 @@
     {
       id: "tier-deep-dive",
       title: "Tier-by-Tier Deep Dives",
-      body: "Each tier has a worked example. Try expanding one of the “Example” panels below to see a full reasoning trace for that tier.",
+      body: "Each tier has a worked example. Click any of the highlighted summaries to expand the trace for that tier.",
       focusPoints: [
         {
           selector: "#tier-deep-dive .tier-1-detail summary",
-          label: "This one's already open — see the full causal trace from processing to property below.",
+          label: "Already open — see the full causal trace from processing to property below.",
           action: { kind: "open-details" },
         },
         {
@@ -112,7 +118,7 @@
       ],
       actionPoint: {
         selector: "#tier-deep-dive .tier-2-detail summary",
-        label: "Expand this one to see ARIA validate physical constraints before transferring MoS₂'s mechanism to MoSe₂.",
+        label: "Expand to see ARIA validate physical constraints before transferring MoS₂'s mechanism to MoSe₂.",
         action: { kind: "open-details" },
       },
     },
@@ -164,23 +170,21 @@
   // CONSTANTS — tunable from one place
   // ════════════════════════════════════════════════════════════════
   const CONSTANTS = {
-    // Per-element play cadence (ms). Total ≈1000ms with an action.
-    PLAY_SPRING_IN_MS: 360,
-    PLAY_PRE_ACTION_MS: 100,
-    PLAY_POST_ACTION_MS: 360,
-    PLAY_NEXT_GAP_MS: 180,
-    // Manual reveal animation
-    REVEAL_SPRING_MS: 420,
-    MASK_HOLE_BLOOM_MS: 280,
-    CALLOUT_SPRING_MS: 320,
-    // Z-indices (scrim < canvas < mask < callout < panel)
-    Z_SCRIM: 400,
-    Z_HIGHLIGHT: 500,
-    Z_FOCUS: 450,
-    Z_ACTION: 480,
+    // Per-section timing (ms)
+    CLEAR_BEFORE_REVEAL_MS: 2000,   // fully clear at section entry
+    CLEAR_BETWEEN_SECTIONS_MS: 3000, // fully clear after all holes clicked
+    MASK_FADE_IN_MS: 380,
+    MASK_FADE_OUT_MS: 400,
+    CHIP_ENTRANCE_MS: 320,
+    BREATH_PERIOD_MS: 2000,
+    NEXT_BREATH_PERIOD_MS: 2400,
+    // Auto-play pacing
+    AUTO_PLAY_GAP_MS: 1000,
+    // Z-indices
+    Z_CANVAS: 499,
     Z_MASK: 460,
-    Z_CALLOUT: 470,
-    Z_CONNECTOR: 460,
+    Z_LABEL: 470,
+    Z_LABEL_CONNECTOR: 461,
     Z_PANEL: 2000,
     // Easing
     SPRING: "cubic-bezier(0.34, 1.56, 0.64, 1)",
@@ -198,15 +202,19 @@
         return null;
       }
     },
+    getAllEl(selector) {
+      try {
+        return Array.from(document.querySelectorAll(selector));
+      } catch (e) {
+        return [];
+      }
+    },
     reducedMotion() {
       return (
         window.matchMedia &&
         window.matchMedia("(prefers-reduced-motion: reduce)").matches
       );
     },
-    // Fire a real click that listeners attached with addEventListener
-    // will receive. We dispatch MouseEvent in addition to calling .click()
-    // so delegated handlers (event.target.closest(...)) also fire.
     dispatchClick(el) {
       if (!el) return;
       if (typeof el.click === "function") el.click();
@@ -224,7 +232,6 @@
       if (!details) return;
       if (!details.open) {
         details.open = true;
-        // Some pages listen for the 'toggle' event to re-render.
         details.dispatchEvent(new Event("toggle"));
       }
     },
@@ -234,14 +241,16 @@
         new Event("change", { bubbles: true, cancelable: true })
       );
     },
+    wait(ms) {
+      return new Promise((resolve) => window.setTimeout(resolve, ms));
+    },
   };
 
   // ════════════════════════════════════════════════════════════════
   // RENDERER: canvas frame
-  // Rounded outline + chrome that hugs a section. Sits ABOVE the
-  // section's content so the section is fully visible inside, but
-  // BELOW the mask. The first frame of each section shows ONLY the
-  // canvas, with no mask.
+  // A thin rounded outline + corner pill. Shows "Step N of M · title"
+  // and a one-line hint ("Click the highlighted elements"). No
+  // sub-step strip in this revision.
   // ════════════════════════════════════════════════════════════════
   function createCanvasFrame(sectionEl, meta) {
     const root = document.createElement("div");
@@ -254,23 +263,22 @@
     pill.className = "tour-canvas__pill";
     root.appendChild(pill);
 
-    const strip = document.createElement("div");
-    strip.className = "tour-canvas__strip";
-    root.appendChild(strip);
+    const hint = document.createElement("div");
+    hint.className = "tour-canvas__hint";
+    root.appendChild(hint);
 
     const endBtn = document.createElement("button");
     endBtn.type = "button";
     endBtn.className = "tour-canvas__end";
     endBtn.setAttribute("aria-label", "End tour");
     endBtn.textContent = "End Tour ✕";
-    endBtn.addEventListener("click", () => meta.onEnd && meta.onEnd());
+    endBtn.addEventListener("click", function () {
+      meta.onEnd && meta.onEnd();
+    });
     root.appendChild(endBtn);
 
     function render() {
       const rect = sectionEl.getBoundingClientRect();
-      // Position the canvas as a fixed overlay matching the section's
-      // viewport position. We use `position: fixed` because the section
-      // can scroll under the viewport while the tour is mid-step.
       root.style.left = rect.left + "px";
       root.style.top = rect.top + "px";
       root.style.width = rect.width + "px";
@@ -284,12 +292,12 @@
         meta.sectionTitle;
     }
 
-    function setSubStep(done, total) {
-      strip.innerHTML = "";
-      for (let i = 0; i < total; i++) {
-        const seg = document.createElement("span");
-        seg.className = "tour-canvas__seg" + (i < done ? " is-done" : "");
-        strip.appendChild(seg);
+    function setHint(text) {
+      if (text) {
+        hint.textContent = text;
+        hint.classList.add("is-visible");
+      } else {
+        hint.classList.remove("is-visible");
       }
     }
 
@@ -298,14 +306,14 @@
     }
 
     render();
-    return { root, render, setSubStep, destroy };
+    return { root, render, setHint, destroy };
   }
 
   // ════════════════════════════════════════════════════════════════
-  // RENDERER: mask
-  // A single SVG that covers the section, draws a dark glass layer,
-  // and punches rounded-rect holes through it for every revealed
-  // element. Holes only ever grow (reveals are accumulating).
+  // RENDERER: mask (SVG cutouts)
+  // A single SVG that covers the section. One dark glass layer with
+  // rounded-rect holes punched through it. Holes have a "breathing"
+  // pulse via a CSS animation.
   // ════════════════════════════════════════════════════════════════
   function createMask(sectionEl) {
     const root = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -313,11 +321,9 @@
     root.setAttribute("aria-hidden", "true");
     sectionEl.appendChild(root);
 
-    // Defs: a single mask whose white shapes become "holes".
     const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
     const mask = document.createElementNS("http://www.w3.org/2000/svg", "mask");
     mask.setAttribute("id", "tour-mask-cutout");
-    // Mask starts fully BLACK (= nothing visible through the mask).
     const bg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
     bg.setAttribute("x", "0");
     bg.setAttribute("y", "0");
@@ -328,8 +334,8 @@
     defs.appendChild(mask);
     root.appendChild(defs);
 
-    // The visible dark layer references the mask.
     const layer = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    layer.setAttribute("class", "tour-mask-layer");
     layer.setAttribute("x", "0");
     layer.setAttribute("y", "0");
     layer.setAttribute("width", "100%");
@@ -349,44 +355,100 @@
       root.style.height = sRect.height + "px";
     }
 
-    function setRevealed(els) {
-      render();
-      // Remove all currently-rendered hole rects; re-add fresh ones
-      // so re-measured positions are accurate.
-      mask.querySelectorAll("rect.hole").forEach(function (n) {
-        n.remove();
-      });
+    // holes: [{ el, label, text, action, rect, hole, settled }]
+    const holes = [];
+    let fadedOut = false;
+
+    function setHoles(newHoles) {
+      // Clear existing
+      mask.querySelectorAll("rect.hole").forEach((n) => n.remove());
+      holes.length = 0;
       const sRect = sectionEl.getBoundingClientRect();
       const reduced = utils.reducedMotion();
-      els.forEach(function (el, i) {
-        const r = el.getBoundingClientRect();
-        // Position relative to the section's top-left.
-        const x = r.left - sRect.left - 6;
-        const y = r.top - sRect.top - 6;
-        const w = r.width + 12;
-        const h = r.height + 12;
-        const hole = document.createElementNS(
-          "http://www.w3.org/2000/svg",
-          "rect"
-        );
+      newHoles.forEach((h, i) => {
+        const r = h.el.getBoundingClientRect();
+        const x = r.left - sRect.left - 8;
+        const y = r.top - sRect.top - 8;
+        const w = r.width + 16;
+        const hgt = r.height + 16;
+        const hole = document.createElementNS("http://www.w3.org/2000/svg", "rect");
         hole.setAttribute("class", "hole");
         hole.setAttribute("x", x);
         hole.setAttribute("y", y);
         hole.setAttribute("width", w);
-        hole.setAttribute("height", h);
-        // Animate rx/ry from 4 → 12 for the "bloom" on the newest hole.
-        const isNewest = i === els.length - 1;
-        if (isNewest && !reduced) {
+        hole.setAttribute("height", hgt);
+        if (reduced) {
+          hole.setAttribute("rx", 12);
+          hole.setAttribute("ry", 12);
+        } else {
           hole.setAttribute("rx", 4);
           hole.setAttribute("ry", 4);
           hole.classList.add("hole--blooming");
-        } else {
-          hole.setAttribute("rx", 12);
-          hole.setAttribute("ry", 12);
         }
         hole.setAttribute("fill", "white");
         mask.appendChild(hole);
+        holes.push({
+          el: h.el,
+          label: h.label,
+          text: h.text,
+          action: h.action,
+          rect: { x, y, w, h: hgt },
+          hole,
+          settled: false,
+        });
       });
+    }
+
+    function updateHoleRects() {
+      const sRect = sectionEl.getBoundingClientRect();
+      holes.forEach((h) => {
+        if (!h.el.isConnected) return;
+        const r = h.el.getBoundingClientRect();
+        h.rect = {
+          x: r.left - sRect.left - 8,
+          y: r.top - sRect.top - 8,
+          w: r.width + 16,
+          h: r.height + 16,
+        };
+        h.hole.setAttribute("x", h.rect.x);
+        h.hole.setAttribute("y", h.rect.y);
+        h.hole.setAttribute("width", h.rect.w);
+        h.hole.setAttribute("height", h.rect.h);
+      });
+    }
+
+    function settleHole(el) {
+      const h = holes.find((x) => x.el === el);
+      if (!h || h.settled) return;
+      h.settled = true;
+      h.hole.classList.remove("hole--blooming");
+      h.hole.classList.add("hole--settled");
+    }
+
+    function fadeIn() {
+      fadedOut = false;
+      root.classList.remove("is-fading-out");
+      root.classList.add("is-fading-in");
+    }
+
+    function fadeOut() {
+      fadedOut = true;
+      root.classList.remove("is-fading-in");
+      root.classList.add("is-fading-out");
+    }
+
+    function clear() {
+      holes.length = 0;
+      mask.querySelectorAll("rect.hole").forEach((n) => n.remove());
+      root.classList.remove("is-fading-in", "is-fading-out");
+    }
+
+    function getHoles() {
+      return holes;
+    }
+
+    function isFadedOut() {
+      return fadedOut;
     }
 
     function destroy() {
@@ -394,64 +456,128 @@
     }
 
     render();
-    return { root, render, setRevealed, destroy };
+    return {
+      root,
+      render,
+      setHoles,
+      updateHoleRects,
+      settleHole,
+      fadeIn,
+      fadeOut,
+      clear,
+      getHoles,
+      isFadedOut,
+      destroy,
+    };
   }
 
   // ════════════════════════════════════════════════════════════════
-  // RENDERER: callout
-  // Small glass bubble that flows in next to its target. No SVG line —
-  // the proximity is enough since the target is lit and the section
-  // is dimmed.
+  // RENDERER: hole label
+  // A small numbered/lettered chip with a dashed SVG leader line
+  // to the target element. The chip carries a hover tooltip with
+  // the explanatory text.
   // ════════════════════════════════════════════════════════════════
-  function createCallout(targetEl, opts) {
+  function createHoleLabel(targetEl, label, text) {
     const root = document.createElement("div");
-    root.className = "tour-callout glass-card";
-    const p = document.createElement("p");
-    p.className = "tour-callout__text";
-    p.textContent = opts.text;
-    root.appendChild(p);
+    root.className = "tour-hole-label";
+    const chip = document.createElement("div");
+    chip.className = "tour-hole-label__chip";
+    chip.textContent = label;
+    const tt = document.createElement("div");
+    tt.className = "tour-hole-label__tooltip";
+    tt.textContent = text || "";
+    root.appendChild(chip);
+    root.appendChild(tt);
     document.body.appendChild(root);
 
+    // Dashed leader line in its own SVG so it can sit behind the chip.
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("class", "tour-hole-label__svg");
+    svg.setAttribute("aria-hidden", "true");
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("class", "tour-hole-label__line");
+    svg.appendChild(line);
+    document.body.appendChild(svg);
+
     function place() {
-      const tRect = targetEl.getBoundingClientRect();
-      const margin = 16;
-      const gap = 18;
-      // Measure after content is in the DOM.
-      const cRect = root.getBoundingClientRect();
-      const goesLeft =
-        tRect.left + tRect.width / 2 > window.innerWidth / 2;
-      let left = goesLeft
-        ? tRect.left - gap - cRect.width
-        : tRect.right + gap;
-      left = Math.min(
-        Math.max(left, margin),
-        window.innerWidth - cRect.width - margin
-      );
-      let top = tRect.top + tRect.height / 2 - cRect.height / 2;
-      top = Math.min(
-        Math.max(top, margin),
-        window.innerHeight - cRect.height - margin
-      );
+      const r = targetEl.getBoundingClientRect();
+      const tRect = root.getBoundingClientRect();
+      const margin = 12;
+      const gap = 26;
+      // Prefer to put the chip above the target; if no room, put it to the right.
+      const wantTop = r.top - tRect.height - gap > margin;
+      let left, top, x1, y1, x2, y2;
+      if (wantTop) {
+        // Center horizontally over the target.
+        left = r.left + r.width / 2 - tRect.width / 2;
+        left = Math.min(
+          Math.max(left, margin),
+          window.innerWidth - tRect.width - margin
+        );
+        top = r.top - tRect.height - gap;
+        // Leader line: from chip's bottom-center to target's top-center.
+        const chipCx = left + tRect.width / 2;
+        const chipBy = top + tRect.height;
+        const tx = r.left + r.width / 2;
+        const ty = r.top;
+        x1 = chipCx;
+        y1 = chipBy;
+        x2 = tx;
+        y2 = ty;
+      } else {
+        // Right of the target.
+        left = r.right + gap;
+        left = Math.min(
+          Math.max(left, margin),
+          window.innerWidth - tRect.width - margin
+        );
+        top = r.top + r.height / 2 - tRect.height / 2;
+        top = Math.min(
+          Math.max(top, margin),
+          window.innerHeight - tRect.height - margin
+        );
+        const chipL = left;
+        const chipCy = top + tRect.height / 2;
+        const tx = r.right;
+        const ty = r.top + r.height / 2;
+        x1 = chipL;
+        y1 = chipCy;
+        x2 = tx;
+        y2 = ty;
+      }
       root.style.left = left + "px";
       root.style.top = top + "px";
-      root.dataset.side = goesLeft ? "left" : "right";
+      svg.setAttribute(
+        "viewBox",
+        "0 0 " + window.innerWidth + " " + window.innerHeight
+      );
+      svg.setAttribute("width", window.innerWidth);
+      svg.setAttribute("height", window.innerHeight);
+      svg.style.left = "0px";
+      svg.style.top = "0px";
+      line.setAttribute("x1", x1);
+      line.setAttribute("y1", y1);
+      line.setAttribute("x2", x2);
+      line.setAttribute("y2", y2);
     }
 
-    function reposition() {
-      place();
+    function settle() {
+      root.classList.add("is-settled");
+      line.classList.add("is-settled");
     }
 
     function destroy() {
       root.remove();
+      svg.remove();
     }
 
     place();
-    return { root, reposition, destroy };
+    return { root, svg, line, place, settle, destroy };
   }
 
   // ════════════════════════════════════════════════════════════════
-  // RENDERER: panel
-  // Bottom-right control panel. The primary slot morphs based on state.
+  // RENDERER: panel (bottom-right)
+  // The primary slot morphs based on tour state.
   // ════════════════════════════════════════════════════════════════
   function createPanel(initial) {
     const root = document.createElement("div");
@@ -468,9 +594,9 @@
     title.className = "tour-panel__title";
     root.appendChild(title);
 
-    const dots = document.createElement("div");
-    dots.className = "tour-panel__dots";
-    root.appendChild(dots);
+    const hint = document.createElement("div");
+    hint.className = "tour-panel__hint";
+    root.appendChild(hint);
 
     const controls = document.createElement("div");
     controls.className = "tour-panel__controls";
@@ -480,12 +606,11 @@
       progress.textContent =
         "Step " + state.stepNumber + " of " + state.totalSteps;
       title.textContent = state.sectionTitle;
-      dots.innerHTML = "";
-      for (let i = 0; i < state.subStepTotal; i++) {
-        const d = document.createElement("span");
-        d.className =
-          "tour-panel__dot" + (i < state.subStepDone ? " is-done" : "");
-        dots.appendChild(d);
+      if (state.hint) {
+        hint.textContent = state.hint;
+        hint.classList.add("is-visible");
+      } else {
+        hint.classList.remove("is-visible");
       }
       controls.innerHTML = "";
       if (state.canBack) {
@@ -506,40 +631,33 @@
       const primary = document.createElement("button");
       primary.type = "button";
       primary.className = "tour-btn tour-btn--primary";
-      if (state.isPlaying) {
-        primary.textContent = "⏸ Pause";
+      if (state.isAutoPlaying) {
+        primary.textContent = "Skip ▸▸";
+        primary.classList.remove("tour-btn--breathing");
         primary.addEventListener("click", function () {
-          state.onPause && state.onPause();
+          state.onSkip && state.onSkip();
         });
-      } else if (state.isPaused) {
-        primary.textContent = "▶ Resume";
+      } else if (state.canAdvance) {
+        primary.textContent = "Next ▸";
+        primary.classList.add("tour-btn--breathing");
         primary.addEventListener("click", function () {
-          state.onResume && state.onResume();
+          state.onNext && state.onNext();
+        });
+      } else if (state.holesTotal > 0) {
+        primary.textContent = "Do it for me ▶";
+        primary.classList.add("tour-btn--breathing");
+        primary.addEventListener("click", function () {
+          state.onDoIt && state.onDoIt();
         });
       } else {
+        // Section has no holes (e.g. PSP / robustness). Show Next.
         primary.textContent = "Next ▸";
+        primary.classList.add("tour-btn--breathing");
         primary.addEventListener("click", function () {
           state.onNext && state.onNext();
         });
       }
       controls.appendChild(primary);
-
-      // "Do it for me" — secondary when not primary and not at end.
-      if (
-        !state.isPlaying &&
-        !state.isPaused &&
-        state.canDoIt &&
-        state.subStepDone < state.subStepTotal
-      ) {
-        const doIt = document.createElement("button");
-        doIt.type = "button";
-        doIt.className = "tour-btn tour-btn--ghost tour-btn--doit";
-        doIt.textContent = "Do it for me ▶";
-        doIt.addEventListener("click", function () {
-          state.onDoIt && state.onDoIt();
-        });
-        controls.appendChild(doIt);
-      }
 
       const end = document.createElement("button");
       end.type = "button";
@@ -561,24 +679,26 @@
 
   // ════════════════════════════════════════════════════════════════
   // ORCHESTRATOR: SiteTour
-  // Owns state, lifecycle, sub-step index, play loop, keyboard.
+  // State machine:
+  //   'idle'         — section is fully clear
+  //   'revealing'    — mask fading in, holes breathing, user clicking
+  //   'settling'     — all holes clicked, mask fading out
+  //   'auto-playing' — "Do it for me" running
+  //   'clearing'     — fully clear, waiting for user Next
   // ════════════════════════════════════════════════════════════════
   class SiteTour {
     constructor(stops) {
-      this.stops = stops.filter(function (stop) {
-        return document.getElementById(stop.id);
-      });
+      this.stops = stops.filter((s) => document.getElementById(s.id));
       this._index = -1;
-      this._subIndex = -1; // -1 = first-frame canvas (nothing revealed yet)
-      this._revealed = []; // elements revealed in the current section
-      this._mode = "idle"; // 'idle' | 'playing' | 'paused'
-      this._playCancel = null;
-      this._isAdvancing = false;
+      this._mode = "idle";
+      this._autoPlayCancel = null;
+      this._timers = [];
       this._active = false;
       this._canvas = null;
       this._mask = null;
-      this._callout = null;
       this._panel = null;
+      this._labels = []; // array of createHoleLabel instances
+      this._holes = [];  // [{ el, label, text, action }]
       this._onKeydown = this._onKeydown.bind(this);
       this._onViewportChange = this._reposition.bind(this);
       this._rafScheduled = false;
@@ -589,20 +709,18 @@
       if (!this.stops.length || this._active) return;
       this._active = true;
       this._index = 0;
-      this._subIndex = -1;
-      this._revealed = [];
-      this._mode = "idle";
       document.addEventListener("keydown", this._onKeydown);
       window.addEventListener("scroll", this._onViewportChange, {
         passive: true,
       });
       window.addEventListener("resize", this._onViewportChange);
-      this._goto(0, -1);
+      this._goto(0);
     }
 
     end() {
       if (!this._active) return;
-      this._cancelPlay();
+      this._cancelAutoPlay();
+      this._clearTimers();
       const cur = this.stops[this._index];
       if (cur && typeof cur.onLeave === "function") {
         try {
@@ -616,161 +734,88 @@
       this._active = false;
     }
 
+    // Panel "Next" handler. Only advances if the section is in the
+    // "ready to advance" state (i.e. user has clicked all holes
+    // and the post-clear beat is over).
     next() {
-      if (this._isAdvancing || !this._active) return;
-      this._isAdvancing = true;
-      try {
-        const cur = this.stops[this._index];
-        const totalSubSteps = this._subStepTotal(cur);
-        if (this._subIndex < totalSubSteps - 1) {
-          this._goto(this._index, this._subIndex + 1);
-        } else {
-          // Last sub-step done — advance to next section.
-          if (this._index >= this.stops.length - 1) {
-            this.end();
-          } else {
-            this._goto(this._index + 1, -1);
-          }
-        }
-      } finally {
-        this._isAdvancing = false;
+      if (!this._active) return;
+      if (this._mode !== "clearing") {
+        // Nudge: pulse the panel a bit so the user knows to wait.
+        this._nudgePanel();
+        return;
       }
+      if (this._index >= this.stops.length - 1) {
+        this.end();
+        return;
+      }
+      this._goto(this._index + 1);
     }
 
     back() {
-      if (this._isAdvancing || !this._active) return;
-      this._isAdvancing = true;
-      try {
-        if (this._subIndex > -1) {
-          this._goto(this._index, this._subIndex - 1);
-        } else if (this._index > 0) {
-          const prev = this.stops[this._index - 1];
-          this._goto(this._index - 1, this._subStepTotal(prev) - 1);
-        }
-      } finally {
-        this._isAdvancing = false;
-      }
+      if (!this._active) return;
+      if (this._index <= 0) return;
+      this._cancelAutoPlay();
+      this._clearTimers();
+      this._goto(this._index - 1);
     }
 
-    play() {
-      if (this._mode === "playing" || !this._active) return;
-      const cur = this.stops[this._index];
-      const total = this._subStepTotal(cur);
-      // If everything's already revealed, restart the section.
-      if (total > 0 && this._subIndex >= total - 1) {
-        this._cancelPlay();
-        this._goto(this._index, -1);
+    doItForMe() {
+      if (!this._active) return;
+      if (this._mode !== "revealing") return;
+      if (this._holes.length === 0) {
+        // No holes — just advance the section.
+        this._settleAllHoles();
+        return;
       }
-      this._mode = "playing";
+      this._mode = "auto-playing";
       this._refreshPanel();
-      let i = this._subIndex + 1;
+      const self = this;
+      let i = 0;
       let cancelled = false;
-      this._playCancel = function () {
+      this._autoPlayCancel = () => {
         cancelled = true;
       };
-
-      const self = this;
-      const step = function () {
+      const step = () => {
         if (cancelled || !self._active) return;
-        if (i >= total) {
-          self._mode = "idle";
-          self._playCancel = null;
-          self._refreshPanel();
+        if (i >= self._holes.length) {
+          self._autoPlayCancel = null;
+          self._settleAllHoles();
           return;
         }
-        self._goto(self._index, i);
-        const el = self._currentSubStepEl();
-        const pt = self._currentSubStepPoint();
-        const fire = function () {
-          if (pt && pt.action) {
-            if (pt.action.kind === "click") utils.dispatchClick(el);
-            else if (pt.action.kind === "open-details")
-              utils.openDetails(el);
-            else if (pt.action.kind === "change") utils.dispatchChange(el);
-          }
-        };
-        const next = function () {
-          if (cancelled || !self._active) return;
-          if (self._mode === "paused") {
-            // Pause: poll lightly until resumed.
-            const wait = setInterval(function () {
-              if (cancelled || !self._active) {
-                clearInterval(wait);
-                return;
-              }
-              if (self._mode === "playing") {
-                clearInterval(wait);
-                i += 1;
-                window.setTimeout(step, 60);
-              }
-            }, 120);
-            return;
-          }
-          i += 1;
-          window.setTimeout(step, CONSTANTS.PLAY_NEXT_GAP_MS);
-        };
-        window.setTimeout(
-          fire,
-          CONSTANTS.PLAY_SPRING_IN_MS + CONSTANTS.PLAY_PRE_ACTION_MS
-        );
-        window.setTimeout(
-          next,
-          CONSTANTS.PLAY_SPRING_IN_MS +
-            CONSTANTS.PLAY_PRE_ACTION_MS +
-            CONSTANTS.PLAY_POST_ACTION_MS
-        );
+        const h = self._holes[i];
+        self._fireHole(h);
+        i += 1;
+        window.setTimeout(step, CONSTANTS.AUTO_PLAY_GAP_MS);
       };
       window.setTimeout(step, 60);
     }
 
-    pause() {
-      if (this._mode !== "playing") return;
-      this._mode = "paused";
-      this._refreshPanel();
+    skipAutoPlay() {
+      this._cancelAutoPlay();
+      this._settleAllHoles();
     }
 
-    resume() {
-      if (this._mode !== "paused") return;
-      this._mode = "playing";
-      this._refreshPanel();
-    }
-
-    isPlaying() {
-      return this._mode === "playing";
+    isActive() {
+      return this._active;
     }
 
     // ── Internals ──
 
-    _subStepTotal(stop) {
-      if (!stop) return 0;
-      const fps = stop.focusPoints ? stop.focusPoints.length : 0;
-      return fps + (stop.actionPoint ? 1 : 0);
-    }
-
-    _subStepPoint(stop, subIndex) {
-      if (!stop) return null;
-      const fps = stop.focusPoints || [];
-      if (subIndex < fps.length) return fps[subIndex];
-      if (stop.actionPoint) return stop.actionPoint;
-      return null;
-    }
-
-    _currentSubStepPoint() {
-      return this._subStepPoint(this.stops[this._index], this._subIndex);
-    }
-
-    _currentSubStepEl() {
-      const pt = this._currentSubStepPoint();
-      if (!pt) return null;
-      return utils.getEl(pt.selector);
-    }
-
-    _cancelPlay() {
-      if (this._playCancel) {
-        this._playCancel();
-        this._playCancel = null;
+    _cancelAutoPlay() {
+      if (this._autoPlayCancel) {
+        this._autoPlayCancel();
+        this._autoPlayCancel = null;
       }
-      this._mode = "idle";
+      if (this._mode === "auto-playing") this._mode = "revealing";
+    }
+
+    _clearTimers() {
+      this._timers.forEach((t) => window.clearTimeout(t));
+      this._timers = [];
+    }
+
+    _addTimer(t) {
+      this._timers.push(t);
     }
 
     _destroyRenderers() {
@@ -782,149 +827,240 @@
         this._mask.destroy();
         this._mask = null;
       }
-      if (this._callout) {
-        this._callout.destroy();
-        this._callout = null;
-      }
       if (this._panel) {
         this._panel.destroy();
         this._panel = null;
       }
+      this._labels.forEach((l) => l.destroy());
+      this._labels = [];
+      this._holes = [];
     }
 
-    _goto(index, subIndex) {
+    _goto(index) {
+      this._cancelAutoPlay();
+      this._clearTimers();
       const prev = this.stops[this._index];
-
-      // Section transition
-      if (prev && prev !== this.stops[index]) {
-        if (typeof prev.onLeave === "function") {
-          try {
-            prev.onLeave(document.getElementById(prev.id));
-          } catch (e) {}
-        }
-        this._destroyRenderers();
-        this._revealed = [];
-      } else if (prev === this.stops[index] && subIndex < this._subIndex) {
-        // Going back within a section — re-reveal up to subIndex.
-        this._revealed = this._revealed.slice(0, subIndex + 1);
-        if (this._callout) {
-          this._callout.destroy();
-          this._callout = null;
-        }
-      } else if (prev === this.stops[index] && subIndex > this._subIndex) {
-        // Going forward within a section — append the new element.
-        const pt = this._subStepPoint(this.stops[index], subIndex);
-        if (pt) {
-          const el = utils.getEl(pt.selector);
-          if (el) this._revealed.push(el);
-        }
+      if (prev && typeof prev.onLeave === "function") {
+        try {
+          prev.onLeave(document.getElementById(prev.id));
+        } catch (e) {}
       }
-
+      this._destroyRenderers();
       this._index = index;
-      this._subIndex = subIndex;
       const stop = this.stops[index];
       const sectionEl = document.getElementById(stop.id);
       if (!sectionEl) {
-        this.next();
+        // Skip missing sections.
+        if (index < this.stops.length - 1) this._goto(index + 1);
+        else this.end();
         return;
       }
 
-      // Fire onEnter for the new stop (only when we just changed stop).
-      if (prev !== stop) {
-        if (typeof stop.onEnter === "function") {
-          try {
-            stop.onEnter(sectionEl);
-          } catch (e) {}
-        }
+      if (typeof stop.onEnter === "function") {
+        try {
+          stop.onEnter(sectionEl);
+        } catch (e) {}
       }
 
-      // Scroll into view (smooth, unless reduced motion).
       const reduced = utils.reducedMotion();
       sectionEl.scrollIntoView({
         behavior: reduced ? "auto" : "smooth",
         block: "center",
       });
 
-      this._ensureRenderers(sectionEl, stop);
-      this._applyRevealState(sectionEl, stop, subIndex);
-      this._refreshPanel();
-    }
+      // Build the canvas frame, mask, and panel up front so the
+      // "clear" beat already has its chrome in place.
+      this._canvas = createCanvasFrame(sectionEl, {
+        stepNumber: this._index + 1,
+        totalSteps: this.stops.length,
+        sectionTitle: stop.title,
+        onEnd: () => this.end(),
+      });
+      this._mask = createMask(sectionEl);
+      this._mask.root.classList.add("is-fading-in");
+      // Mask starts FADED OUT (clear). We toggle is-fading-out below.
+      this._mask.root.classList.add("is-fading-out");
 
-    _ensureRenderers(sectionEl, stop) {
-      if (!this._canvas) {
-        this._canvas = createCanvasFrame(sectionEl, {
-          stepNumber: this._index + 1,
-          totalSteps: this.stops.length,
-          sectionTitle: stop.title,
-          onEnd: () => this.end(),
+      // Collect holes.
+      const holes = [];
+      const fps = stop.focusPoints || [];
+      fps.forEach((p) => {
+        const el = utils.getEl(p.selector);
+        if (el) {
+          holes.push({
+            el,
+            label: "",
+            text: p.label || "",
+            action: p.action || null,
+          });
+        }
+      });
+      if (stop.actionPoint) {
+        const el = utils.getEl(stop.actionPoint.selector);
+        if (el) {
+          holes.push({
+            el,
+            label: "",
+            text: stop.actionPoint.label || "",
+            action: stop.actionPoint.action || null,
+          });
+        }
+      }
+      // Number holes 1, 2, 3...
+      holes.forEach((h, i) => {
+        h.label = String(i + 1);
+      });
+      this._holes = holes;
+      const useLetters = stop.labels === "letters";
+      if (useLetters) {
+        this._holes.forEach((h, i) => {
+          h.label = String.fromCharCode("a".charCodeAt(0) + i);
         });
       }
-      if (!this._mask) {
-        this._mask = createMask(sectionEl);
-      }
-      if (!this._panel) {
-        this._panel = createPanel(this._panelState(stop));
+
+      this._panel = createPanel(this._panelState(stop));
+      this._mode = "revealing"; // technically still in clear beat, but
+      // the panel needs the right primary action.
+      this._refreshPanel();
+      this._setHintOnStop(stop, "clear");
+      this._setHint("");
+
+      // Schedule the "reveal all holes" moment.
+      const revealDelay = utils.reducedMotion() ? 60 : CONSTANTS.CLEAR_BEFORE_REVEAL_MS;
+      this._addTimer(
+        window.setTimeout(() => this._revealAllHoles(), revealDelay)
+      );
+    }
+
+    _setHint(text) {
+      if (this._canvas) this._canvas.setHint(text);
+    }
+
+    _setHintOnStop(stop, phase) {
+      // phase: 'clear' | 'revealing' | 'clearing' | 'ready'
+      if (phase === "clear") {
+        this._setHint("");
+      } else if (phase === "revealing") {
+        if (this._holes.length > 0) {
+          this._setHint("Click the highlighted elements");
+        } else {
+          this._setHint("");
+        }
+      } else if (phase === "clearing") {
+        this._setHint("");
       }
     }
 
-    _applyRevealState(sectionEl, stop, subIndex) {
-      // subIndex === -1 means "first frame of this section".
-      if (subIndex < 0) {
-        this._revealed = [];
-        this._mask.setRevealed([]);
-        this._canvas.setSubStep(0, this._subStepTotal(stop));
-        if (this._callout) {
-          this._callout.destroy();
-          this._callout = null;
-        }
-        return;
-      }
-      // Reveal up to subIndex.
-      this._revealed = [];
-      for (let i = 0; i <= subIndex; i++) {
-        const pt = this._subStepPoint(stop, i);
-        if (!pt) continue;
-        const el = utils.getEl(pt.selector);
-        if (el) this._revealed.push(el);
-      }
-      this._mask.setRevealed(this._revealed);
-      this._canvas.setSubStep(
-        this._revealed.length,
-        this._subStepTotal(stop)
-      );
-      if (this._callout) {
-        this._callout.destroy();
-        this._callout = null;
-      }
-      const curPt = this._subStepPoint(stop, subIndex);
-      const curEl = curPt ? utils.getEl(curPt.selector) : null;
-      if (curPt && curEl) {
-        this._callout = createCallout(curEl, { text: curPt.label });
-        if (utils.reducedMotion()) {
-          this._callout.root.style.animation = "none";
-        }
-      }
+    _revealAllHoles() {
+      if (!this._active) return;
+      this._mode = "revealing";
+      this._mask.setHoles(this._holes);
+      this._mask.fadeIn();
+      this._setHintOnStop(this.stops[this._index], "revealing");
+      // Build labels.
+      this._holes.forEach((h) => {
+        const label = createHoleLabel(h.el, h.label, h.text);
+        // Click on the label's chip also fires the action — same as
+        // clicking the hole itself.
+        label.root.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (h.action) this._fireHole(h);
+        });
+        this._labels.push(label);
+      });
+      this._refreshPanel();
       this._reposition();
     }
 
+    _fireHole(h) {
+      // Fire the action. The element's own click / open / change
+      // handlers will mutate the DOM (e.g. expand <details>); the
+      // layout will shift, so we re-measure on the next frame.
+      if (h.action) {
+        if (h.action.kind === "click") utils.dispatchClick(h.el);
+        else if (h.action.kind === "open-details") utils.openDetails(h.el);
+        else if (h.action.kind === "change") utils.dispatchChange(h.el);
+      } else {
+        // No action: still "settle" the hole so the user gets
+        // feedback that they did the right thing.
+        utils.dispatchClick(h.el);
+      }
+      this._mask.settleHole(h.el);
+      const lab = this._labels.find((l) => l && l.root.dataset && l.root.dataset.labelKey === h.label);
+      // Use a simpler lookup: match by text.
+      this._labels.forEach((l) => {
+        if (!l || l.root.classList.contains("is-settled")) return;
+        if (l.root.querySelector(".tour-hole-label__chip").textContent === h.label) {
+          l.settle();
+        }
+      });
+      this._refreshPanel();
+      // After layout shifts, re-measure the mask and labels.
+      window.requestAnimationFrame(() => this._reposition());
+
+      // If all holes settled, transition to clearing.
+      if (this._allHolesSettled()) {
+        this._settleAllHoles();
+      }
+    }
+
+    _allHolesSettled() {
+      if (this._holes.length === 0) return false;
+      return this._labels.every((l) => l.root.classList.contains("is-settled"));
+    }
+
+    _settleAllHoles() {
+      if (this._mode === "clearing" || this._mode === "idle") return;
+      this._mode = "clearing";
+      this._mask.fadeOut();
+      this._setHintOnStop(this.stops[this._index], "clearing");
+      this._refreshPanel();
+
+      // After the clear beat, mark as "ready to advance" so the
+      // panel Next button starts breathing.
+      this._clearTimers();
+      this._addTimer(
+        window.setTimeout(
+          () => this._markReady(),
+          CONSTANTS.CLEAR_BETWEEN_SECTIONS_MS
+        )
+      );
+    }
+
+    _markReady() {
+      if (this._mode !== "clearing") return;
+      this._mode = "clearing"; // still clearing visually; the panel
+      // shows Next-breathing because canAdvance is true.
+      this._refreshPanel();
+    }
+
     _panelState(stop) {
-      const total = this._subStepTotal(stop);
-      const done = Math.max(0, this._subIndex + 1);
+      const holesTotal = this._holes.length;
+      const holesDone = this._labels.filter((l) =>
+        l.root.classList.contains("is-settled")
+      ).length;
+      const canAdvance =
+        this._mode === "clearing" && holesTotal === holesDone;
+      let hint = "";
+      if (this._mode === "clearing" && holesTotal > 0) {
+        hint = "Section complete — Next to continue";
+      } else if (this._mode === "revealing" && holesTotal > 0) {
+        hint = "Click the highlighted elements";
+      }
       return {
         stepNumber: this._index + 1,
         totalSteps: this.stops.length,
         sectionTitle: stop.title,
-        subStepDone: done,
-        subStepTotal: total,
-        canBack: this._index > 0 || this._subIndex > -1,
-        canDoIt: total > 0,
-        canNext: true,
-        isPlaying: this._mode === "playing",
-        isPaused: this._mode === "paused",
+        holesTotal,
+        holesDone,
+        canAdvance,
+        canBack: this._index > 0,
+        isAutoPlaying: this._mode === "auto-playing",
+        hint,
         onBack: () => this.back(),
-        onDoIt: () => this.play(),
-        onPause: () => this.pause(),
-        onResume: () => this.resume(),
+        onDoIt: () => this.doItForMe(),
+        onSkip: () => this.skipAutoPlay(),
         onNext: () => this.next(),
         onEnd: () => this.end(),
       };
@@ -935,18 +1071,25 @@
       this._panel.setState(this._panelState(this.stops[this._index]));
     }
 
+    _nudgePanel() {
+      if (!this._panel) return;
+      const root = this._panel.root;
+      root.classList.remove("is-nudge");
+      // force reflow
+      void root.offsetWidth;
+      root.classList.add("is-nudge");
+    }
+
     _reposition() {
       if (this._rafScheduled) return;
       const self = this;
       this._rafScheduled = true;
       window.requestAnimationFrame(function () {
         self._rafScheduled = false;
-        const stop = self.stops[self._index];
-        const sectionEl = stop ? document.getElementById(stop.id) : null;
-        if (!sectionEl) return;
+        if (!self._active) return;
         if (self._canvas) self._canvas.render();
-        if (self._mask) self._mask.setRevealed(self._revealed);
-        if (self._callout) self._callout.reposition();
+        if (self._mask) self._mask.updateHoleRects();
+        self._labels.forEach((l) => l.place());
       });
     }
 
@@ -957,7 +1100,7 @@
         return;
       }
       if (e.key === "ArrowRight" || e.key === " ") {
-        if (this._mode === "playing") this.pause();
+        if (this._mode === "auto-playing") this.skipAutoPlay();
         else this.next();
         if (e.preventDefault) e.preventDefault();
       } else if (e.key === "ArrowLeft") {
@@ -974,13 +1117,13 @@
 /* ── Tour canvas (first frame of each section) ── */
 .tour-canvas {
   position: fixed;
-  z-index: 499;
+  z-index: ${CONSTANTS.Z_CANVAS};
   pointer-events: none;
   border-radius: 22px;
   outline: 1.5px solid rgba(104, 172, 229, 0.35);
   outline-offset: 0;
-  transition: outline-color 0.2s cubic-bezier(0.22, 0.61, 0.36, 1);
-  animation: tour-canvas-in 0.4s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  transition: outline-color 0.2s ${CONSTANTS.SMOOTH};
+  animation: tour-canvas-in 0.4s ${CONSTANTS.SMOOTH} both;
 }
 .tour-canvas__pill {
   position: absolute;
@@ -996,31 +1139,29 @@
   pointer-events: auto;
   box-shadow: 0 4px 12px -4px rgba(4, 8, 18, 0.4);
   white-space: nowrap;
-  max-width: calc(100% - 32px);
+  max-width: calc(100% - 200px);
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.tour-canvas__strip {
+.tour-canvas__hint {
   position: absolute;
-  top: -2px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 4px;
-  padding: 3px 8px;
-  background: rgba(6, 10, 22, 0.85);
+  top: 14px;
+  right: 16px;
+  padding: 4px 10px;
   border-radius: 9999px;
-  pointer-events: auto;
+  background: rgba(6, 10, 22, 0.78);
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 500;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 0.3s ${CONSTANTS.SMOOTH},
+              transform 0.3s ${CONSTANTS.SMOOTH};
 }
-.tour-canvas__seg {
-  width: 14px;
-  height: 3px;
-  border-radius: 2px;
-  background: rgba(255, 255, 255, 0.18);
-  transition: background 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
-}
-.tour-canvas__seg.is-done {
-  background: rgba(104, 172, 229, 0.95);
+.tour-canvas__hint.is-visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 .tour-canvas__end {
   position: absolute;
@@ -1036,8 +1177,8 @@
   font-weight: 600;
   cursor: pointer;
   pointer-events: auto;
-  transition: background 0.15s cubic-bezier(0.22, 0.61, 0.36, 1),
-              transform 0.15s cubic-bezier(0.22, 0.61, 0.36, 1);
+  transition: background 0.15s ${CONSTANTS.SMOOTH},
+              transform 0.15s ${CONSTANTS.SMOOTH};
 }
 .tour-canvas__end:hover {
   background: rgba(104, 172, 229, 0.18);
@@ -1052,57 +1193,140 @@
 .tour-mask-svg {
   position: absolute;
   inset: 0;
-  z-index: 460;
+  z-index: ${CONSTANTS.Z_MASK};
   pointer-events: none;
   backdrop-filter: blur(2px);
   -webkit-backdrop-filter: blur(2px);
+  opacity: 0;
+  transition: opacity ${CONSTANTS.MASK_FADE_IN_MS}ms ${CONSTANTS.SMOOTH};
+}
+.tour-mask-svg.is-fading-in { opacity: 1; }
+.tour-mask-svg.is-fading-out {
+  opacity: 0;
+  transition: opacity ${CONSTANTS.MASK_FADE_OUT_MS}ms ${CONSTANTS.SMOOTH};
 }
 .tour-mask-svg rect.hole--blooming {
-  animation: tour-hole-bloom 280ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation: tour-hole-bloom 320ms ${CONSTANTS.SPRING} both,
+             tour-hole-breath ${CONSTANTS.BREATH_PERIOD_MS}ms ease-in-out infinite 320ms;
+}
+.tour-mask-svg rect.hole--settled {
+  animation: none;
 }
 @keyframes tour-hole-bloom {
   from { rx: 4; ry: 4; }
-  to   { rx: 12; ry: 12; }
+  to   { rx: 14; ry: 14; }
+}
+@keyframes tour-hole-breath {
+  0%, 100% { rx: 14; ry: 14; }
+  50%      { rx: 16; ry: 16; }
 }
 
-/* ── Tour callout ── */
-.tour-callout {
+/* The mask LAYER's mask cutouts (the white rects in the mask)
+   are themselves the "breathing ring" — the rect's stroke could
+   grow, but since the mask only contributes the white-fill shape,
+   the breath is a faint inset ring rendered as the rect's
+   box-shadow on the section element behind the mask. */
+
+/* ── Tour hole label (chip + dashed leader line) ── */
+.tour-hole-label {
   position: fixed;
-  z-index: 470;
-  width: min(220px, calc(50vw - 48px));
-  padding: 10px 14px;
+  z-index: ${CONSTANTS.Z_LABEL};
   pointer-events: auto;
-  animation: tour-callout-in-right 320ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation: tour-chip-in ${CONSTANTS.CHIP_ENTRANCE_MS}ms ${CONSTANTS.SPRING} both;
 }
-.tour-callout[data-side="left"] {
-  animation-name: tour-callout-in-left;
+.tour-hole-label.is-settled { opacity: 0.45; }
+.tour-hole-label__chip {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--apple-primary, #002D72);
+  color: #fff;
+  font-family: var(--font-display, inherit);
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px -4px rgba(4, 8, 18, 0.55),
+              0 0 0 4px rgba(104, 172, 229, 0.22);
+  cursor: pointer;
+  transition: transform 0.2s ${CONSTANTS.SPRING},
+              box-shadow 0.2s ${CONSTANTS.SMOOTH};
+  user-select: none;
 }
-.tour-callout__text {
-  margin: 0;
-  font-size: 12.5px;
-  line-height: 1.4;
-  color: var(--apple-text-primary, inherit);
+.tour-hole-label__chip:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 18px -4px rgba(4, 8, 18, 0.6),
+              0 0 0 6px rgba(104, 172, 229, 0.35);
 }
-@keyframes tour-callout-in-right {
-  0%   { opacity: 0; transform: translateX(12px) scale(0.96); }
-  100% { opacity: 1; transform: translateX(0) scale(1); }
+.tour-hole-label__tooltip {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 8px);
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: 240px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--apple-primary, #002D72);
+  color: #fff;
+  font-size: 11.5px;
+  line-height: 1.35;
+  white-space: normal;
+  text-align: left;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ${CONSTANTS.SMOOTH};
+  box-shadow: 0 6px 16px -4px rgba(4, 8, 18, 0.4);
+  z-index: 1;
 }
-@keyframes tour-callout-in-left {
-  0%   { opacity: 0; transform: translateX(-12px) scale(0.96); }
-  100% { opacity: 1; transform: translateX(0) scale(1); }
+.tour-hole-label:hover .tour-hole-label__tooltip {
+  opacity: 1;
 }
+.tour-hole-label.is-settled .tour-hole-label__chip {
+  cursor: default;
+}
+@keyframes tour-chip-in {
+  0%   { opacity: 0; transform: scale(0.6) translateY(-4px); }
+  60%  { opacity: 1; transform: scale(1.08) translateY(0); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+.tour-hole-label__svg {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: ${CONSTANTS.Z_LABEL_CONNECTOR};
+  pointer-events: none;
+}
+.tour-hole-label__line {
+  stroke: var(--apple-primary-on-dark, #68ACE5);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 4;
+  opacity: 0.85;
+  transition: opacity 0.3s ${CONSTANTS.SMOOTH};
+}
+.tour-hole-label__line.is-settled { opacity: 0.25; }
 
 /* ── Tour panel (bottom-right) ── */
 .tour-panel {
   position: fixed;
   right: 20px;
   bottom: 20px;
-  z-index: 2000;
+  z-index: ${CONSTANTS.Z_PANEL};
   width: min(360px, calc(100vw - 40px));
   padding: 16px 18px;
   display: flex;
   flex-direction: column;
   gap: 6px;
+  transition: transform 0.18s ${CONSTANTS.SPRING};
+}
+.tour-panel.is-nudge {
+  animation: tour-panel-nudge 0.42s ${CONSTANTS.SPRING};
+}
+@keyframes tour-panel-nudge {
+  0%, 100% { transform: translateY(0); }
+  40%      { transform: translateY(-6px); }
 }
 .tour-panel__progress {
   font-size: 11.5px;
@@ -1118,22 +1342,20 @@
   font-weight: 700;
   color: var(--apple-text-primary, inherit);
 }
-.tour-panel__dots {
-  display: flex;
-  gap: 5px;
-  margin: 2px 0 4px;
+.tour-panel__hint {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--apple-text-secondary, inherit);
+  margin-top: 2px;
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: opacity 0.3s ${CONSTANTS.SMOOTH},
+              max-height 0.3s ${CONSTANTS.SMOOTH};
 }
-.tour-panel__dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: rgba(0, 45, 114, 0.18);
-  transition: background 0.3s cubic-bezier(0.22, 0.61, 0.36, 1),
-              transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-.tour-panel__dot.is-done {
-  background: var(--apple-primary, #002D72);
-  transform: scale(1.2);
+.tour-panel__hint.is-visible {
+  opacity: 0.85;
+  max-height: 40px;
 }
 .tour-panel__controls {
   display: flex;
@@ -1153,19 +1375,30 @@
   border-radius: 9999px;
   border: 1px solid transparent;
   cursor: pointer;
-  transition: transform 0.15s cubic-bezier(0.22, 0.61, 0.36, 1),
-              background 0.15s cubic-bezier(0.22, 0.61, 0.36, 1),
-              box-shadow 0.2s cubic-bezier(0.22, 0.61, 0.36, 1);
+  transition: transform 0.15s ${CONSTANTS.SMOOTH},
+              background 0.15s ${CONSTANTS.SMOOTH},
+              box-shadow 0.2s ${CONSTANTS.SMOOTH};
 }
 .tour-btn:hover { transform: translateY(-1px); }
 .tour-btn--primary {
   background: var(--apple-primary, #002D72);
   color: #fff;
-  animation: tour-next-pulse 2.2s ease-in-out infinite;
 }
 .tour-btn--primary:hover {
   background: var(--apple-primary-focus, #1a3d8f);
-  animation-play-state: paused;
+}
+.tour-btn--breathing {
+  animation: tour-btn-breath ${CONSTANTS.NEXT_BREATH_PERIOD_MS}ms ease-in-out infinite;
+}
+@keyframes tour-btn-breath {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(104, 172, 229, 0.45);
+  }
+  50% {
+    transform: scale(1.03);
+    box-shadow: 0 0 0 8px rgba(104, 172, 229, 0);
+  }
 }
 .tour-btn--ghost {
   background: transparent;
@@ -1173,16 +1406,6 @@
   color: var(--apple-primary, #002D72);
 }
 .tour-btn--ghost:hover { background: rgba(0, 45, 114, 0.06); }
-.tour-btn--doit {
-  background: rgba(104, 172, 229, 0.12);
-  border-color: rgba(104, 172, 229, 0.4);
-  color: var(--apple-primary-focus, #1a3d8f);
-}
-.tour-btn--doit:hover { background: rgba(104, 172, 229, 0.22); }
-@keyframes tour-next-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(104, 172, 229, 0.45); }
-  50%      { box-shadow: 0 0 0 6px rgba(104, 172, 229, 0); }
-}
 
 /* ── Take-a-Tour CTA breathing ── */
 .tour-cta {
@@ -1200,13 +1423,17 @@
 
 @media (prefers-reduced-motion: reduce) {
   .tour-canvas,
+  .tour-mask-svg,
   .tour-mask-svg rect.hole--blooming,
-  .tour-callout,
+  .tour-hole-label,
   .tour-btn--primary,
+  .tour-btn--breathing,
   .tour-cta {
     animation: none !important;
     transition: none !important;
   }
+  .tour-mask-svg.is-fading-in { opacity: 1; }
+  .tour-mask-svg.is-fading-out { opacity: 0; }
 }
 
 @media (max-width: 640px) {
@@ -1224,6 +1451,10 @@
   }
   .tour-canvas__end {
     right: 12px;
+  }
+  .tour-canvas__hint {
+    right: 12px;
+    top: 22px;
   }
 }
       `;
