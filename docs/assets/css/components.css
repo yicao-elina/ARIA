@@ -87,6 +87,7 @@
 }
 
 .tier-card {
+  position: relative;
   border-radius: 20px;
   padding: 28px;
   border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.6));
@@ -94,16 +95,49 @@
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 8px 28px rgba(0, 45, 114, 0.08);
-  transition: transform 220ms ease-out, box-shadow 220ms ease;
+  transition:
+    transform 320ms cubic-bezier(.16, 1, .3, 1),
+    box-shadow 320ms ease,
+    border-color 320ms ease;
+  overflow: hidden;
+}
+
+/* Tier-colored bottom-bar reveal on hover. The bar starts at 0
+   width and grows to 100% on hover — a refined Morandi blue/gold
+   accent that signals which tier the card represents without
+   fighting the rest of the design. */
+.tier-card::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    var(--tier-1, #002D72) 30%,
+    var(--tier-2, #A99400) 70%,
+    transparent 100%);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 420ms cubic-bezier(.16, 1, .3, 1);
+  opacity: 0.55;
+  pointer-events: none;
 }
 
 .tier-card:hover {
-  transform: translateY(-3px);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65), 0 16px 40px rgba(0, 45, 114, 0.12);
+  transform: translateY(-4px);
+  border-color: rgba(104, 172, 229, 0.32);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 18px 44px rgba(0, 45, 114, 0.14),
+    0 0 0 1px rgba(104, 172, 229, 0.06);
 }
 
+.tier-card:hover::after { transform: scaleX(1); }
+
 .tier-card:active {
-  transform: scale(0.97);
+  transform: scale(0.985) translateY(-1px);
 }
 
 .tier-card h3 {
@@ -152,20 +186,22 @@
   text-transform: uppercase;
 }
 
-/* ── Tier Detail Sections ── */
-/* Frosted-glass deep-dive cards: 24px radius, 32px padding, soft inner ring,
-   Heritage-tinted shadow, AND the colored left accent strip preserved. */
+/* ── Tier Detail Sections ──
+   Quiet frosted container — the *examples* inside should pop, not this.
+   Reduced blur and lower background so each .tier-example inside reads
+   as a clearly distinct card. */
 .tier-detail {
   margin: 48px 0;
-  padding: 32px;
-  border-radius: 24px;
+  padding: 28px;
+  border-radius: 20px;
   border-left: 4px solid;
-  border-top: 1px solid var(--glass-border, rgba(255, 255, 255, 0.6));
-  border-right: 1px solid var(--glass-border, rgba(255, 255, 255, 0.6));
-  border-bottom: 1px solid var(--glass-border, rgba(255, 255, 255, 0.6));
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 12px 36px rgba(0, 45, 114, 0.08);
+  border-top: 1px solid var(--apple-divider-soft);
+  border-right: 1px solid var(--apple-divider-soft);
+  border-bottom: 1px solid var(--apple-divider-soft);
+  background: rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(8px) saturate(160%);
+  -webkit-backdrop-filter: blur(8px) saturate(160%);
+  box-shadow: 0 2px 12px rgba(0, 45, 114, 0.04);
 }
 
 .tier-detail-header {
@@ -174,6 +210,103 @@
   gap: 12px;
   margin-bottom: 17px;
   flex-wrap: wrap;
+}
+
+/* ── Tier Example (sub-block) ──
+   Each Example 1/2/3 is its OWN visually distinct glass card — opaque
+   white surface, prominent shadow, corner badge "EXAMPLE 01/02/03",
+   tier-coloured left strip, and a subtle hover lift so the user can
+   tell at a glance these are separate, self-contained moments. */
+.tier-example {
+  position: relative;
+  margin: 28px 0;
+  padding: 28px 26px 24px;
+  border-radius: 18px;
+  background: var(--apple-canvas);
+  border: 1px solid var(--apple-divider-soft);
+  border-left: 4px solid var(--apple-primary);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    0 2px 6px rgba(0, 45, 114, 0.04),
+    0 10px 28px rgba(0, 45, 114, 0.08);
+  transition:
+    transform 320ms cubic-bezier(.16, 1, .3, 1),
+    box-shadow 320ms ease,
+    border-color 320ms ease;
+}
+
+/* Tier-tinted left strip for each example */
+.tier-1-detail .tier-example { border-left-color: var(--tier-1); }
+.tier-2-detail .tier-example { border-left-color: var(--tier-2); }
+.tier-3-detail .tier-example { border-left-color: var(--tier-3); }
+
+.tier-example:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    0 4px 10px rgba(0, 45, 114, 0.06),
+    0 18px 40px rgba(0, 45, 114, 0.12);
+}
+
+/* "EXAMPLE 0X" corner badge — gives each block its own identity */
+.tier-example::after {
+  content: "EXAMPLE " counter(aria-example, decimal-leading-zero);
+  position: absolute;
+  top: -10px;
+  left: 22px;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--apple-primary);
+  color: var(--apple-on-primary);
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.10em;
+  box-shadow: 0 2px 8px rgba(0, 45, 114, 0.22);
+}
+
+.tier-1-detail .tier-example::after { background: var(--tier-1); }
+.tier-2-detail .tier-example::after { background: var(--tier-2); }
+.tier-3-detail .tier-example::after { background: var(--tier-3); }
+
+/* Counter for "EXAMPLE 01/02/03" badges. Reset ONCE at the top-level
+   #tier-deep-dive container so the three examples number globally
+   (01 → 02 → 03) rather than each tier restarting at 01. */
+#tier-deep-dive { counter-reset: aria-example; }
+.tier-example { counter-increment: aria-example; }
+
+.tier-example h4 {
+  margin: 4px 0 16px;
+  font-size: var(--text-body-strong);
+  font-weight: var(--weight-semibold);
+  color: var(--apple-ink);
+  line-height: var(--leading-body-strong);
+  letter-spacing: var(--tracking-body);
+}
+
+/* Constraint checks, analogical transfer, confidence comparison —
+   all live as inner blocks within .tier-example. They get a calmer
+   surface treatment so the eye doesn't get exhausted by 4 layers of
+   blur in a row, but they still respond to hover. */
+.constraint-checks,
+.analogical-transfer,
+.uncertainty-flag,
+.confidence-comparison {
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--apple-divider-soft);
+  border-radius: 14px;
+  padding: 16px 18px;
+  transition:
+    border-color 240ms ease,
+    box-shadow 240ms ease,
+    transform 240ms cubic-bezier(.16, 1, .3, 1);
+}
+
+.analogical-transfer:hover,
+.confidence-comparison:hover {
+  border-color: rgba(104, 172, 229, 0.30);
+  box-shadow: 0 6px 20px rgba(0, 45, 114, 0.08);
+  transform: translateY(-2px);
 }
 
 /* ── Causal Trace Visualization ── */
@@ -193,6 +326,16 @@
   min-width: 140px;
   font-size: var(--text-caption);
   line-height: var(--leading-caption);
+  cursor: default;
+  transition:
+    transform 240ms cubic-bezier(.16, 1, .3, 1),
+    box-shadow 240ms ease;
+}
+
+.trace-node:hover {
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 10px 24px rgba(0, 45, 114, 0.18);
+  z-index: 1;
 }
 
 .trace-label {
@@ -220,11 +363,20 @@
 
 .trace-mechanism {
   font-size: var(--text-caption);
-  background: rgba(255, 255, 255, 0.7);
-  padding: 12px 17px;
+  background: rgba(255, 255, 255, 0.85);
+  padding: 14px 18px;
   border-radius: var(--radius-sm);
   margin: 12px 0;
   line-height: var(--leading-body);
+  border: 1px solid var(--apple-divider-soft);
+  cursor: default;
+  transition: border-color 220ms ease, transform 220ms ease, box-shadow 220ms ease;
+}
+
+.trace-mechanism:hover {
+  border-color: rgba(104, 172, 229, 0.30);
+  transform: translateX(3px);
+  box-shadow: 0 6px 18px rgba(0, 45, 114, 0.08);
 }
 
 /* ── Constraint Checks ── */
@@ -236,9 +388,17 @@
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  padding: 4px 0;
+  padding: 8px 10px;
   font-size: var(--text-caption);
   line-height: var(--leading-caption);
+  border-radius: 10px;
+  cursor: default;
+  transition: background 200ms ease, transform 200ms ease;
+}
+
+.constraint-check:hover {
+  background: rgba(104, 172, 229, 0.06);
+  transform: translateX(3px);
 }
 
 .constraint-check.passed .check-icon {
@@ -262,7 +422,18 @@
   border-radius: var(--radius-sm);
   text-align: center;
   min-width: 150px;
+  cursor: default;
+  transition: transform 240ms cubic-bezier(.16, 1, .3, 1), box-shadow 240ms ease;
 }
+
+.analogical-transfer:hover .transfer-source,
+.analogical-transfer:hover .transfer-target {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(0, 45, 114, 0.12);
+}
+
+.analogical-transfer:hover .transfer-source { transform: translateX(-4px); }
+.analogical-transfer:hover .transfer-target { transform: translateX(4px); }
 
 .transfer-source {
   background: rgba(0, 45, 114, 0.05);
@@ -291,9 +462,17 @@
 .disclaimer {
   font-size: var(--text-caption);
   background: var(--aria-warning-bg);
-  padding: 8px 17px;
+  padding: 10px 17px;
   border-radius: var(--radius-sm);
   margin: 12px 0;
+  border: 1px solid transparent;
+  cursor: default;
+  transition: border-color 220ms ease, transform 220ms ease;
+}
+
+.disclaimer:hover {
+  border-color: var(--aria-warning);
+  transform: translateX(3px);
 }
 
 /* ── Uncertainty Flag ── */
@@ -308,10 +487,22 @@
   margin: 17px 0;
   font-size: var(--text-caption);
   line-height: var(--leading-caption);
+  cursor: default;
+  transition: transform 240ms ease, box-shadow 240ms ease;
+}
+
+.uncertainty-flag:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(0, 45, 114, 0.10);
 }
 
 .flag-icon {
   font-size: 1.4em;
+  transition: transform 320ms cubic-bezier(.16, 1, .3, 1);
+}
+
+.uncertainty-flag:hover .flag-icon {
+  transform: rotate(-8deg) scale(1.15);
 }
 
 /* ── Confidence Comparison Bars ── */
@@ -321,6 +512,15 @@
 
 .comparison-bar {
   margin: 8px 0;
+  padding: 6px 10px;
+  border-radius: 10px;
+  cursor: default;
+  transition: background 220ms ease, transform 220ms ease;
+}
+
+.comparison-bar:hover {
+  background: rgba(104, 172, 229, 0.06);
+  transform: translateX(3px);
 }
 
 .comparison-label {
@@ -339,25 +539,35 @@
   font-weight: var(--weight-semibold);
   font-size: var(--text-caption);
   color: var(--apple-on-primary);
-  transition: width 0.5s ease;
+  transition: width 0.5s ease, transform 220ms ease, box-shadow 220ms ease;
   background: linear-gradient(90deg, #002D72 0%, #1a3d8f 50%, #68ACE5 100%);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 4px 14px rgba(0, 45, 114, 0.18);
 }
 
+.comparison-bar:hover .comparison-fill {
+  transform: translateX(4px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 8px 24px rgba(0, 45, 114, 0.28);
+}
+
 /* ── Trace Audit Demo ── */
 .trace-audit-demo {
-  background: var(--apple-parchment);
-  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.6));
+  border-radius: 20px;
   padding: 24px;
   margin: 24px 0;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65), 0 10px 32px rgba(0, 45, 114, 0.08);
 }
 
 .trace-query {
-  background: var(--apple-primary);
+  background: linear-gradient(135deg, var(--tier-1, #002D72) 0%, var(--apple-primary-focus, #1a3d8f) 100%);
   color: var(--apple-on-primary);
-  padding: 12px 17px;
-  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  padding: 14px 18px;
+  border-radius: 14px;
   font-weight: var(--weight-semibold);
+  box-shadow: 0 4px 14px rgba(0, 45, 114, 0.18);
 }
 
 .trace-query-label {
@@ -374,18 +584,26 @@
   padding: 17px 0;
 }
 
+/* Each individual step in the trace gets its own glass treatment
+   so the user can focus on one step at a time. */
 .trace-step {
   display: flex;
-  gap: 17px;
-  margin-bottom: 17px;
+  gap: 14px;
+  margin-bottom: 14px;
   opacity: 1;
-  transition: opacity 0.3s ease;
+  transition: transform 280ms cubic-bezier(.16, 1, .3, 1), box-shadow 280ms ease;
+  padding: 4px;
+  border-radius: 16px;
+}
+
+.trace-step:hover {
+  transform: translateX(2px);
 }
 
 .trace-step-marker {
-  width: 32px;
-  height: 32px;
-  min-width: 32px;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
   border-radius: var(--radius-full);
   background: var(--apple-primary);
   color: var(--apple-on-primary);
@@ -394,6 +612,7 @@
   justify-content: center;
   font-weight: var(--weight-semibold);
   font-size: var(--text-caption);
+  box-shadow: 0 2px 8px rgba(0, 45, 114, 0.22);
 }
 
 .tier-1-marker {
@@ -406,10 +625,20 @@
 
 .trace-step-content {
   flex: 1;
-  background: var(--apple-canvas);
-  padding: 17px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--apple-divider-soft);
+  background: rgba(255, 255, 255, 0.7);
+  padding: 14px 17px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transition: border-color 240ms ease, box-shadow 240ms ease, transform 240ms ease;
+}
+
+.trace-step:hover .trace-step-content {
+  border-color: rgba(104, 172, 229, 0.30);
+  box-shadow: 0 6px 20px rgba(0, 45, 114, 0.08);
+  transform: translateY(-1px);
 }
 
 .trace-step-content h4 {

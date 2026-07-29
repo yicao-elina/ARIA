@@ -25,8 +25,10 @@
   border-color: var(--tier-1-border);
 }
 
+/* Tier-N detail uses a QUIET frosted surface so the inner .tier-example
+   cards can pop out as distinct, opaque blocks. Only the colored left
+   strip tells you which tier you're looking at. */
 .tier-1-detail {
-  background: var(--tier-1-bg);
   border-left-color: var(--tier-1);
 }
 
@@ -37,7 +39,6 @@
 }
 
 .tier-2-detail {
-  background: var(--tier-2-bg);
   border-left-color: var(--tier-2);
 }
 
@@ -48,7 +49,6 @@
 }
 
 .tier-3-detail {
-  background: var(--tier-3-bg);
   border-left-color: var(--tier-3);
 }
 
