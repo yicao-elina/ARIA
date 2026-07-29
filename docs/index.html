@@ -118,7 +118,7 @@
     </p>
 
     <div class="callout insight glass-card glass-card--compact reveal">
-      <div class="callout-label">🔑 Key Insight</div>
+      <div class="callout-label">Key Insight</div>
       <p>
         <strong>Contextual tunneling</strong> is a failure mode where LLMs over-anchor on correct-but-incomplete evidence fragments, suppressing their broader parametric reasoning. Unlike the "Knowledge Paradox" (where evidence <em>contradicts</em> parametric knowledge), contextual tunneling occurs even when <em>all retrieved evidence is factually correct</em>—the problem is <em>mechanistic incompleteness</em> of the causal chain.
       </p>
@@ -319,7 +319,7 @@
     </figure>
 
     <div class="callout insight glass-card glass-card--compact reveal">
-      <div class="callout-label">🔑 Key Insight</div>
+      <div class="callout-label">Key Insight</div>
       <p>
         ARIA's gating happens at the <strong>reasoning stage</strong>, not the retrieval stage. Existing RAG systems (Self-RAG, GIVE, GNN-RAG) operate at retrieval—deciding <em>what</em> to retrieve. ARIA decides <em>whether to use</em> retrieved evidence based on whether it forms a complete causal chain.
       </p>
@@ -451,7 +451,7 @@
                 <div class="transfer-content">Estimated bandgap: ~1.5 eV</div>
               </div>
             </div>
-            <div class="disclaimer"><em>⚠ Analogy-based prediction. Mechanisms transferred from MoS₂ with S→Se substitution correction.</em></div>
+            <div class="disclaimer"><em>Analogy-based prediction. Mechanisms transferred from MoS₂ with S→Se substitution correction.</em></div>
           </div>
           <div class="callout success glass-card glass-card--compact reveal">
             <div class="callout-label">✓ Result</div>
@@ -479,7 +479,9 @@
           <div class="tier-example">
             <h4>Example: ITO alternative for transparent conductors</h4>
             <div class="uncertainty-flag">
-              <div class="flag-icon">⚠️</div>
+              <div class="flag-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M12 3.5 22 20H2z"/><path d="M12 9.5v5M12 17.5h.01"/></svg>
+              </div>
               <div class="flag-content">
                 <strong>Uncertainty Flag:</strong> Insufficient causal evidence in the knowledge graph for this inverse design query. Output is based solely on parametric knowledge and should be treated as speculative.
               </div>
@@ -496,7 +498,7 @@
             </div>
           </div>
           <div class="callout warning glass-card glass-card--compact reveal">
-            <div class="callout-label">⚠ Contrast</div>
+            <div class="callout-label">Contrast</div>
             <p>Naive KG+LLM assigns <strong>0.76 confidence</strong> to the same query by concatenating partial ITO edges—<em>despite no complete causal chain existing</em>. ARIA honestly reports <strong>0.52 confidence</strong>, a 32% reduction that signals real <span class="term-tip" tabindex="0" data-tip="Uncertainty about what the model doesn't know or hasn't verified, as opposed to inherent randomness in the underlying physical process.">epistemic uncertainty</span>.</p>
           </div>
         </div>
@@ -667,7 +669,7 @@
     </p>
 
     <div class="callout insight glass-card glass-card--compact reveal">
-      <div class="callout-label">🔑 Takeaway</div>
+      <div class="callout-label">Takeaway</div>
       <p>
         <strong>Retrieve broadly, reason carefully.</strong> The solution to contextual tunneling is not less knowledge, but <em>gated</em> knowledge: activating evidence only when it forms a complete causal chain, analogizing with physical constraints when it doesn't, and honestly flagging uncertainty when evidence is absent.
       </p>

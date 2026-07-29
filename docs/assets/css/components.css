@@ -490,7 +490,9 @@
 }
 
 .flag-icon {
-  font-size: 1.4em;
+  display: flex;
+  flex: 0 0 auto;
+  color: var(--aria-danger);
   transition: transform 320ms cubic-bezier(.16, 1, .3, 1);
 }
 
