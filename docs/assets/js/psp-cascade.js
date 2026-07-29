@@ -101,9 +101,34 @@
       };
     }
 
+    /* ── frosted-glass layer lanes (HTML overlay, behind the SVG) ──── */
+    _drawLayerGlass() {
+      const H = this.height;
+      const band = this.band;
+      const layers = [
+        { key: 'p', modifier: 'processing' },
+        { key: 's', modifier: 'structure' },
+        { key: 'x', modifier: 'property' },
+      ];
+      layers.forEach(l => {
+        const b = band[l.key];
+        this.container.append('div')
+          .attr('class', `psp-layer-glass psp-layer-glass--${l.modifier}`)
+          .style('top', (b.y / H * 100) + '%')
+          .style('height', (b.h / H * 100) + '%');
+      });
+    }
+
     /* ── build SVG skeleton ───────────────────────────────────────── */
     _build() {
       const W = this.width, H = this.height;
+
+      /* Three frosted-glass "lane" overlays — one per PSP layer — sit
+         behind the SVG. Positioned as % of the viewBox height so they
+         track the SVG's responsive scaling (SVG width:100%, viewBox
+         preserves aspect ratio). Pure HTML/CSS because backdrop-filter
+         is not reliable inside inline SVG <rect> elements. */
+      this._drawLayerGlass();
 
       this.svg = this.container
         .append('svg')

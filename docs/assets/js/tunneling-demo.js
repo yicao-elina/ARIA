@@ -303,21 +303,23 @@
         if (seg.type === 'green') {
           span
             .style('background', this.colors.successBg)
-            .style('padding', '1px 3px')
-            .style('border-radius', '3px')
+            .style('padding', '1px 5px')
+            .style('border-radius', '5px')
             .style('color', this.colors.success)
-            .style('font-weight', 600);
+            .style('font-weight', 600)
+            .style('transition', 'background 180ms ease');
         } else if (seg.type === 'red') {
           span
             .style('background', this.colors.dangerBg)
-            .style('padding', '1px 3px')
-            .style('border-radius', '3px')
+            .style('padding', '1px 5px')
+            .style('border-radius', '5px')
             .style('color', this.colors.danger)
             .style('font-weight', 600)
             .style('cursor', 'pointer')
-            .style('border-bottom', '2px wavy ' + this.colors.danger)
+            .style('border-bottom', '1px dashed ' + this.colors.danger)
+            .style('transition', 'background 180ms ease')
             .on('mouseenter', function () {
-              d3.select(this).style('background', '#FCA5A5');
+              d3.select(this).style('background', 'rgba(184, 80, 74, 0.18)');
             })
             .on('mouseleave', function () {
               d3.select(this).style('background', c.dangerBg);
@@ -328,8 +330,8 @@
         } else if (seg.type === 'grey') {
           span
             .style('background', c.parchment)
-            .style('padding', '1px 3px')
-            .style('border-radius', '3px')
+            .style('padding', '1px 5px')
+            .style('border-radius', '5px')
             .style('color', c.inkMuted80)
             .style('font-style', 'italic');
         }

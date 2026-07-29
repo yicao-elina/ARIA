@@ -109,22 +109,30 @@
 
 .entity.property {
   background: var(--aria-success-bg);
-  color: #1f6f2c;
+  color: var(--aria-success);
   font-weight: var(--weight-semibold);
 }
 
-/* ── Comparison Bars ── */
+/* ── Comparison Bars ──
+   Tinted fill + solid left accent border instead of a full-saturation
+   block with reversed (white-on-color) text — softer, still legible,
+   consistent with the glass/Morandi aesthetic used elsewhere. */
 .aria-fill {
-  background: var(--apple-primary);
+  background: var(--aria-success-bg);
+  border-left: 3px solid var(--aria-success);
+  color: var(--aria-success);
 }
 
 .naive-fill {
-  background: var(--aria-danger);
+  background: var(--aria-danger-bg);
+  border-left: 3px solid var(--aria-danger);
+  color: var(--aria-danger);
 }
 
 /* ── Completeness Bar ── */
 .completeness-fill.complete {
-  background: var(--aria-success);
+  background: var(--aria-success-bg);
+  border-left: 3px solid var(--aria-success);
 }
 
 /* ── Toggle Buttons ── */

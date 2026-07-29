@@ -220,7 +220,7 @@
   position: relative;
   margin: 28px 0;
   padding: 28px 26px 24px;
-  border-radius: 18px;
+  border-radius: var(--radius-lg, 18px);
   background: var(--pearl-glass, rgba(255, 255, 255, 0.6));
   border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.6));
   border-top: 3px solid var(--apple-primary);
@@ -291,16 +291,21 @@
    blur in a row, but they still respond to hover. */
 .constraint-checks,
 .analogical-transfer,
-.uncertainty-flag,
 .confidence-comparison {
   background: rgba(255, 255, 255, 0.7);
   border: 1px solid var(--apple-divider-soft);
-  border-radius: 14px;
+  border-radius: var(--radius-md, 11px);
   padding: 16px 18px;
   transition:
     border-color 240ms ease,
     box-shadow 240ms ease,
     transform 240ms cubic-bezier(.16, 1, .3, 1);
+}
+
+/* .uncertainty-flag shares this family's radius/motion recipe but keeps
+   its own danger-tinted surface (color rules untouched — see below) */
+.uncertainty-flag {
+  border-radius: var(--radius-md, 11px);
 }
 
 .analogical-transfer:hover,
@@ -392,9 +397,9 @@
   padding: 8px 10px;
   font-size: var(--text-caption);
   line-height: var(--leading-caption);
-  border-radius: 10px;
+  border-radius: var(--radius-sm, 8px);
   cursor: default;
-  transition: background 200ms ease, transform 200ms ease;
+  transition: background 200ms ease, transform 200ms cubic-bezier(.16, 1, .3, 1);
 }
 
 .constraint-check:hover {
@@ -482,14 +487,16 @@
   align-items: flex-start;
   gap: 12px;
   background: var(--aria-danger-bg);
-  padding: 17px;
-  border-radius: 14px;
+  padding: 16px 18px;
   border: 1px solid rgba(184, 80, 74, 0.22);
   margin: 17px 0;
   font-size: var(--text-caption);
   line-height: var(--leading-caption);
   cursor: default;
-  transition: transform 240ms ease, box-shadow 240ms ease;
+  transition:
+    border-color 240ms ease,
+    box-shadow 240ms ease,
+    transform 240ms cubic-bezier(.16, 1, .3, 1);
 }
 
 .uncertainty-flag:hover {
@@ -514,9 +521,9 @@
 .comparison-bar {
   margin: 8px 0;
   padding: 6px 10px;
-  border-radius: 10px;
+  border-radius: var(--radius-sm, 8px);
   cursor: default;
-  transition: background 220ms ease, transform 220ms ease;
+  transition: background 220ms ease, transform 220ms cubic-bezier(.16, 1, .3, 1);
 }
 
 .comparison-bar:hover {
@@ -531,6 +538,11 @@
   margin-bottom: 4px;
 }
 
+/* Tinted fill + left accent border rather than a solid saturated block
+   with reversed white text — reads as "progress" without the harsh
+   billboard-color-block look. Default (unthemed) case keeps a soft
+   blue tint; .aria-fill / .naive-fill override background/border/color
+   below to carry the pass/fail semantics. */
 .comparison-fill {
   height: 28px;
   border-radius: var(--radius-xs);
@@ -539,15 +551,16 @@
   padding-left: 12px;
   font-weight: var(--weight-semibold);
   font-size: var(--text-caption);
-  color: var(--apple-on-primary);
-  transition: width 0.5s ease, transform 220ms ease, box-shadow 220ms ease;
-  background: linear-gradient(90deg, #002D72 0%, #1a3d8f 50%, #68ACE5 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 4px 14px rgba(0, 45, 114, 0.18);
+  color: var(--apple-primary);
+  transition: width 0.5s ease, transform 220ms ease, box-shadow 220ms ease, background 220ms ease;
+  background: rgba(0, 45, 114, 0.08);
+  border-left: 3px solid var(--apple-primary);
+  box-shadow: none;
 }
 
 .comparison-bar:hover .comparison-fill {
   transform: translateX(4px);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 8px 24px rgba(0, 45, 114, 0.28);
+  box-shadow: 0 4px 14px rgba(0, 45, 114, 0.10);
 }
 
 /* ── Trace Audit Demo ── */
