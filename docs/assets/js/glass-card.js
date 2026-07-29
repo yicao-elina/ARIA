@@ -11,7 +11,7 @@
 (function () {
   "use strict";
 
-  var MAX_TILT = 8;            // degrees
+  var MAX_TILT = 8;            // degrees, baseline for small cards
   var SELECTOR = ".glass-card";
   var SPOTLIGHT_SELECTOR = ".glass-card:not(.glass-card--no-spotlight)";
   var TILT_SELECTOR = ".glass-card:not(.glass-card--no-tilt)";
@@ -22,6 +22,17 @@
 
   function isTouchDevice() {
     return window.matchMedia("(hover: none)").matches || ("ontouchstart" in window);
+  }
+
+  // Size-proportional tilt cap. Larger cards use a smaller angle so
+  // the 3D effect stays subtle and refined instead of feeling like the
+  // card is wobbling. Recomputed once per card and cached in dataset
+  // so we don't hit getBoundingClientRect on every pointermove.
+  function computeMaxTilt(width) {
+    if (width < 300) return 8;
+    if (width < 600) return 6;
+    if (width < 900) return 4;
+    return 3;
   }
 
   function init() {
@@ -51,14 +62,27 @@
         if (motionOff) return;
         if (!card.matches(TILT_SELECTOR)) return;
 
+        // Compute and cache the size-based tilt cap once per card.
+        // Recomputed on resize so reflows don't strand a stale cap.
+        var cachedMax = NaN;
+        function refreshMax() {
+          var w = card.getBoundingClientRect().width;
+          var cap = computeMaxTilt(w);
+          cachedMax = cap;
+          card.dataset.maxTilt = String(cap);
+        }
+        refreshMax();
+        window.addEventListener("resize", refreshMax, { passive: true });
+
         card.addEventListener("pointermove", function (e) {
           var rect = card.getBoundingClientRect();
           var dx = (e.clientX - (rect.left + rect.width / 2)) / (rect.width / 2);
           var dy = (e.clientY - (rect.top + rect.height / 2)) / (rect.height / 2);
           var cx = Math.max(-1, Math.min(1, dx));
           var cy = Math.max(-1, Math.min(1, -dy));   // invert so up-tilt is positive
-          card.style.setProperty("--tilt-x", (cx * MAX_TILT).toFixed(2) + "deg");
-          card.style.setProperty("--tilt-y", (cy * MAX_TILT).toFixed(2) + "deg");
+          var tilt = isNaN(cachedMax) ? MAX_TILT : cachedMax;
+          card.style.setProperty("--tilt-x", (cx * tilt).toFixed(2) + "deg");
+          card.style.setProperty("--tilt-y", (cy * tilt).toFixed(2) + "deg");
         });
 
         card.addEventListener("pointerleave", function () {

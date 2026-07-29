@@ -74,12 +74,39 @@
    Distill-style title block: large title, subtitle, centered,
    with the ARIA logo above. */
 .tile--hero {
-  padding: 120px 24px 80px;                    /* Extra top padding */
+  padding: 0 24px 80px;                         /* No top padding — hero parchment extends to viewport top so there's no pearl strip behind the floating pill header. The pill header is translucent, so we want it sitting over parchment, not over the body bg. The hero content reserves its own top space via the .tile__content margin below. */
   text-align: center;
+  position: relative;                            /* Anchor for ::before watermark */
 }
 
 .tile--hero .tile__content {
-  max-width: 720px;                              /* Narrower for hero text */
+  max-width: 880px;                              /* Wider hero text to fit title in 4 lines */
+  position: relative;                             /* Lift hero text above ::before watermark */
+  z-index: 1;
+  margin-top: 104px;                             /* Reserve top space: pill header bottom (~72px) + 32px breathing room. Pushes the content below the fixed pill header. */
+}
+
+/* Hero logo as decorative watermark (Option B — CSS pseudo-element).
+   Sits behind the title text; pointer-events disabled so it never
+   intercepts clicks/selection. */
+.tile--hero::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 60vw;
+  max-width: 600px;
+  transform: translate(-50%, -50%) scale(1.05);
+  aspect-ratio: 1007.25 / 462.75;                 /* Match SVG viewBox */
+  background-image: url("../figures/ARIA-logo.svg");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  opacity: 0.07;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(0.5px);
+  mix-blend-mode: multiply;
 }
 
 .tile--hero .hero-title {
@@ -89,6 +116,7 @@
   letter-spacing: var(--tracking-hero);
   color: var(--apple-ink);
   margin-bottom: 16px;
+  margin-top: 0;
 }
 
 .tile--hero .hero-subtitle {
@@ -113,9 +141,14 @@
 }
 
 .tile--hero .hero-logo {
-  max-width: 100px;
+  /* Legacy class — the hero logo is now a CSS ::before watermark on
+     .tile--hero (see .tile--hero::before above). The class is kept
+     here as a safety net in case the <img> is ever re-introduced. */
+  max-width: 600px;
+  width: 60vw;
   margin: 24px auto 0;
-  opacity: 0.8;
+  opacity: 0.07;
+  pointer-events: none;
 }
 
 .tile--hero .hero-cta {
@@ -123,6 +156,16 @@
   align-items: center;
   gap: 12px;
   margin-top: 24px;
+}
+
+/* Lead paragraphs read better left-aligned at a comfortable measure —
+   center-aligned works for the one-line title/subtitle above, but
+   multi-line body copy centered across the full width is a readability
+   anti-pattern (ragged, harder-to-track line starts). */
+.tile--hero .hero-lead {
+  text-align: left;
+  max-width: 640px;
+  margin: 32px auto 0;
 }
 
 /* ── Figure Layout (Distill-style)

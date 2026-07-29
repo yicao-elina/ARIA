@@ -84,10 +84,37 @@
         const response = await fetch(this.dataPath);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const json = await response.json();
-        this.data = json.robustness || DEFAULT_ROBUSTNESS;
+        this.data = this._normalize(json.robustness);
       } catch {
         this.data = DEFAULT_ROBUSTNESS;
       }
+    }
+
+    /**
+     * assets/data/benchmark_results.json's `robustness` block ships flat
+     * keys (`edge_deletion_pct`, `aria_full`, `aria_core`, `baseline`,
+     * `naive_kg`) rather than the `{deletion_levels, methods: {name:
+     * [...]}}` shape this component renders from. Without this adapter
+     * `data.methods` is undefined and `Object.keys(data.methods)` throws,
+     * silently failing the whole widget (the constructor's `_loadData()
+     * .then()` has no `.catch`, so the failure never surfaces either).
+     */
+    _normalize(raw) {
+      if (!raw) return DEFAULT_ROBUSTNESS;
+      if (raw.deletion_levels && raw.methods) return raw; // already correct shape
+      if (!raw.edge_deletion_pct) return DEFAULT_ROBUSTNESS;
+      const nameMap = {
+        aria_full: 'ARIA-FULL',
+        aria_core: 'ARIA-CORE',
+        baseline:  'Baseline',
+        naive_kg:  'Naive KG',
+      };
+      const methods = {};
+      Object.keys(nameMap).forEach((key) => {
+        if (Array.isArray(raw[key])) methods[nameMap[key]] = raw[key];
+      });
+      if (!Object.keys(methods).length) return DEFAULT_ROBUSTNESS;
+      return { deletion_levels: raw.edge_deletion_pct, methods };
     }
 
     _build() {

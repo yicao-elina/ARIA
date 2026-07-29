@@ -29,12 +29,12 @@
   <script src="https://d3js.org/d3.v7.min.js"></script>
 
   <!-- Open Graph -->
-  <meta property="og:title" content="ARIA: Causal-Aware Reasoning for Materials Science">
+  <meta property="og:title" content="ARIA: A Causal-Aware Framework for Rescuing LLM Reasoning in Materials Discovery">
   <meta property="og:description" content="How gating knowledge on causal completeness prevents contextual tunneling in LLMs.">
   <meta property="og:type" content="article">
   <meta property="og:image" content="assets/figures/KDD-Fig1.svg">
 
-  <title>ARIA: Causal-Aware Reasoning for Materials Science</title>
+  <title>ARIA: A Causal-Aware Framework for Rescuing LLM Reasoning in Materials Discovery</title>
 </head>
 
 <body>
@@ -84,16 +84,15 @@
 <section class="tile tile--parchment tile--hero" id="abstract">
   <div class="mesh mesh--hero" aria-hidden="true"></div>
   <div class="tile__content">
-    <img src="assets/figures/ARIA-logo.svg" alt="ARIA Logo" class="hero-logo">
-    <h1 class="hero-title reveal">ARIA: Causal-Aware Reasoning for Materials Science</h1>
-    <p class="hero-subtitle reveal">How gating knowledge on causal completeness prevents <em>contextual tunneling</em> in LLMs</p>
-    <p class="hero-authors reveal">Yi Cao et al. · Johns Hopkins University</p>
-    <p class="hero-date reveal">KDD 2026</p>
+    <h1 class="hero-title reveal">ARIA: A Causal-Aware Framework for Rescuing LLM Reasoning in Materials Discovery</h1>
+    <p class="hero-subtitle reveal">Gating knowledge on causal completeness to prevent <em>contextual tunneling</em> in LLMs</p>
+    <p class="hero-authors reveal">Yi Cao, Liaoyaqi Wang, Jieneng Chen, Benjamin Van Durme, Alan Yuille, Paulette Clancy</p>
+    <p class="hero-date reveal">KDD 2026 · AI for Sciences Track</p>
     <div class="hero-cta reveal">
       <a href="https://github.com/yicao-elina/aria" class="sub-nav__cta" target="_blank" rel="noopener">Code &amp; Data</a>
       <a href="#problem" class="toggle-btn">Explore ↓</a>
     </div>
-    <div style="margin-top: 32px;">
+    <div class="hero-lead">
       <p class="reveal">
         Large language models hold immense promise for materials science, but <strong>naively augmenting</strong> them with knowledge graph evidence <em>degrades</em> performance through a failure mode we call <em>contextual tunneling</em>—over-anchoring on correct-but-incomplete evidence. <strong>ARIA</strong> addresses this with a three-tier adaptive reasoning cascade that gates evidence on <em>causal completeness</em>.
       </p>
@@ -160,8 +159,8 @@
     <figure class="figure-block glass-card reveal" id="fig-paper-1">
       <div class="figure-block__stage">
         <img class="figure-block__image"
-             src="assets/figures/KDD-Fig1.png"
-             data-full-src="assets/figures/KDD-Fig1_full.png"
+             src="https://raw.githubusercontent.com/yicao-elina/ARIA/main/docs/figures/KDD-Fig1.svg"
+             data-full-src="https://raw.githubusercontent.com/yicao-elina/ARIA/main/docs/figures/KDD-Fig1.svg"
              alt="KDD Fig 1 - ARIA's three-tier causal cascade. Evidence is activated only when causally complete (Tier 1), transferred from analogs with physical checks (Tier 2), or explicitly flagged as ungrounded (Tier 3)." />
         <button class="fig-hotspot fig-hotspot--pulse" type="button"
                 data-target="#problem"
@@ -187,8 +186,8 @@
     <figure class="figure-block glass-card reveal" id="fig-paper-3">
       <div class="figure-block__stage">
         <img class="figure-block__image"
-             src="assets/figures/KDD_Fig3-KG-workflow.png"
-             data-full-src="assets/figures/KDD_Fig3-KG-workflow_full.png"
+             src="https://raw.githubusercontent.com/yicao-elina/ARIA/main/docs/figures/KDD_Fig3-KG-workflow.svg"
+             data-full-src="https://raw.githubusercontent.com/yicao-elina/ARIA/main/docs/figures/KDD_Fig3-KG-workflow.svg"
              alt="KDD Fig 3 - Knowledge graph construction pipeline: from literature to PSP relationships." />
         <button class="fig-hotspot" type="button"
                 data-target="#kg-section"
@@ -209,8 +208,8 @@
     <figure class="figure-block glass-card reveal" id="fig-paper-4">
       <div class="figure-block__stage">
         <img class="figure-block__image"
-             src="assets/figures/KDD_Fig4.png"
-             data-full-src="assets/figures/KDD_Fig4_full.png"
+             src="https://raw.githubusercontent.com/yicao-elina/ARIA/main/docs/figures/KDD_Fig4.svg"
+             data-full-src="https://raw.githubusercontent.com/yicao-elina/ARIA/main/docs/figures/KDD_Fig4.svg"
              alt="KDD Fig 4 - Tier-specific performance. ARIA's selective evidence activation prevents contextual tunneling while naive KG amplifies it." />
         <button class="fig-hotspot" type="button"
                 data-target="#results"
@@ -226,23 +225,6 @@
         evidence activation prevents contextual tunneling while naive KG amplifies it.
         <a href="#results">Jump to the results</a> for the per-method breakdown
         with confidence intervals and 99.2% LLM-judge preference.
-      </figcaption>
-    </figure>
-
-    <figure class="figure-block glass-card reveal" id="fig-paper-teaser">
-      <div class="figure-block__stage">
-        <img class="figure-block__image"
-             src="assets/figures/Teaser.png"
-             data-full-src="assets/figures/Teaser.png"
-             alt="Teaser figure - ARIA in one frame: knowledge graph with PSP edges, three-tier router, and confidence gating." />
-        <button class="fig-hotspot" type="button"
-                data-target="#abstract"
-                aria-label="Back to the abstract"
-                style="top: 12%; left: 92%;">&uarr;</button>
-      </div>
-      <figcaption class="figure-block__caption">
-        <strong>Teaser.</strong> ARIA in one frame: causal knowledge graph with
-        PSP edges, three-tier router, and confidence gating. <a href="assets/figures/Teaser.pdf" target="_blank" rel="noopener">Original PDF</a>
       </figcaption>
     </figure>
 
@@ -680,11 +662,13 @@
     </p>
 
     <h3>BibTeX</h3>
-    <pre id="bibtex-content">@inproceedings{cao2026aria,
-  title     = {ARIA: Causal-Aware Reasoning for Intelligent Analysis},
-  author    = {Cao, Yi and others},
-  booktitle = {Proceedings of the 32nd ACM SIGKDD Conference on Knowledge Discovery and Data Mining},
-  year      = {2026}
+    <pre id="bibtex-content">@inproceedings{
+cao2026aria,
+title={{ARIA}: A Causal-Aware Framework for Rescuing {LLM} Reasoning in Materials Discovery},
+author={Yi Cao and Liaoyaqi Wang and Jieneng Chen and Benjamin Van Durme and Alan Yuille and Paulette Clancy},
+booktitle={32nd SIGKDD Conference on Knowledge Discovery and Data Mining - AI for Sciences Track},
+year={2026},
+url={https://openreview.net/forum?id=7LFRS69byw}
 }</pre>
 
     <h3>Acknowledgments</h3>
@@ -697,20 +681,38 @@
 <!-- ==================== FOOTER ==================== -->
 <footer class="site-footer">
   <div class="tile__content">
-    ARIA: Causal-Aware Reasoning for Intelligent Analysis · Johns Hopkins University · KDD 2026
+    ARIA: A Causal-Aware Framework for Rescuing LLM Reasoning in Materials Discovery · KDD 2026 · AI for Sciences Track
   </div>
 </footer>
 
-<!-- ==================== SCRIPTS ==================== -->
-<script src="assets/js/theme.js"></script>
-<script src="assets/js/psp-cascade.js"></script>
-<script src="assets/js/tunneling-demo.js"></script>
-<script src="assets/js/kg-explorer.js"></script>
-<script src="assets/js/figure-viewer.js"></script>
+<!-- ==================== SCRIPTS ====================
+     Critical chrome scripts (theme, glass, reveal, header, boot) are
+     `defer` and load first so the page always paints correctly.
+     Heavy D3 demo widgets are `async` and independent of each other —
+     a stalled fetch for any one of them (slow network, blocked CDN,
+     a cloud-sync placeholder file that never hydrates) can no longer
+     block the others or the core chrome from initializing. main.js
+     already no-ops gracefully (with a console warning) if a widget
+     class hasn't finished loading by the time its container scrolls
+     into view. -->
+<script src="assets/js/theme.js" defer></script>
+<script src="assets/js/glass-card.js" defer></script>
+<script src="assets/js/header-tooltip.js" defer></script>
+<script src="assets/js/reveal.js" defer></script>
+<script src="assets/js/figure-viewer.js" defer></script>
+
+<script src="assets/js/psp-cascade.js" async></script>
+<script src="assets/js/tunneling-demo.js" async></script>
+<script src="assets/js/kg-explorer.js" async></script>
+<script src="assets/js/main-table.js" async></script>
+<script src="assets/js/tier-router.js" async></script>
+<script src="assets/js/results-chart.js" async></script>
+<script src="assets/js/robustness-slider.js" async></script>
+
 <script>window.ARIA_MAIN_TABLE = {
   "version": "1.0.0",
   "title": "Main Results on 2D-Materials Synthesis Tasks",
-  "subtitle": "149 expert-validated queries · 6 systems · forward prediction & inverse design",
+  "subtitle": "149 expert-validated queries · 5 methods · forward prediction & inverse design",
   "rows": [
     {
       "method": "Baseline LLM",
@@ -718,12 +720,12 @@
       "color_token": "--apple-ink-muted-48",
       "category": "ablation",
       "forward_id": 0.340,
-      "forward_ood": 0.326,
-      "forward_pooled": 0.333,
-      "inverse_id": 0.345,
-      "inverse_ood": 0.313,
-      "inverse_pooled": 0.329,
-      "overall": 0.331,
+      "forward_ood": 0.298,
+      "forward_pooled": 0.319,
+      "inverse_id": 0.326,
+      "inverse_ood": 0.285,
+      "inverse_pooled": 0.306,
+      "overall": 0.313,
       "phys_consistency": 0.877,
       "phys_violation_pct": 12.3,
       "latency_ms": 980,
@@ -736,12 +738,12 @@
       "color_token": "--aria-danger",
       "category": "ablation",
       "forward_id": 0.337,
-      "forward_ood": 0.322,
-      "forward_pooled": 0.330,
-      "inverse_id": 0.301,
-      "inverse_ood": 0.312,
-      "inverse_pooled": 0.307,
-      "overall": 0.318,
+      "forward_ood": 0.301,
+      "forward_pooled": 0.319,
+      "inverse_id": 0.285,
+      "inverse_ood": 0.265,
+      "inverse_pooled": 0.275,
+      "overall": 0.297,
       "phys_consistency": 0.350,
       "phys_violation_pct": 65.0,
       "latency_ms": 1240,
@@ -749,21 +751,57 @@
       "preference_pct": 0.4
     },
     {
+      "method": "Self-RAG",
+      "short": "Self-RAG",
+      "color_token": "--aria-warning",
+      "category": "rag-baseline",
+      "forward_id": 0.402,
+      "forward_ood": 0.368,
+      "forward_pooled": 0.385,
+      "inverse_id": 0.390,
+      "inverse_ood": 0.345,
+      "inverse_pooled": 0.368,
+      "overall": 0.376,
+      "phys_consistency": 0.560,
+      "phys_violation_pct": 44.0,
+      "latency_ms": 1580,
+      "interp_score": 0.560,
+      "preference_pct": 8.5
+    },
+    {
+      "method": "GNN-RAG",
+      "short": "GNN-RAG",
+      "color_token": "--aria-warning",
+      "category": "rag-baseline",
+      "forward_id": 0.418,
+      "forward_ood": 0.382,
+      "forward_pooled": 0.400,
+      "inverse_id": 0.402,
+      "inverse_ood": 0.360,
+      "inverse_pooled": 0.381,
+      "overall": 0.391,
+      "phys_consistency": 0.620,
+      "phys_violation_pct": 38.0,
+      "latency_ms": 1620,
+      "interp_score": 0.620,
+      "preference_pct": 12.7
+    },
+    {
       "method": "ARIA-CORE",
       "short": "ARIA-CORE",
       "color_token": "--apple-primary-focus",
       "category": "aria",
       "forward_id": 0.410,
-      "forward_ood": 0.447,
-      "forward_pooled": 0.429,
+      "forward_ood": 0.372,
+      "forward_pooled": 0.391,
       "inverse_id": 0.454,
-      "inverse_ood": 0.459,
-      "inverse_pooled": 0.457,
-      "overall": 0.443,
+      "inverse_ood": 0.408,
+      "inverse_pooled": 0.431,
+      "overall": 0.411,
       "phys_consistency": 0.833,
       "phys_violation_pct": 16.7,
       "latency_ms": 1410,
-      "interp_score": 0.791,
+      "interp_score": 0.833,
       "preference_pct": 35.4
     },
     {
@@ -772,53 +810,17 @@
       "color_token": "--apple-primary",
       "category": "aria",
       "forward_id": 0.512,
-      "forward_ood": 0.513,
-      "forward_pooled": 0.513,
+      "forward_ood": 0.465,
+      "forward_pooled": 0.587,
       "inverse_id": 0.498,
-      "inverse_ood": 0.513,
-      "inverse_pooled": 0.506,
-      "overall": 0.509,
+      "inverse_ood": 0.450,
+      "inverse_pooled": 0.495,
+      "overall": 0.541,
       "phys_consistency": 0.912,
       "phys_violation_pct": 8.8,
       "latency_ms": 1820,
-      "interp_score": 0.925,
+      "interp_score": 0.912,
       "preference_pct": 99.2
-    },
-    {
-      "method": "ARIA-SEARCH",
-      "short": "ARIA-SEARCH",
-      "color_token": "--aria-warning",
-      "category": "aria",
-      "forward_id": 0.511,
-      "forward_ood": 0.493,
-      "forward_pooled": 0.502,
-      "inverse_id": 0.520,
-      "inverse_ood": 0.467,
-      "inverse_pooled": 0.494,
-      "overall": 0.498,
-      "phys_consistency": null,
-      "phys_violation_pct": null,
-      "latency_ms": null,
-      "interp_score": 0.816,
-      "preference_pct": null
-    },
-    {
-      "method": "KG-ONLY",
-      "short": "KG-ONLY",
-      "color_token": "--apple-ink-muted-48",
-      "category": "ablation",
-      "forward_id": 0.231,
-      "forward_ood": 0.228,
-      "forward_pooled": 0.230,
-      "inverse_id": 0.238,
-      "inverse_ood": 0.238,
-      "inverse_pooled": 0.238,
-      "overall": 0.234,
-      "phys_consistency": null,
-      "phys_violation_pct": null,
-      "latency_ms": null,
-      "interp_score": 0.350,
-      "preference_pct": null
     }
   ],
   "columns": [
@@ -836,6 +838,8 @@
     "p_values": {
       "vs_baseline":  "1.2e-19",
       "vs_naive_kg":  "8.7e-31",
+      "vs_self_rag":  "3.4e-22",
+      "vs_gnn_rag":   "1.1e-18",
       "vs_aria_core": "2.0e-04"
     }
   },
@@ -845,15 +849,25 @@
   }
 }
 ;</script>
-<script src="assets/js/main-table.js"></script>
-<script src="assets/js/tier-router.js"></script>
-<script src="assets/js/results-chart.js"></script>
-<script src="assets/js/robustness-slider.js"></script>
-<script src="assets/js/glass-card.js" defer></script>
-<script src="assets/js/header-tooltip.js" defer></script>
-<script src="assets/js/reveal.js" defer></script>
-<script src="assets/js/main.js"></script>
+<script src="assets/js/main.js" defer></script>
 <script>document.documentElement.classList.add("site-ready");</script>
+
+<!-- Safety net: if reveal.js is ever blocked from loading (dead CDN,
+     a cloud-sync placeholder that never hydrates, etc.), force all
+     .reveal content visible after a short grace period so the page
+     never gets stuck fully blank. Inline + tiny so it can't itself
+     be the thing that fails to load. -->
+<script>
+(function () {
+  'use strict';
+  setTimeout(function () {
+    var hidden = document.querySelectorAll('.reveal:not(.is-visible)');
+    if (hidden.length) {
+      hidden.forEach(function (el) { el.classList.add('is-visible'); });
+    }
+  }, 2500);
+})();
+</script>
 
 </body>
 </html>

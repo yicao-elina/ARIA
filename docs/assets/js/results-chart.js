@@ -66,16 +66,60 @@
         const response = await fetch(this.dataPath);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const json = await response.json();
-        /* Merge: prefer JSON fields, fall back to defaults */
-        this.data = {
-          methods:             json.methods             || DEFAULT_DATA.methods,
-          scores:             json.scores             || DEFAULT_DATA.scores,
-          tier_distribution:  json.tier_distribution  || DEFAULT_DATA.tier_distribution,
-          physical_consistency: json.physical_consistency || DEFAULT_DATA.physical_consistency,
-        };
+        this.data = this._normalize(json);
       } catch {
         this.data = DEFAULT_DATA;
       }
+    }
+
+    /**
+     * assets/data/benchmark_results.json ships one object per method
+     * (`{name, short, forward_in_domain, forward_ood, inverse_in_domain,
+     * inverse_ood, overall, physical_consistency, tier_distribution}`)
+     * rather than the parallel-array shape this component renders from
+     * (`methods: [string]`, `scores: {forward_prediction, inverse_design,
+     * overall}`, etc). Without this adapter, `json.methods` (an array of
+     * objects) silently overrides DEFAULT_DATA.methods, producing
+     * "[object Object]" axis labels, while `json.scores` is simply absent
+     * so the chart quietly falls back to made-up placeholder percentages
+     * instead of the paper's real numbers. Adapt the real shape here
+     * instead of rewriting every render function.
+     */
+    _normalize(json) {
+      if (!Array.isArray(json.methods) || !json.methods.length || typeof json.methods[0] !== 'object') {
+        return {
+          methods:              json.methods              || DEFAULT_DATA.methods,
+          scores:                json.scores                || DEFAULT_DATA.scores,
+          tier_distribution:    json.tier_distribution    || DEFAULT_DATA.tier_distribution,
+          physical_consistency: json.physical_consistency || DEFAULT_DATA.physical_consistency,
+        };
+      }
+
+      const pooled = (a, b) => (typeof a === 'number' && typeof b === 'number') ? (a + b) / 2 : null;
+      const methods = json.methods.map((m) => m.short || m.name);
+      const scores = {
+        forward_prediction: json.methods.map((m) => pooled(m.forward_in_domain, m.forward_ood)),
+        inverse_design:     json.methods.map((m) => pooled(m.inverse_in_domain, m.inverse_ood)),
+        overall:             json.methods.map((m) => m.overall),
+      };
+
+      const toTierKeys = (d) => (d ? { T1: d.tier1, T2: d.tier2, T3: d.tier3 } : null);
+      const tierSource = json.methods.find((m) => m.tier_distribution && (m.tier_distribution.forward || m.tier_distribution.inverse));
+      const tier_distribution = tierSource ? {
+        forward_prediction: toTierKeys(tierSource.tier_distribution.forward) || DEFAULT_DATA.tier_distribution.forward_prediction,
+        inverse_design:     toTierKeys(tierSource.tier_distribution.inverse) || DEFAULT_DATA.tier_distribution.inverse_design,
+      } : DEFAULT_DATA.tier_distribution;
+
+      const physical_consistency = json.methods
+        .filter((m) => typeof m.physical_consistency === 'number')
+        .map((m) => ({ method: m.short || m.name, value: m.physical_consistency }));
+
+      return {
+        methods,
+        scores,
+        tier_distribution,
+        physical_consistency: physical_consistency.length ? physical_consistency : DEFAULT_DATA.physical_consistency,
+      };
     }
 
     _build() {

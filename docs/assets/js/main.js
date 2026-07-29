@@ -223,6 +223,12 @@
         } else {
           console.warn('[ARIA] KGExplorer class not found');
         }
+        // KGExplorer builds its DOM lazily via an explicit init() call
+        // (constructor only sets up state). Without this the container
+        // stays empty even though the class loaded successfully.
+        if (window.ARIA.KGExplorer && typeof window.ARIA.KGExplorer.init === 'function') {
+          window.ARIA.KGExplorer.init();
+        }
       } catch (err) {
         console.error('[ARIA] KGExplorer init failed', err);
       }

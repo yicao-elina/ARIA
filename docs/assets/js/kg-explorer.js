@@ -139,7 +139,7 @@
     } else {
       this.container = d3.select(this.containerSelector);
     }
-    if (!this.container || this.container.empty || this.container.empty()) {
+    if (!this.container || this.container.empty()) {
       console.error('[KGExplorer] Container not found:', this.containerSelector);
       return;
     }
@@ -665,17 +665,19 @@
       .attr('stroke-width', 2)
       .style('cursor', 'pointer');
 
-    nodeEnter
-      .transition().duration(400)
-      .attr('r', function (d) { return self._nodeRadius(d); })
-      .attr('opacity', 1);
-
     // Merge
+    // NOTE: entering and merged selections must share a single .transition()
+    // call per element. Two separate .transition() calls on overlapping
+    // selections (one on nodeEnter, one on the merge) interrupt each other —
+    // the first (opacity 0→1) gets canceled after its first frame, leaving
+    // nodes permanently stuck at ~0 opacity. Only the merged transition
+    // below runs, so it must also carry the opacity 0→1 fade-in.
     var nodeMerge = nodeSel.merge(nodeEnter);
 
     nodeMerge
-      .transition().duration(300)
+      .transition().duration(400)
       .attr('r', function (d) { return self._nodeRadius(d); })
+      .attr('opacity', 1)
       .attr('fill', function (d) { return PSP_LAYERS[d.layer] ? PSP_LAYERS[d.layer].color : '#999'; });
 
     // Drag behavior
@@ -718,13 +720,13 @@
       .attr('opacity', 0)
       .text(function (d) { return self._truncateLabel(d.id); });
 
-    labelEnter
-      .transition().duration(400)
-      .attr('opacity', 1);
-
     // Update
+    // (See _drawNodes for why opacity must be set on this single merged
+    // transition rather than a separate one on labelEnter — two competing
+    // .transition() calls on overlapping selections interrupt each other.)
     labelSel.merge(labelEnter)
-      .transition().duration(300)
+      .transition().duration(400)
+      .attr('opacity', 1)
       .attr('dy', function (d) { return self._nodeRadius(d) + 14; })
       .text(function (d) { return self._truncateLabel(d.id); });
   };
