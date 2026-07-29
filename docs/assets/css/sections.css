@@ -13,6 +13,10 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  /* When the page is jumped to a section (via the header pill links,
+     fig-hotspot reverse jumps, or paper-fig-link outbound clicks), keep
+     the section's top clear of the fixed pill header. */
+  scroll-margin-top: calc(var(--header-offset, 96px) + 12px);
 }
 
 .tile__content {

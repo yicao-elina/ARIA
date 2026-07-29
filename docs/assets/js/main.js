@@ -524,7 +524,17 @@
       if (window.matchMedia('(hover: none)').matches) {
         document.body.classList.add('no-spotlight');
       }
-      console.log('[ARIA] site init complete');
+
+      // Mark result/chart surfaces so the glass-card spotlight + float
+      // don't compete with the data. The user wants to read the chart,
+      // not be distracted by a glowing cursor trail.
+      qsa('.interactive-figure, #mt-table-host, #mt-column-charts, #mt-stat-tests, #mt-tier-donut, #main-table-root, #results-chart')
+        .forEach(function (el) {
+          if (!el) return;
+          el.classList.add('glass-card--no-tilt');
+          el.classList.add('glass-card--no-spotlight');
+          el.classList.add('glass-card--no-float');
+        });
     } catch (err) { console.error('[ARIA] style-lift init failed', err); }
 
     try { initScrollAnimations(); } catch (err) { console.error('[ARIA] Scroll animations init failed', err); }

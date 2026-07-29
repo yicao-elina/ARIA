@@ -8,6 +8,11 @@
 
 .figure-block {
   margin: var(--sp-xl) 0;
+  /* Anchor targets (e.g. #fig-paper-1) used by section "View in paper"
+     links and the fig-hotspot reverse jumps. Without this, the browser
+     scrolls the figure's top to the viewport top, where the fixed
+     pill header covers it. */
+  scroll-margin-top: calc(var(--header-offset, 96px) + 12px);
 }
 
 .figure-block__stage {
@@ -90,14 +95,19 @@
   text-decoration: underline;
 }
 
-/* Clickable guidance hotspots overlaid on the figure */
+/* Clickable guidance hotspots overlaid on the figure.
+   Two-layer "alive" affordance:
+   - solid colored core with tier-tinted glow ring
+   - soft outer pulse so the user instantly knows something is interactive
+   - on hover: scale 1.25, brighter ring, glow halo, tooltip slides in
+*/
 .fig-hotspot {
   position: absolute;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   background: var(--apple-primary);
   color: var(--apple-on-primary);
@@ -105,23 +115,46 @@
   font-size: 13px;
   font-weight: var(--weight-semibold);
   border: 2px solid var(--apple-canvas);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  box-shadow:
+    0 2px 8px rgba(0, 45, 114, 0.18),
+    0 0 0 4px rgba(104, 172, 229, 0.18);
   cursor: pointer;
-  transform: translate(-50%, -50%);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  transform: translate(-50%, -50%) scale(1);
+  transition:
+    transform 280ms cubic-bezier(.16, 1, .3, 1),
+    box-shadow 280ms ease,
+    background 280ms ease;
   z-index: 2;
+  animation: fig-hotspot-breath 2.6s ease-in-out infinite;
+}
+
+@keyframes fig-hotspot-breath {
+  0%, 100% {
+    box-shadow:
+      0 2px 8px rgba(0, 45, 114, 0.18),
+      0 0 0 4px rgba(104, 172, 229, 0.18);
+  }
+  50% {
+    box-shadow:
+      0 4px 14px rgba(0, 45, 114, 0.28),
+      0 0 0 8px rgba(104, 172, 229, 0.10);
+  }
 }
 
 .fig-hotspot:hover,
 .fig-hotspot:focus-visible {
-  transform: translate(-50%, -50%) scale(1.15);
+  transform: translate(-50%, -50%) scale(1.25);
   background: var(--apple-primary-focus);
-  box-shadow: 0 4px 16px rgba(0, 45, 114, 0.35);
+  box-shadow:
+    0 6px 22px rgba(0, 45, 114, 0.42),
+    0 0 0 6px rgba(104, 172, 229, 0.28),
+    0 0 28px rgba(104, 172, 229, 0.45);
   outline: none;
+  animation-play-state: paused;
 }
 
 .fig-hotspot:active {
-  transform: translate(-50%, -50%) scale(0.95);
+  transform: translate(-50%, -50%) scale(1.05);
 }
 
 .fig-hotspot--pulse::after {
@@ -144,7 +177,7 @@
   position: absolute;
   top: 50%;
   left: calc(100% + 12px);
-  transform: translateY(-50%);
+  transform: translateY(-50%) translateX(-6px);
   background: rgba(29, 29, 31, 0.94);
   color: #fff;
   font-size: 12px;
@@ -156,8 +189,16 @@
   white-space: nowrap;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition: opacity 220ms ease, transform 220ms cubic-bezier(.16, 1, .3, 1);
   z-index: 3;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.22);
+}
+
+.fig-hotspot__label::before {
+  content: "→ ";
+  color: var(--spirit-blue, #68ACE5);
+  font-weight: var(--weight-semibold);
+  margin-right: 2px;
 }
 
 .fig-hotspot:hover .fig-hotspot__label,
@@ -265,3 +306,4 @@
   animation: fig-pulse-target 1.4s ease-out 2;
   border-radius: 8px;
 }
+

@@ -1,20 +1,30 @@
 /* ============================================================
-   Floating glass icon-pill header (ARIA paper site)
+   Floating glass icon-rail header (ARIA paper site)
    Mirrors the yicao-elina header.css; selectors renamed to
    .hp-* to avoid collisions with the rest of the site.
    Self-contained. Loads after tokens.css.
+
+   Docked to the RIGHT edge of the viewport as a vertical rail
+   (rather than a horizontal top-center pill) so it never overlaps
+   page headings, hero copy, or tour-mode callouts that sit near
+   the top of each section. Vertically centered so its footprint
+   sits clear of both the very top and very bottom of the viewport.
+   Reverts to the original horizontal top pill on narrow/mobile
+   viewports, where a side rail would eat into content width.
    ============================================================ */
 
 .app-header {
   position: fixed;
-  top: 16px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 50%;
+  right: 16px;
+  left: auto;
+  transform: translateY(-50%);
   z-index: 1000;
   display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 4px;
-  padding: 8px 12px;
+  padding: 12px 8px;
   background: var(--pearl-glass-strong, rgba(255, 255, 255, 0.7));
   border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.6));
   border-radius: var(--radius-pill, 9999px);
@@ -62,22 +72,29 @@
   transition: color 180ms ease, transform 180ms var(--ease-spring);
   text-decoration: none;
 }
+/* Stacked vertically now, so the hover lift moves icons sideways
+   (away from the rail, toward the page content) instead of
+   vertically — a vertical lift would visually collide with the
+   icon above/below it in the stack. */
 .hp-icon:hover,
 .hp-icon:focus-visible {
   color: var(--mint);
-  transform: translateY(-2px);
+  transform: translateX(-4px);
   outline: none;
 }
 .hp-icon[aria-current="page"] {
   color: var(--mint);
 }
 
-/* Tooltip: absolute, below the icon, spring translateY reveal */
+/* Tooltip: absolute, to the LEFT of the icon (opposite the docked
+   right edge), spring translateX reveal. Vertically centered on
+   the icon since icons are stacked, not inline. */
 .hp-tooltip {
   position: absolute;
-  top: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%) translateY(-4px);
+  right: calc(100% + 6px);
+  left: auto;
+  top: 50%;
+  transform: translateY(-50%) translateX(4px);
   background: #fff;
   color: var(--ink-deep);
   font: 600 11px/1 var(--font-text, "SF Pro Text", -apple-system, BlinkMacSystemFont, sans-serif);
@@ -93,7 +110,7 @@
 .hp-icon:hover .hp-tooltip,
 .hp-icon:focus-visible .hp-tooltip {
   opacity: 1;
-  transform: translateX(-50%) translateY(0);
+  transform: translateY(-50%) translateX(0);
 }
 
 /* CTA icon: GitHub link, mint by default */
@@ -105,7 +122,11 @@
   color: var(--mint-bright);
 }
 
-/* Mobile: hide middle icons, keep avatar + first nav + CTA */
+/* Mobile: revert to the original horizontal top pill — a side
+   rail would eat into the already-narrow content width, and a
+   horizontal pill at the top is the safer, well-understood
+   pattern on small viewports. Hide middle icons, keep avatar +
+   first nav + CTA, matching the previous horizontal behavior. */
 @media (max-width: 768px) {
   .app-header .hp-icon:nth-child(n+5):not(.hp-avatar):not(.hp-icon--cta) {
     display: none;
@@ -113,10 +134,30 @@
   .app-header {
     position: relative;
     top: 0;
-    transform: none;
+    right: auto;
     left: 0;
+    transform: none;
+    flex-direction: row;
     max-width: calc(100% - 24px);
     margin: 12px auto;
+  }
+  /* Icons are inline again on mobile, so lift vertically like the
+     original horizontal pill instead of sideways. */
+  .hp-icon:hover,
+  .hp-icon:focus-visible {
+    transform: translateY(-2px);
+  }
+  /* Tooltip goes back below the icon, centered horizontally,
+     since the rail is a horizontal row again on mobile. */
+  .hp-tooltip {
+    top: calc(100% + 6px);
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%) translateY(-4px);
+  }
+  .hp-icon:hover .hp-tooltip,
+  .hp-icon:focus-visible .hp-tooltip {
+    transform: translateX(-50%) translateY(0);
   }
 }
 

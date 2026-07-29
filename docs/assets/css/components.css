@@ -8,15 +8,13 @@
    ========================================================================== */
 
 /* ── Callout Boxes ── */
-/* Morandi-JHU frosted callouts: subtle backdrop blur, left accent ring */
+/* Morandi-JHU frosted callouts: full glass border, no top accent bar. */
 .callout {
+  position: relative;
   border-radius: 20px;
   padding: 28px;
   margin: 32px 0;
-  border-left: 4px solid;
-  border-top: 1px solid var(--glass-border, rgba(255, 255, 255, 0.6));
-  border-right: 1px solid var(--glass-border, rgba(255, 255, 255, 0.6));
-  border-bottom: 1px solid var(--glass-border, rgba(255, 255, 255, 0.6));
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.6));
   font-size: var(--text-body);
   line-height: var(--leading-body);
   letter-spacing: var(--tracking-body);
@@ -41,7 +39,6 @@
 /* Insight — Heritage Blue accent */
 .callout.insight {
   background: rgba(0, 45, 114, 0.05);
-  border-left-color: var(--apple-primary);
 }
 
 .callout.insight .callout-label {
@@ -51,7 +48,6 @@
 /* Definition — Heritage Blue lighter */
 .callout.definition {
   background: rgba(0, 45, 114, 0.03);
-  border-left-color: var(--tier-1);
 }
 
 .callout.definition .callout-label {
@@ -61,7 +57,6 @@
 /* Success — Apple green */
 .callout.success {
   background: var(--aria-success-bg);
-  border-left-color: var(--aria-success);
 }
 
 .callout.success .callout-label {
@@ -71,7 +66,6 @@
 /* Warning — Apple red */
 .callout.warning {
   background: var(--aria-danger-bg);
-  border-left-color: var(--aria-danger);
 }
 
 .callout.warning .callout-label {
@@ -87,6 +81,7 @@
 }
 
 .tier-card {
+  position: relative;
   border-radius: 20px;
   padding: 28px;
   border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.6));
@@ -94,16 +89,49 @@
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 8px 28px rgba(0, 45, 114, 0.08);
-  transition: transform 220ms ease-out, box-shadow 220ms ease;
+  transition:
+    transform 320ms cubic-bezier(.16, 1, .3, 1),
+    box-shadow 320ms ease,
+    border-color 320ms ease;
+  overflow: hidden;
+}
+
+/* Tier-colored bottom-bar reveal on hover. The bar starts at 0
+   width and grows to 100% on hover — a refined Morandi blue/gold
+   accent that signals which tier the card represents without
+   fighting the rest of the design. */
+.tier-card::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    var(--tier-1, #002D72) 30%,
+    var(--tier-2, #A99400) 70%,
+    transparent 100%);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 420ms cubic-bezier(.16, 1, .3, 1);
+  opacity: 0.55;
+  pointer-events: none;
 }
 
 .tier-card:hover {
-  transform: translateY(-3px);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65), 0 16px 40px rgba(0, 45, 114, 0.12);
+  transform: translateY(-4px);
+  border-color: rgba(104, 172, 229, 0.32);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 18px 44px rgba(0, 45, 114, 0.14),
+    0 0 0 1px rgba(104, 172, 229, 0.06);
 }
 
+.tier-card:hover::after { transform: scaleX(1); }
+
 .tier-card:active {
-  transform: scale(0.97);
+  transform: scale(0.985) translateY(-1px);
 }
 
 .tier-card h3 {
@@ -152,20 +180,18 @@
   text-transform: uppercase;
 }
 
-/* ── Tier Detail Sections ── */
-/* Frosted-glass deep-dive cards: 24px radius, 32px padding, soft inner ring,
-   Heritage-tinted shadow, AND the colored left accent strip preserved. */
+/* ── Tier Detail Sections ──
+   Quiet frosted glass container — full rounded border, no top accent bar.
+   The *examples* inside still pop as opaque cards. */
 .tier-detail {
   margin: 48px 0;
-  padding: 32px;
-  border-radius: 24px;
-  border-left: 4px solid;
-  border-top: 1px solid var(--glass-border, rgba(255, 255, 255, 0.6));
-  border-right: 1px solid var(--glass-border, rgba(255, 255, 255, 0.6));
-  border-bottom: 1px solid var(--glass-border, rgba(255, 255, 255, 0.6));
+  padding: 28px;
+  border-radius: 20px;
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.6));
+  background: var(--pearl-glass, rgba(255, 255, 255, 0.45));
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 12px 36px rgba(0, 45, 114, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 8px 28px rgba(0, 45, 114, 0.06);
 }
 
 .tier-detail-header {
@@ -174,6 +200,99 @@
   gap: 12px;
   margin-bottom: 17px;
   flex-wrap: wrap;
+}
+
+/* ── Tier Example (sub-block) ──
+   Each Example 1/2/3 no longer carries its own full-block frosted
+   glass panel (it already sits inside a .detail-toggle glass card,
+   so a second layer of blur was redundant and visually heavy). It
+   keeps only a light surface tint, a corner badge "EXAMPLE 01/02/03",
+   and the SAME calm hover-lift recipe used elsewhere on the site
+   (translateY + border/shadow highlight, no bounce) so the
+   interaction feels unified across the page. */
+.tier-example {
+  position: relative;
+  margin: 28px 0;
+  padding: 28px 26px 24px;
+  border-radius: var(--radius-lg, 18px);
+  background: rgba(255, 255, 255, 0.35);
+  border: 1px solid var(--apple-divider-soft, rgba(0, 45, 114, 0.08));
+  transition:
+    transform 280ms cubic-bezier(.16, 1, .3, 1),
+    box-shadow 280ms ease,
+    border-color 280ms ease;
+}
+
+.tier-example:hover {
+  transform: translateY(-3px);
+  border-color: rgba(104, 172, 229, 0.30);
+  box-shadow: 0 12px 32px rgba(0, 45, 114, 0.10);
+}
+
+/* "EXAMPLE 0X" corner badge — gives each block its own identity */
+.tier-example::after {
+  content: "EXAMPLE " counter(aria-example, decimal-leading-zero);
+  position: absolute;
+  top: -10px;
+  left: 22px;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--apple-primary);
+  color: var(--apple-on-primary);
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.10em;
+  box-shadow: 0 2px 8px rgba(0, 45, 114, 0.22);
+}
+
+.tier-1-detail .tier-example::after { background: var(--tier-1); }
+.tier-2-detail .tier-example::after { background: var(--tier-2); }
+.tier-3-detail .tier-example::after { background: var(--tier-3); }
+
+/* Counter for "EXAMPLE 01/02/03" badges. Reset ONCE at the top-level
+   #tier-deep-dive container so the three examples number globally
+   (01 → 02 → 03) rather than each tier restarting at 01. */
+#tier-deep-dive { counter-reset: aria-example; }
+.tier-example { counter-increment: aria-example; }
+
+.tier-example h4 {
+  margin: 4px 0 16px;
+  font-size: var(--text-body-strong);
+  font-weight: var(--weight-semibold);
+  color: var(--apple-ink);
+  line-height: var(--leading-body-strong);
+  letter-spacing: var(--tracking-body);
+}
+
+/* Constraint checks, analogical transfer, confidence comparison —
+   all live as inner blocks within .tier-example. They get a calmer
+   surface treatment so the eye doesn't get exhausted by 4 layers of
+   blur in a row, but they still respond to hover. */
+.constraint-checks,
+.analogical-transfer,
+.confidence-comparison {
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--apple-divider-soft);
+  border-radius: var(--radius-md, 11px);
+  padding: 16px 18px;
+  transition:
+    border-color 240ms ease,
+    box-shadow 240ms ease,
+    transform 240ms cubic-bezier(.16, 1, .3, 1);
+}
+
+/* .uncertainty-flag shares this family's radius/motion recipe but keeps
+   its own danger-tinted surface (color rules untouched — see below) */
+.uncertainty-flag {
+  border-radius: var(--radius-md, 11px);
+}
+
+.analogical-transfer:hover,
+.confidence-comparison:hover {
+  border-color: rgba(104, 172, 229, 0.30);
+  box-shadow: 0 6px 20px rgba(0, 45, 114, 0.08);
+  transform: translateY(-2px);
 }
 
 /* ── Causal Trace Visualization ── */
@@ -193,6 +312,16 @@
   min-width: 140px;
   font-size: var(--text-caption);
   line-height: var(--leading-caption);
+  cursor: default;
+  transition:
+    transform 240ms cubic-bezier(.16, 1, .3, 1),
+    box-shadow 240ms ease;
+}
+
+.trace-node:hover {
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 10px 24px rgba(0, 45, 114, 0.18);
+  z-index: 1;
 }
 
 .trace-label {
@@ -220,11 +349,20 @@
 
 .trace-mechanism {
   font-size: var(--text-caption);
-  background: rgba(255, 255, 255, 0.7);
-  padding: 12px 17px;
+  background: rgba(255, 255, 255, 0.85);
+  padding: 14px 18px;
   border-radius: var(--radius-sm);
   margin: 12px 0;
   line-height: var(--leading-body);
+  border: 1px solid var(--apple-divider-soft);
+  cursor: default;
+  transition: border-color 220ms ease, transform 220ms ease, box-shadow 220ms ease;
+}
+
+.trace-mechanism:hover {
+  border-color: rgba(104, 172, 229, 0.30);
+  transform: translateX(3px);
+  box-shadow: 0 6px 18px rgba(0, 45, 114, 0.08);
 }
 
 /* ── Constraint Checks ── */
@@ -236,9 +374,17 @@
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  padding: 4px 0;
+  padding: 8px 10px;
   font-size: var(--text-caption);
   line-height: var(--leading-caption);
+  border-radius: var(--radius-sm, 8px);
+  cursor: default;
+  transition: background 200ms ease, transform 200ms cubic-bezier(.16, 1, .3, 1);
+}
+
+.constraint-check:hover {
+  background: rgba(104, 172, 229, 0.06);
+  transform: translateX(3px);
 }
 
 .constraint-check.passed .check-icon {
@@ -262,7 +408,18 @@
   border-radius: var(--radius-sm);
   text-align: center;
   min-width: 150px;
+  cursor: default;
+  transition: transform 240ms cubic-bezier(.16, 1, .3, 1), box-shadow 240ms ease;
 }
+
+.analogical-transfer:hover .transfer-source,
+.analogical-transfer:hover .transfer-target {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(0, 45, 114, 0.12);
+}
+
+.analogical-transfer:hover .transfer-source { transform: translateX(-4px); }
+.analogical-transfer:hover .transfer-target { transform: translateX(4px); }
 
 .transfer-source {
   background: rgba(0, 45, 114, 0.05);
@@ -291,9 +448,17 @@
 .disclaimer {
   font-size: var(--text-caption);
   background: var(--aria-warning-bg);
-  padding: 8px 17px;
+  padding: 10px 17px;
   border-radius: var(--radius-sm);
   margin: 12px 0;
+  border: 1px solid transparent;
+  cursor: default;
+  transition: border-color 220ms ease, transform 220ms ease;
+}
+
+.disclaimer:hover {
+  border-color: var(--aria-warning);
+  transform: translateX(3px);
 }
 
 /* ── Uncertainty Flag ── */
@@ -302,16 +467,32 @@
   align-items: flex-start;
   gap: 12px;
   background: var(--aria-danger-bg);
-  padding: 17px;
-  border-radius: var(--radius-sm);
-  border-left: 4px solid var(--aria-danger);
+  padding: 16px 18px;
+  border: 1px solid rgba(184, 80, 74, 0.22);
   margin: 17px 0;
   font-size: var(--text-caption);
   line-height: var(--leading-caption);
+  cursor: default;
+  transition:
+    border-color 240ms ease,
+    box-shadow 240ms ease,
+    transform 240ms cubic-bezier(.16, 1, .3, 1);
+}
+
+.uncertainty-flag:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(0, 45, 114, 0.10);
 }
 
 .flag-icon {
-  font-size: 1.4em;
+  display: flex;
+  flex: 0 0 auto;
+  color: var(--aria-danger);
+  transition: transform 320ms cubic-bezier(.16, 1, .3, 1);
+}
+
+.uncertainty-flag:hover .flag-icon {
+  transform: rotate(-8deg) scale(1.15);
 }
 
 /* ── Confidence Comparison Bars ── */
@@ -321,6 +502,15 @@
 
 .comparison-bar {
   margin: 8px 0;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm, 8px);
+  cursor: default;
+  transition: background 220ms ease, transform 220ms cubic-bezier(.16, 1, .3, 1);
+}
+
+.comparison-bar:hover {
+  background: rgba(104, 172, 229, 0.06);
+  transform: translateX(3px);
 }
 
 .comparison-label {
@@ -330,6 +520,11 @@
   margin-bottom: 4px;
 }
 
+/* Tinted fill + left accent border rather than a solid saturated block
+   with reversed white text — reads as "progress" without the harsh
+   billboard-color-block look. Default (unthemed) case keeps a soft
+   blue tint; .aria-fill / .naive-fill override background/border/color
+   below to carry the pass/fail semantics. */
 .comparison-fill {
   height: 28px;
   border-radius: var(--radius-xs);
@@ -338,26 +533,37 @@
   padding-left: 12px;
   font-weight: var(--weight-semibold);
   font-size: var(--text-caption);
-  color: var(--apple-on-primary);
-  transition: width 0.5s ease;
-  background: linear-gradient(90deg, #002D72 0%, #1a3d8f 50%, #68ACE5 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 4px 14px rgba(0, 45, 114, 0.18);
+  color: var(--apple-primary);
+  transition: width 0.5s ease, transform 220ms ease, box-shadow 220ms ease, background 220ms ease;
+  background: rgba(0, 45, 114, 0.08);
+  border-left: 3px solid var(--apple-primary);
+  box-shadow: none;
+}
+
+.comparison-bar:hover .comparison-fill {
+  transform: translateX(4px);
+  box-shadow: 0 4px 14px rgba(0, 45, 114, 0.10);
 }
 
 /* ── Trace Audit Demo ── */
 .trace-audit-demo {
-  background: var(--apple-parchment);
-  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.6));
+  border-radius: 20px;
   padding: 24px;
   margin: 24px 0;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65), 0 10px 32px rgba(0, 45, 114, 0.08);
 }
 
 .trace-query {
-  background: var(--apple-primary);
+  background: linear-gradient(135deg, var(--tier-1, #002D72) 0%, var(--apple-primary-focus, #1a3d8f) 100%);
   color: var(--apple-on-primary);
-  padding: 12px 17px;
-  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  padding: 14px 18px;
+  border-radius: 14px;
   font-weight: var(--weight-semibold);
+  box-shadow: 0 4px 14px rgba(0, 45, 114, 0.18);
 }
 
 .trace-query-label {
@@ -374,18 +580,26 @@
   padding: 17px 0;
 }
 
+/* Each individual step in the trace gets its own glass treatment
+   so the user can focus on one step at a time. */
 .trace-step {
   display: flex;
-  gap: 17px;
-  margin-bottom: 17px;
+  gap: 14px;
+  margin-bottom: 14px;
   opacity: 1;
-  transition: opacity 0.3s ease;
+  transition: transform 280ms cubic-bezier(.16, 1, .3, 1), box-shadow 280ms ease;
+  padding: 4px;
+  border-radius: 16px;
+}
+
+.trace-step:hover {
+  transform: translateX(2px);
 }
 
 .trace-step-marker {
-  width: 32px;
-  height: 32px;
-  min-width: 32px;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
   border-radius: var(--radius-full);
   background: var(--apple-primary);
   color: var(--apple-on-primary);
@@ -394,6 +608,7 @@
   justify-content: center;
   font-weight: var(--weight-semibold);
   font-size: var(--text-caption);
+  box-shadow: 0 2px 8px rgba(0, 45, 114, 0.22);
 }
 
 .tier-1-marker {
@@ -406,10 +621,20 @@
 
 .trace-step-content {
   flex: 1;
-  background: var(--apple-canvas);
-  padding: 17px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--apple-divider-soft);
+  background: rgba(255, 255, 255, 0.7);
+  padding: 14px 17px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transition: border-color 240ms ease, box-shadow 240ms ease, transform 240ms ease;
+}
+
+.trace-step:hover .trace-step-content {
+  border-color: rgba(104, 172, 229, 0.30);
+  box-shadow: 0 6px 20px rgba(0, 45, 114, 0.08);
+  transform: translateY(-1px);
 }
 
 .trace-step-content h4 {
@@ -440,9 +665,10 @@
   color: var(--apple-primary);
 }
 
-/* Trace result */
-.trace-result {
-  border-left: 3px solid var(--aria-success);
+/* Trace result — a soft success-tinted glass card instead of a left rule */
+.trace-result .trace-step-content {
+  background: var(--aria-success-bg);
+  border-color: rgba(42, 138, 110, 0.28);
 }
 
 .result-meta {
@@ -473,11 +699,48 @@
    REMOVED: Hard-coded stats. Data comes from interactive visualizations.
    See .results-toggle for the paper reference toggle. */
 
-/* ── Chart Toggle Buttons ── */
-.chart-toggles {
-  display: flex;
+/* Outbound link from a body section to the matching paper figure
+   (which lives at the bottom of the page, before References). Low
+   emphasis, single-line, with a small Fig-N badge. */
+.paper-fig-link {
+  margin-top: var(--sp-lg);
+  font-size: var(--text-caption, 15px);
+  text-align: right;
+}
+
+.paper-fig-link a {
+  display: inline-flex;
+  align-items: center;
   gap: 8px;
-  margin: 17px 0;
+  color: var(--apple-ink-muted-80, #333);
+  text-decoration: none;
+  padding: 6px 12px 6px 6px;
+  border-radius: var(--radius-pill, 9999px);
+  background: var(--apple-surface-pearl, #fafafc);
+  border: 1px solid var(--apple-hairline, #e0e0e0);
+  transition: color 200ms ease, border-color 200ms ease, background-color 200ms ease;
+}
+
+.paper-fig-link a:hover,
+.paper-fig-link a:focus-visible {
+  color: var(--apple-primary, #002D72);
+  border-color: var(--mint, #68ACE5);
+  background: var(--mint-soft, rgba(104, 172, 229, 0.10));
+  text-decoration: none;
+}
+
+.paper-fig-link__num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  padding: 3px 9px;
+  font-size: 12px;
+  font-weight: var(--weight-semibold, 600);
+  letter-spacing: 0.02em;
+  color: var(--apple-on-primary, #fff);
+  background: var(--apple-primary, #002D72);
+  border-radius: var(--radius-pill, 9999px);
 }
 
 .toggle-btn {
@@ -506,6 +769,103 @@
 .toggle-btn:focus-visible {
   outline: 2px solid var(--apple-primary-focus);
   outline-offset: 2px;
+}
+
+/* ── Tour CTA — cloud-like idle drift, iridescent shimmer on hover ──
+   Layers on top of .toggle-btn. The idle animation is a slow vertical
+   bob + breathing shadow (reads as "floating"), matching the same
+   float language as .glass-card (glass.css). Hover swaps to a bouncy
+   spring lift with a light-sweep shimmer — kept subtle so it still
+   reads as an academic paper site, not a marketing page. */
+@keyframes tour-cta-float {
+  0%, 100% {
+    transform: translateY(0);
+    box-shadow: 0 4px 10px rgba(0, 45, 114, 0.08);
+  }
+  50% {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 18px rgba(0, 45, 114, 0.10);
+  }
+}
+
+@keyframes tour-cta-shimmer {
+  0%   { background-position: -140% 0; }
+  100% { background-position: 240% 0; }
+}
+
+.tour-cta {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--apple-canvas);
+  animation: tour-cta-float 3.6s ease-in-out infinite;
+  /* Same "Q弹" idiom as .hp-avatar:hover (header-pill.css) and
+     .detail-toggle__body (glossary.css): a single transition on
+     --ease-spring, whose y>1 control point overshoots the target
+     and settles back — no multi-keyframe animation needed. */
+  transition: transform 380ms var(--ease-spring, cubic-bezier(.34, 1.56, .64, 1)),
+    border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Light-sweep shimmer, off-screen until hover */
+.tour-cta::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.75) 47%,
+    var(--mint-bright, #8fc1ea) 50%,
+    rgba(255, 255, 255, 0.75) 53%,
+    transparent 70%
+  );
+  background-size: 250% 100%;
+  background-position: -140% 0;
+  opacity: 0;
+  pointer-events: none;
+  z-index: -1;
+  transition: opacity 0.25s ease;
+}
+
+.tour-cta:hover,
+.tour-cta:focus-visible {
+  animation-play-state: paused;
+  transform: translateY(-4px) scale(1.06);
+  border-color: var(--spirit-blue, #68ACE5);
+  color: var(--tier-1, #002D72);
+  background: rgba(104, 172, 229, 0.10);
+  box-shadow: 0 14px 26px rgba(0, 45, 114, 0.16);
+}
+
+.tour-cta:hover::before,
+.tour-cta:focus-visible::before {
+  opacity: 1;
+  animation: tour-cta-shimmer 1.1s ease-in-out;
+}
+
+.tour-cta:active {
+  transform: scale(0.95);
+  transition-duration: 150ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tour-cta {
+    animation: none;
+  }
+
+  .tour-cta:hover,
+  .tour-cta:focus-visible,
+  .tour-cta:active {
+    animation: none;
+    transform: none;
+  }
+
+  .tour-cta:hover::before,
+  .tour-cta:focus-visible::before {
+    animation: none;
+    opacity: 0;
+  }
 }
 
 /* ── Results Toggle (expand/collapse for paper tables) ── */

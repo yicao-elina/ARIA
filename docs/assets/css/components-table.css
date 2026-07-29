@@ -91,6 +91,32 @@
   border: 1px solid var(--apple-divider-soft);
   border-radius: var(--radius-md);
   overflow: hidden;
+  transition: border-color 280ms ease, box-shadow 280ms ease;
+}
+
+#mt-table-host {
+  /* Flat container — the table wraps itself with its own border. The host
+     used to be a glass-card; we stripped that so the result reads as one
+     continuous, calm panel rather than a glass pill floating over glass. */
+  transition: border-color 280ms ease, box-shadow 280ms ease;
+  padding: 0;
+  background: transparent;
+  border: 0;
+}
+
+#mt-table-host:hover {
+  /* No lift — the table itself has its own quiet hover, see below. */
+}
+
+#mt-table-host .mt-table {
+  border: 1px solid var(--apple-divider-soft);
+  border-radius: var(--radius-md);
+  transition: border-color 280ms ease, box-shadow 280ms ease;
+}
+
+#mt-table-host:hover .mt-table {
+  border-color: rgba(104, 172, 229, 0.28);
+  box-shadow: 0 12px 32px rgba(0, 45, 114, 0.07);
 }
 .mt-th, .mt-td {
   padding: 10px 12px;
@@ -115,7 +141,7 @@
 .mt-td--best .mt-td__value { font-weight: var(--weight-semibold); }
 .mt-td__value { display: block; font-weight: var(--weight-semibold); }
 .mt-row-meta { color: var(--apple-ink-muted-48); font-size: 11px; margin-top: 2px; }
-.mt-table tr:hover td { background: rgba(0, 102, 204, 0.03); }
+.mt-table tr:hover td { background: rgba(104, 172, 229, 0.06); }
 .mt-table tr:last-child td { border-bottom: 0; }
 
 /* Cell bar */
@@ -140,10 +166,19 @@
   margin-top: 24px;
 }
 .mt-col-chart {
-  background: var(--apple-parchment);
+  background: var(--apple-canvas);
   border: 1px solid var(--apple-divider-soft);
   border-radius: var(--radius-md);
   padding: 16px;
+  transition:
+    border-color 280ms ease,
+    box-shadow 280ms ease,
+    transform 280ms cubic-bezier(.16, 1, .3, 1);
+}
+.mt-col-chart:hover {
+  border-color: rgba(104, 172, 229, 0.28);
+  box-shadow: 0 12px 32px rgba(0, 45, 114, 0.07);
+  transform: translateY(-2px);
 }
 .mt-col-chart__title {
   margin: 0;
@@ -157,14 +192,21 @@
   color: var(--apple-ink-muted-48);
   line-height: 1.4;
 }
-.mt-col-chart__bars { display: flex; flex-direction: column; gap: 4px; }
+.mt-col-chart__bars { display: flex; flex-direction: column; gap: 2px; }
 .mt-col-chart__row {
   display: grid;
   grid-template-columns: 70px 1fr 64px;
   gap: 8px;
   align-items: center;
   font-size: 12px;
-  padding: 2px 0;
+  padding: 5px 6px;
+  border-radius: 6px;
+  cursor: default;
+  transition: background 200ms ease, transform 200ms ease;
+}
+.mt-col-chart__row:hover {
+  background: rgba(104, 172, 229, 0.06);
+  transform: translateX(3px);
 }
 .mt-col-chart__row--best .mt-col-chart__val { font-weight: var(--weight-semibold); }
 .mt-col-chart__name { color: var(--apple-ink-muted-80); }
@@ -178,7 +220,12 @@
   display: block;
   height: 100%;
   border-radius: 4px;
-  transition: width 0.4s ease;
+  transition: width 0.4s ease, transform 220ms ease;
+  transform-origin: left;
+}
+.mt-col-chart__row:hover .mt-col-chart__fill {
+  transform: scaleX(1.04);
+  filter: brightness(1.08);
 }
 .mt-col-chart__val { text-align: right; color: var(--apple-ink); }
 .mt-col-chart__legend {
@@ -194,7 +241,12 @@
   background: var(--apple-canvas);
   border: 1px solid var(--apple-divider-soft);
   border-radius: var(--radius-md);
-  padding: 16px;
+  padding: 16px 18px;
+  transition: border-color 280ms ease, box-shadow 280ms ease;
+}
+.mt-stat-tests:hover {
+  border-color: rgba(104, 172, 229, 0.28);
+  box-shadow: 0 12px 32px rgba(0, 45, 114, 0.07);
 }
 .mt-stat-tests__title {
   margin: 0 0 4px;
@@ -211,27 +263,58 @@
 }
 .mt-stat-table th, .mt-stat-table td {
   text-align: left;
-  padding: 6px 10px;
+  padding: 8px 10px;
   border-bottom: 1px solid var(--apple-divider-soft);
+  transition: background 200ms ease;
 }
 .mt-stat-table th { color: var(--apple-ink-muted-80); font-weight: var(--weight-semibold); }
+.mt-stat-table tr:hover td { background: rgba(104, 172, 229, 0.06); }
+.mt-stat-table tr:last-child td { border-bottom: 0; }
 .mt-stat-table code { font-family: "SF Mono", "Fira Code", Consolas, monospace; }
 
 /* Tier donut */
 .mt-tier-donut {
   margin-top: 24px;
-  background: var(--apple-parchment);
+  background: var(--apple-canvas);
   border: 1px solid var(--apple-divider-soft);
   border-radius: var(--radius-md);
   padding: 24px;
+  transition: border-color 280ms ease, box-shadow 280ms ease;
+}
+.mt-tier-donut:hover {
+  border-color: rgba(104, 172, 229, 0.28);
+  box-shadow: 0 12px 32px rgba(0, 45, 114, 0.07);
 }
 .mt-tier-donut h3 { margin: 0 0 12px; font-size: var(--text-body-strong); font-weight: var(--weight-semibold); color: var(--apple-ink); }
 .mt-tier-donut__pair { display: flex; flex-wrap: wrap; gap: 24px; }
 .mt-tier-donut__one { flex: 1 1 240px; }
 .mt-tier-donut__one h4 { margin: 0 0 8px; font-size: var(--text-caption); font-weight: var(--weight-semibold); color: var(--apple-ink-muted-80); }
-.mt-tier-donut__legend { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-direction: column; gap: 4px; }
-.mt-tier-donut__legend li { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--apple-ink-muted-80); }
-.mt-tier-donut__swatch { width: 12px; height: 12px; border-radius: 2px; display: inline-block; }
+.mt-tier-donut__legend { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-direction: column; gap: 2px; }
+.mt-tier-donut__legend li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--apple-ink-muted-80);
+  padding: 5px 8px;
+  border-radius: 6px;
+  cursor: default;
+  transition: background 200ms ease, transform 200ms ease;
+}
+.mt-tier-donut__legend li:hover {
+  background: rgba(104, 172, 229, 0.06);
+  transform: translateX(3px);
+}
+.mt-tier-donut__swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  display: inline-block;
+  transition: transform 220ms ease;
+}
+.mt-tier-donut__legend li:hover .mt-tier-donut__swatch {
+  transform: scale(1.25);
+}
 .mt-tier-donut__caption { margin: 12px 0 0; font-size: 12px; color: var(--apple-ink-muted-48); }
 
 @media (max-width: 735px) {

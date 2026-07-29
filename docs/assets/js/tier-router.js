@@ -12,6 +12,13 @@
 /* global d3 */
 
 class TierRouter {
+  // Outer step cadence (ms). Tuned to match the inner D3/CSS transition
+  // durations used inside _drawMiniGraph / the .tr-step-panel reveal, so the
+  // next step never starts animating before the previous one has settled.
+  static START_DELAY_MS = 420;
+  static STEP_DELAY_MS = 900;
+  static RESULT_DELAY_MS = 600;
+
   constructor(containerId) {
     this.container = document.getElementById(containerId);
     if (!this.container) {
@@ -189,6 +196,7 @@ class TierRouter {
   runQuery(index) {
     if (index < 0 || index >= this.queries.length) return;
     this._cancelTimers();
+    this._resetPanels();
     this.currentQuery = this.queries[index];
     this.currentStep = -1;
     this.isRunning = true;
@@ -200,9 +208,32 @@ class TierRouter {
     // Reset steps
     this._updateStepIndicators();
 
-    // Animate through steps with delays
-    const stepDelay = 1500; // ms between steps
-    const startDelay = 600;
+    // Animate through steps with delays. Tuned to match the inner D3/CSS
+    // transition durations (see STEP_DELAY_MS) so the outer scheduler never
+    // advances to the next step before the current one has finished animating.
+    this._scheduleQueryTimeline();
+  }
+
+  /**
+   * Synchronously clear every step panel and the result panel before a new
+   * run starts, so no visual trace from a previous run lingers while the
+   * new run animates in. Also hides the idle-state prompt, if present.
+   */
+  _resetPanels() {
+    const panels = this.container.querySelectorAll('.tr-step-panel, .tr-result-panel');
+    panels.forEach((panel) => {
+      panel.innerHTML = '';
+      panel.classList.remove('visible');
+    });
+
+    const idlePrompt = this.container.querySelector('.tr-idle-prompt');
+    if (idlePrompt) idlePrompt.remove();
+  }
+
+  /** Shared step timeline used by both example queries and custom queries. */
+  _scheduleQueryTimeline() {
+    const stepDelay = TierRouter.STEP_DELAY_MS;
+    const startDelay = TierRouter.START_DELAY_MS;
 
     this._scheduleTimeout(() => this._animateStep(1), startDelay);
     this._scheduleTimeout(() => this._animateStep(2), startDelay + stepDelay);
@@ -211,7 +242,7 @@ class TierRouter {
     this._scheduleTimeout(() => {
       this.isRunning = false;
       this._showResultPanel();
-    }, startDelay + stepDelay * 3 + 800);
+    }, startDelay + stepDelay * 3 + TierRouter.RESULT_DELAY_MS);
   }
 
   // ---------------------------------------------------------------------------
@@ -309,7 +340,7 @@ class TierRouter {
   border: 2px solid var(--tr-border);
   background: var(--tr-bg-card);
   color: var(--tr-text-muted);
-  transition: all 0.5s ease;
+  transition: all 0.32s cubic-bezier(.16, 1, .3, 1);
   position: relative;
 }
 
@@ -337,7 +368,7 @@ class TierRouter {
   text-align: center;
   max-width: 56px;
   line-height: 1.2;
-  transition: color 0.5s ease;
+  transition: color 0.32s cubic-bezier(.16, 1, .3, 1);
 }
 
 .tr-step-label.active {
@@ -352,7 +383,7 @@ class TierRouter {
   width: 2px;
   height: 32px;
   background: var(--tr-border);
-  transition: background 0.5s ease;
+  transition: background 0.32s cubic-bezier(.16, 1, .3, 1);
 }
 
 .tr-step-connector.completed {
@@ -397,7 +428,7 @@ class TierRouter {
   font-size: 14px;
   font-family: inherit;
   outline: none;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  transition: border-color 0.32s cubic-bezier(.16, 1, .3, 1), box-shadow 0.32s cubic-bezier(.16, 1, .3, 1);
 }
 
 .tr-input-field:focus {
@@ -418,7 +449,7 @@ class TierRouter {
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.18s cubic-bezier(.16, 1, .3, 1), box-shadow 0.18s cubic-bezier(.16, 1, .3, 1);
   white-space: nowrap;
 }
 
@@ -452,7 +483,7 @@ class TierRouter {
   color: var(--tr-text-secondary);
   font-size: 12px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(.16, 1, .3, 1);
   font-family: inherit;
 }
 
@@ -462,9 +493,13 @@ class TierRouter {
   color: var(--tr-text-primary);
 }
 
-.tr-example-btn.t1 { border-left: 3px solid var(--tr-tier1); }
-.tr-example-btn.t2 { border-left: 3px solid var(--tr-tier2); }
-.tr-example-btn.t3 { border-left: 3px solid var(--tr-tier3); }
+.tr-example-btn.t1 { border-color: var(--tr-tier1); border-color: color-mix(in srgb, var(--tr-tier1) 45%, var(--tr-border)); }
+.tr-example-btn.t2 { border-color: var(--tr-tier2); border-color: color-mix(in srgb, var(--tr-tier2) 45%, var(--tr-border)); }
+.tr-example-btn.t3 { border-color: var(--tr-tier3); border-color: color-mix(in srgb, var(--tr-tier3) 45%, var(--tr-border)); }
+
+.tr-example-btn.t1:hover { border-color: var(--tr-tier1); }
+.tr-example-btn.t2:hover { border-color: var(--tr-tier2); }
+.tr-example-btn.t3:hover { border-color: var(--tr-tier3); }
 
 /* ---- Step Content ---- */
 .tr-step-content {
@@ -475,6 +510,16 @@ class TierRouter {
   min-height: 280px;
 }
 
+.tr-idle-prompt {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--tr-text-secondary);
+  padding: 20px 22px;
+  background: var(--tr-bg-card);
+  border: 1px dashed var(--tr-border);
+  border-radius: 10px;
+}
+
 .tr-step-panel {
   background: var(--tr-bg-card);
   border: 1px solid var(--tr-border);
@@ -482,7 +527,7 @@ class TierRouter {
   padding: 16px 20px;
   opacity: 0;
   transform: translateY(12px);
-  transition: opacity 0.5s ease, transform 0.5s ease;
+  transition: opacity 0.32s cubic-bezier(.16, 1, .3, 1), transform 0.32s cubic-bezier(.16, 1, .3, 1);
   pointer-events: none;
 }
 
@@ -586,7 +631,7 @@ class TierRouter {
 .tr-completeness-bar-fill {
   height: 100%;
   border-radius: 12px;
-  transition: width 1s ease-out;
+  transition: width 0.55s cubic-bezier(.16, 1, .3, 1);
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -679,7 +724,7 @@ class TierRouter {
   padding: 20px;
   opacity: 0;
   transform: translateY(16px);
-  transition: opacity 0.5s ease, transform 0.5s ease;
+  transition: opacity 0.32s cubic-bezier(.16, 1, .3, 1), transform 0.32s cubic-bezier(.16, 1, .3, 1);
 }
 
 .tr-result-panel.visible {
@@ -878,7 +923,7 @@ class TierRouter {
 
 /* ---- Animations ---- */
 .tr-fade-in {
-  animation: trFadeIn 0.5s ease forwards;
+  animation: trFadeIn 0.32s cubic-bezier(.16, 1, .3, 1) forwards;
 }
 
 @keyframes trFadeIn {
@@ -962,6 +1007,12 @@ class TierRouter {
     input.type = 'text';
     input.placeholder = 'Enter a materials science query…';
     input.setAttribute('aria-label', 'Materials science query input');
+    // Pre-fill with the Tier 1 example so a user who just presses Tab then
+    // Enter (or clicks Route Query) immediately sees a working demo, rather
+    // than facing an empty input backed only by a placeholder.
+    const defaultQuery = (this.queries[0] && this.queries[0].query)
+      || 'What is the carrier mobility of CVD-grown MoS₂ at 750°C?';
+    input.value = defaultQuery;
     row.appendChild(input);
 
     const btn = this._el('button', 'tr-run-btn');
@@ -1002,6 +1053,17 @@ class TierRouter {
 
   _buildStepContent() {
     const content = this._el('div', 'tr-step-content');
+
+    // Idle-state prompt: shown before any run has started, replacing what
+    // would otherwise be a blank set of step panels. Removed by
+    // _resetPanels() the moment a run starts.
+    if (!this.currentQuery) {
+      const idlePrompt = this._el('div', 'tr-idle-prompt');
+      idlePrompt.textContent =
+        'Click "Route Query" or try one of the example queries below to see ARIA route it through the three-tier cascade.';
+      content.appendChild(idlePrompt);
+    }
+
     // 4 placeholder panels
     for (let i = 1; i <= 4; i++) {
       const panel = this._el('div', 'tr-step-panel');
@@ -1035,6 +1097,8 @@ class TierRouter {
       case 3: this._renderStep3(panel); break;
       case 4: this._renderStep4(panel); break;
     }
+
+    this._scrollIntoViewIfNeeded(panel);
   }
 
   // -- Step 1: Entity Extraction ----------------------------------------------
@@ -1185,7 +1249,7 @@ class TierRouter {
       // Animate edge
       line
         .transition()
-        .duration(500)
+        .duration(300)
         .attr('stroke-opacity', 0.8);
 
       // Confidence label
@@ -1201,8 +1265,8 @@ class TierRouter {
           .attr('opacity', 0)
           .text(`${(e.confidence * 100).toFixed(0)}%`)
           .transition()
-          .delay(400)
-          .duration(300)
+          .delay(250)
+          .duration(200)
           .attr('opacity', 1);
       }
     });
@@ -1223,8 +1287,8 @@ class TierRouter {
         .attr('stroke-width', 2)
         .attr('class', 'tr-node-circle')
         .transition()
-        .delay(i * 200)
-        .duration(400)
+        .delay(i * 100)
+        .duration(270)
         .attr('r', 16);
 
       // Label
@@ -1236,8 +1300,8 @@ class TierRouter {
         .attr('opacity', 0)
         .text(n.label)
         .transition()
-        .delay(i * 200 + 300)
-        .duration(300)
+        .delay(i * 100 + 160)
+        .duration(200)
         .attr('opacity', 1);
     });
 
@@ -1252,8 +1316,8 @@ class TierRouter {
         .attr('opacity', 0)
         .text('Analogical transfer')
         .transition()
-        .delay(800)
-        .duration(300)
+        .delay(430)
+        .duration(200)
         .attr('opacity', 1);
     }
 
@@ -1268,8 +1332,8 @@ class TierRouter {
       .attr('opacity', 0)
       .text(`Path type: ${path.path_type}`)
       .transition()
-      .delay(800)
-      .duration(300)
+      .delay(380)
+      .duration(180)
       .attr('opacity', 1);
   }
 
@@ -1432,6 +1496,8 @@ class TierRouter {
     panel.appendChild(this._buildComparison(q));
 
     panel.classList.add('visible');
+
+    this._scrollIntoViewIfNeeded(panel);
   }
 
   // -- Tier 1 Details: PSP Path -----------------------------------------------
@@ -1623,6 +1689,7 @@ class TierRouter {
 
   _runCustomQuery(queryText) {
     this._cancelTimers();
+    this._resetPanels();
     this.currentQuery = {
       id: 'custom',
       query: queryText,
@@ -1651,16 +1718,7 @@ class TierRouter {
 
     this._updateStepIndicators();
 
-    const stepDelay = 1500;
-    const startDelay = 600;
-    this._scheduleTimeout(() => this._animateStep(1), startDelay);
-    this._scheduleTimeout(() => this._animateStep(2), startDelay + stepDelay);
-    this._scheduleTimeout(() => this._animateStep(3), startDelay + stepDelay * 2);
-    this._scheduleTimeout(() => this._animateStep(4), startDelay + stepDelay * 3);
-    this._scheduleTimeout(() => {
-      this.isRunning = false;
-      this._showResultPanel();
-    }, startDelay + stepDelay * 3 + 800);
+    this._scheduleQueryTimeline();
   }
 
   _extractEntities(text) {
@@ -1702,6 +1760,29 @@ class TierRouter {
   _cancelTimers() {
     this.animationTimers.forEach((id) => clearTimeout(id));
     this.animationTimers = [];
+  }
+
+  /**
+   * Scroll `el` into view only when it isn't already reasonably visible in
+   * the viewport (so we don't yank the scroll position on every step when
+   * the user is already looking at the widget). Respects
+   * prefers-reduced-motion by using an instant jump instead of smooth scroll.
+   */
+  _scrollIntoViewIfNeeded(el) {
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+    const margin = 24; // small buffer so panels right at the edge still scroll
+    const isFullyVisible = rect.top >= margin && rect.bottom <= viewportHeight - margin;
+    if (isFullyVisible) return;
+
+    const prefersReducedMotion = window.matchMedia
+      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    el.scrollIntoView({
+      behavior: prefersReducedMotion ? 'auto' : 'smooth',
+      block: 'center',
+    });
   }
 }
 

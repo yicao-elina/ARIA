@@ -7,7 +7,12 @@
 
    Usage: <article class="glass-card"> ... </article>
    Add .glass-card--compact, .glass-card--tier-1/2/3 as needed.
-   Spotlight is auto-disabled on touch + reduced-motion.
+
+   Effects:
+   - Subtle floating drift on idle (--float-duration adjustable)
+   - Cursor-following spotlight glow (auto-disabled on touch + reduced-motion)
+   - Soft hover lift (no 3D rotation — the 3D tilt was too much for an
+     academic paper aesthetic; replaced with a refined translateY)
    ============================================================ */
 
 /* ---------- Design tokens (mirror of design-tokens.css) ----------
@@ -28,6 +33,22 @@
 }
 ------------------------------------------------------------------- */
 
+/* ---------- Float keyframe (shared) ----------
+   A slow vertical drift — ±2px over 6s — so idle cards feel alive
+   without the visual noise of 3D rotation. Each card has a unique
+   --float-delay set in glass-card.js so they don't move in lockstep. */
+@keyframes glass-float {
+  0%   { transform: translateY(0); }
+  50%  { transform: translateY(-3px); }
+  100% { transform: translateY(0); }
+}
+
+@keyframes glass-float-slow {
+  0%   { transform: translateY(0); }
+  50%  { transform: translateY(-2px); }
+  100% { transform: translateY(0); }
+}
+
 /* ---------- Glass card ---------- */
 
 .glass-card {
@@ -41,17 +62,36 @@
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), var(--shadow-glass, 0 8px 32px rgba(0, 0, 0, 0.06));
   backdrop-filter: blur(28px) saturate(180%);
   -webkit-backdrop-filter: blur(28px) saturate(180%);
-  transform: perspective(800px) rotateX(0) rotateY(0) translateY(0);
-  transform-style: preserve-3d;
-  transition: transform 220ms ease-out, box-shadow 220ms ease;
+  transform: translateY(0);
+  transform-style: flat;
+  transition:
+    transform 280ms cubic-bezier(.16, 1, .3, 1),
+    box-shadow 280ms ease,
+    border-color 280ms ease;
   will-change: transform;
   overflow: hidden;
+  animation: glass-float 6.5s ease-in-out infinite;
+  animation-delay: var(--float-delay, 0s);
 }
 
+/* Soft idle lift + slight inner glow on hover. NO 3D rotation —
+   the prior rotateX/rotateY was too theatrical for the paper
+   aesthetic and the JHU Morandi palette reads better with
+   refined micro-motion. */
 .glass-card:hover,
 .glass-card:focus-within {
-  transform: perspective(800px) rotateX(var(--tilt-y, 0deg)) rotateY(var(--tilt-x, 0deg)) translateY(-4px);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 24px 56px rgba(0, 45, 114, 0.14);
+  transform: translateY(-4px);
+  border-color: rgba(104, 172, 229, 0.35);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.75),
+    0 20px 48px rgba(0, 45, 114, 0.12),
+    0 0 0 1px rgba(104, 172, 229, 0.08);
+}
+
+/* Pause the float while hovering — the explicit lift takes over */
+.glass-card:hover,
+.glass-card:focus-within {
+  animation-play-state: paused;
 }
 
 .glass-card:focus-within {
@@ -59,20 +99,22 @@
   outline-offset: 2px;
 }
 
-/* Cursor-following spotlight — driven by --mx / --my from glass-card.js */
+/* Cursor-following spotlight — driven by --mx / --my from glass-card.js.
+   Now subtle: a smaller, more refined Spirit-Blue wash that doesn't
+   compete with the chart/data inside the card. */
 
 .glass-card::before {
   content: "";
   position: absolute;
-  inset: -20%;
+  inset: -10%;
   border-radius: inherit;
   background: radial-gradient(
-    360px circle at var(--mx, 50%) var(--my, 50%),
-    var(--mint-glow, rgba(104, 172, 229, 0.20)),
-    transparent 50%
+    260px circle at var(--mx, 50%) var(--my, 50%),
+    rgba(104, 172, 229, 0.14),
+    transparent 55%
   );
   opacity: 0;
-  transition: opacity 220ms ease;
+  transition: opacity 320ms ease;
   pointer-events: none;
   z-index: 0;
 }
@@ -87,13 +129,40 @@
 /* ---------- Variants ---------- */
 
 .glass-card--compact {
-  padding: 16px;
+  padding: 18px;
   border-radius: 20px;
+  animation-name: glass-float-slow;
+  animation-duration: 7.5s;
 }
 
-.glass-card--tier-1 { border-top: 3px solid var(--tier-1, #002D72); }
-.glass-card--tier-2 { border-top: 3px solid var(--tier-2, #A99400); }
-.glass-card--tier-3 { border-top: 3px solid var(--tier-3, #6c7a92); }
+
+/* ---------- No-tilt / no-spotlight / no-float modifiers ----------
+   Apply to containers whose contents need to stay perfectly still:
+   - chart canvases (tilt + spotlight on a chart makes it hard to read)
+   - the main results table (data integrity > micro-delight)
+   - any block where the user is meant to focus on the data */
+
+.glass-card--no-tilt:hover,
+.glass-card--no-tilt:focus-within {
+  transform: translateY(-1px);
+}
+
+.glass-card--no-spotlight::before,
+.glass-card--no-spotlight:hover::before,
+.glass-card--no-spotlight:focus-within::before {
+  display: none;
+}
+
+.glass-card--no-float {
+  animation: none !important;
+}
+
+/* Glass card that lets its children's hover popovers escape the
+   rounded overflow:hidden mask. Used for callouts containing
+   .term-tip / glossary popovers that need to overflow upward. */
+.glass-card--bleed {
+  overflow: visible;
+}
 
 /* ---------- Reduced motion (CSS-side fallback) ---------- */
 
@@ -103,6 +172,7 @@
   .glass-card:focus-within {
     transition: none;
     transform: none;
+    animation: none;
   }
   .glass-card::before,
   .glass-card:hover::before,
@@ -115,6 +185,7 @@ body.no-motion .glass-card,
 body.no-motion .glass-card:hover,
 body.no-motion .glass-card:focus-within {
   transform: none;
+  animation: none;
   transition: none;
 }
 

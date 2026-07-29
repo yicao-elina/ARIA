@@ -6,14 +6,18 @@
    Distill-style figure layout with centered captions.
    ========================================================================== */
 
-/* ── Interactive Figure Container ── */
+/* ── Interactive Figure Container ──
+   Plain, flat container — no glass/frosted treatment, no hover lift on
+   the outer box. Hover interactions live entirely inside the D3-rendered
+   SVG (node highlight, tooltips, etc.), independent of this wrapper.
+   Structural role only: sizing, clipping, positioning for the SVG. */
 .interactive-figure {
   min-height: 300px;
   border: 1px solid var(--apple-divider-soft);
-  border-radius: var(--radius-sm);                /* 8px */
-  background: var(--apple-parchment);
+  border-radius: var(--radius-md);
   overflow: hidden;
-  margin: 12px 0;
+  margin: 16px 0;
+  position: relative;
 }
 
 /* ── SVG Text ── */
@@ -69,13 +73,14 @@
 /* ── KG Stats Row ── */
 .kg-stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 17px;
   margin: 24px 0;
   text-align: center;
 }
 
 .stat {
+  position: relative;
   background: var(--pearl-glass, rgba(255, 255, 255, 0.55));
   padding: 22px 17px;
   border-radius: 20px;
@@ -83,13 +88,34 @@
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 6px 22px rgba(0, 45, 114, 0.08);
-  transition: transform 200ms ease-out, box-shadow 200ms ease;
+  transition: transform 320ms cubic-bezier(.16, 1, .3, 1), box-shadow 320ms ease, border-color 320ms ease;
+  overflow: hidden;
+}
+
+.stat::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, var(--apple-primary, #002D72) 50%, transparent 100%);
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 380ms cubic-bezier(.16, 1, .3, 1);
+  opacity: 0.7;
+  pointer-events: none;
 }
 
 .stat:hover {
-  transform: translateY(-2px);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 12px 32px rgba(0, 45, 114, 0.12);
+  transform: translateY(-4px);
+  border-color: rgba(104, 172, 229, 0.30);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 16px 36px rgba(0, 45, 114, 0.14);
 }
+
+.stat:hover::after { transform: scaleX(1); }
 
 .stat-number {
   display: block;
@@ -97,12 +123,20 @@
   font-weight: var(--weight-semibold);
   color: var(--apple-primary);
   line-height: 1.2;
+  transition: color 240ms ease, transform 280ms cubic-bezier(.16, 1, .3, 1);
+}
+
+.stat:hover .stat-number {
+  color: var(--tier-1, #002D72);
+  transform: scale(1.04);
 }
 
 .stat-label {
   font-size: var(--text-caption);
   color: var(--apple-ink-muted-48);
   line-height: var(--leading-caption);
+  margin-top: 4px;
+  display: block;
 }
 
 /* ── Tier Activation Container ── */

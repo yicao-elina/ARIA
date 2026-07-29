@@ -25,9 +25,12 @@
   border-color: var(--tier-1-border);
 }
 
+/* Tier-N detail uses a QUIET frosted glass surface so the inner
+   .tier-example cards can pop out as distinct, translucent blocks.
+   A thin colored TOP bar (matching .glass-card--tier-N) tells you
+   which tier you're looking at — no legacy left rule. */
 .tier-1-detail {
-  background: var(--tier-1-bg);
-  border-left-color: var(--tier-1);
+  border-top-color: var(--tier-1);
 }
 
 /* ── Tier 2 Card & Detail ── */
@@ -37,8 +40,7 @@
 }
 
 .tier-2-detail {
-  background: var(--tier-2-bg);
-  border-left-color: var(--tier-2);
+  border-top-color: var(--tier-2);
 }
 
 /* ── Tier 3 Card & Detail ── */
@@ -48,8 +50,7 @@
 }
 
 .tier-3-detail {
-  background: var(--tier-3-bg);
-  border-left-color: var(--tier-3);
+  border-top-color: var(--tier-3);
 }
 
 /* ── Trace Nodes ── */
@@ -108,22 +109,30 @@
 
 .entity.property {
   background: var(--aria-success-bg);
-  color: #1f6f2c;
+  color: var(--aria-success);
   font-weight: var(--weight-semibold);
 }
 
-/* ── Comparison Bars ── */
+/* ── Comparison Bars ──
+   Tinted fill + solid left accent border instead of a full-saturation
+   block with reversed (white-on-color) text — softer, still legible,
+   consistent with the glass/Morandi aesthetic used elsewhere. */
 .aria-fill {
-  background: var(--apple-primary);
+  background: var(--aria-success-bg);
+  border-left: 3px solid var(--aria-success);
+  color: var(--aria-success);
 }
 
 .naive-fill {
-  background: var(--aria-danger);
+  background: var(--aria-danger-bg);
+  border-left: 3px solid var(--aria-danger);
+  color: var(--aria-danger);
 }
 
 /* ── Completeness Bar ── */
 .completeness-fill.complete {
-  background: var(--aria-success);
+  background: var(--aria-success-bg);
+  border-left: 3px solid var(--aria-success);
 }
 
 /* ── Toggle Buttons ── */

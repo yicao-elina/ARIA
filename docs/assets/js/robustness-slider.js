@@ -408,7 +408,7 @@
         self.currentDeletion = val;
         self._sliderLabel.text(val + '%');
         self._slider.style('background',
-          `linear-gradient(to right, ${this.colors.primary} 0%, ${this.colors.primary} ${val / 0.9}%, ${this.colors.hairline} ${val / 0.9}%, ${this.colors.hairline} 100%)`
+          `linear-gradient(to right, ${self.colors.primary} 0%, ${self.colors.primary} ${val / 0.9}%, ${self.colors.hairline} ${val / 0.9}%, ${self.colors.hairline} 100%)`
         );
         self._update(val);
       });

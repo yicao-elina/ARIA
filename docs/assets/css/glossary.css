@@ -1,0 +1,260 @@
+/* ============================================================
+   glossary.css
+   Two reusable "read less, learn more on demand" primitives for
+   the ARIA paper site. Both reuse existing design tokens (glass
+   surface, mint accent, spring easing) so they read as native
+   citizens of the page, not bolted-on widgets.
+
+   1. .term-tip        — inline hover/focus glossary popover for
+                          jargon (e.g. "contextual tunneling").
+                          Usage: <span class="term-tip" tabindex="0"
+                          data-tip="Short plain-language gloss.">contextual tunneling</span>
+
+   2. .detail-toggle    — collapsible glass panel for "read more"
+                          detail blocks (derivations, extra examples).
+                          Usage:
+                          <details class="detail-toggle glass-card glass-card--compact">
+                            <summary>Show the formal definition</summary>
+                            <div class="detail-toggle__body">...</div>
+                          </details>
+   ============================================================ */
+
+/* ---------- 1. Inline glossary hover term ---------- */
+
+.term-tip {
+  position: relative;
+  cursor: help;
+  color: var(--apple-primary, #002D72);
+  border-bottom: 1px dotted var(--mint, #68ACE5);
+  text-decoration: none;
+  transition: color 160ms ease, border-color 160ms ease;
+  z-index: 2;
+}
+
+.term-tip:hover,
+.term-tip:focus-visible {
+  color: var(--mint, #68ACE5);
+  border-bottom-color: var(--apple-primary, #002D72);
+  outline: none;
+}
+
+.term-tip::after {
+  content: attr(data-tip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 10px);
+  transform: translateX(-50%) translateY(4px);
+  width: max-content;
+  max-width: 280px;
+  padding: 10px 13px;
+  background: var(--pearl-glass-strong, rgba(255, 255, 255, 0.86));
+  color: var(--ink, #141e2d);
+  font: 400 12.5px/1.45 var(--font-body, "SF Pro Text", -apple-system, BlinkMacSystemFont, sans-serif);
+  letter-spacing: 0;
+  text-align: left;
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.6));
+  border-radius: 12px;
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  box-shadow: 0 12px 32px rgba(0, 45, 114, 0.16);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms ease, transform 200ms var(--ease-spring, cubic-bezier(.34, 1.56, .64, 1));
+  z-index: 1000;
+}
+
+/* Small triangle nub pointing at the term */
+.term-tip::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 4px);
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--pearl-glass-strong, rgba(255, 255, 255, 0.86));
+  opacity: 0;
+  transition: opacity 200ms ease;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.term-tip:hover::after,
+.term-tip:focus-visible::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.term-tip:hover::before,
+.term-tip:focus-visible::before {
+  opacity: 1;
+}
+
+/* Modifier: pop the popover below the term instead of above.
+   Use for terms near the top of a card (so the popover would
+   otherwise collide with the card's title row). */
+.term-tip--below::after {
+  bottom: auto;
+  top: calc(100% + 10px);
+  transform: translateX(-50%) translateY(-4px);
+}
+.term-tip--below::before {
+  bottom: auto;
+  top: calc(100% + 4px);
+  border-top-color: transparent;
+  border-bottom-color: var(--pearl-glass-strong, rgba(255, 255, 255, 0.86));
+}
+.term-tip--below:hover::after,
+.term-tip--below:focus-visible::after {
+  transform: translateX(-50%) translateY(0);
+}
+
+@media (max-width: 640px) {
+  .term-tip::after {
+    max-width: 220px;
+    font-size: 12px;
+  }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .term-tip::after { background: rgba(255, 255, 255, 0.97); }
+}
+
+/* ---------- 2. Collapsible "read more" glass panel ---------- */
+
+.detail-toggle {
+  cursor: default;
+  margin: 16px 0;
+}
+
+.detail-toggle > summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: -6px -8px;
+  padding: 6px 8px;
+  border-radius: 12px;
+  font-weight: var(--weight-semibold, 600);
+  font-size: var(--text-caption, 13px);
+  color: var(--apple-primary, #002D72);
+  user-select: none;
+  transition: color 200ms ease, background-color 280ms cubic-bezier(.16, 1, .3, 1);
+}
+
+.detail-toggle > summary::-webkit-details-marker { display: none; }
+
+/* Disclosure chevron — a plain rotating glyph, not a protruding shape.
+   Gentle spring overshoot (light "Q弹" jelly feel, not a hard bounce). */
+.detail-toggle > summary::before {
+  content: "›";
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  line-height: 1;
+  transform: rotate(0deg);
+  transition: transform 420ms cubic-bezier(.22, 1.3, .36, 1);
+}
+
+.detail-toggle[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.detail-toggle > summary:hover,
+.detail-toggle > summary:focus-visible {
+  color: var(--mint, #68ACE5);
+  background-color: rgba(104, 172, 229, 0.08);
+  outline: none;
+}
+
+/* .detail-toggle__body is animated via JS (detail-toggle.js), which
+   drives max-height explicitly and toggles the .is-open class — this
+   lets the SAME spring transition play on open AND on close (a plain
+   CSS @keyframes animation only ever plays forward, so close would
+   have snapped shut with no bounce). We override the native
+   details-content display:none so the element stays in the DOM/flow
+   and is animatable both ways. */
+.detail-toggle > .detail-toggle__body {
+  display: block !important;
+  overflow: hidden;
+  transform-origin: top center;
+  max-height: 0;
+  padding-top: 0;
+  opacity: 0;
+  transform: translateY(-10px) scaleY(0.92);
+  transition:
+    max-height 520ms cubic-bezier(.34, 1.56, .64, 1),
+    padding-top 520ms cubic-bezier(.34, 1.56, .64, 1),
+    transform 520ms cubic-bezier(.34, 1.56, .64, 1),
+    opacity 320ms ease;
+}
+
+.detail-toggle > .detail-toggle__body.is-open {
+  padding-top: 14px;
+  opacity: 1;
+  transform: translateY(0) scaleY(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .term-tip::after,
+  .term-tip::before,
+  .detail-toggle > summary::before,
+  .detail-toggle > .detail-toggle__body {
+    transition: none;
+  }
+}
+
+body.no-motion .detail-toggle > .detail-toggle__body { transition: none; }
+
+/* ---------- Portal popover (rendered into <body> by term-tooltip.js) ----------
+   Uses position:fixed so it lives in the page-level stacking context and
+   is never clipped by ancestor overflow:hidden (e.g. .glass-card,
+   .callout, .detail-toggle) or visually overrun by sibling stacking
+   contexts. Hides the legacy CSS ::after/::before popover when this
+   script is active so we don't render two popovers at once. */
+.has-term-tooltip .term-tip::after,
+.has-term-tooltip .term-tip::before {
+  display: none !important;
+}
+
+.term-tooltip-popover {
+  position: fixed;
+  z-index: 10000;
+  max-width: 280px;
+  padding: 10px 13px;
+  background: var(--pearl-glass-strong, rgba(255, 255, 255, 0.92));
+  color: var(--ink-deep, #141e2d);
+  font: 400 14px/1.5 var(--font-body, "SF Pro Text", -apple-system, BlinkMacSystemFont, sans-serif);
+  letter-spacing: 0;
+  text-align: left;
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.7));
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0, 45, 114, 0.18);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 160ms ease, transform 200ms var(--ease-spring, cubic-bezier(.34, 1.56, .64, 1));
+}
+
+.term-tooltip-popover--above { transform: translateY(4px); }
+.term-tooltip-popover--below { transform: translateY(-4px); }
+
+.term-tooltip-popover[style*="left"] {
+  opacity: 1;
+}
+.term-tooltip-popover[style*="left"][class*="--above"] { transform: translateY(0); }
+.term-tooltip-popover[style*="left"][class*="--below"] { transform: translateY(0); }
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .term-tooltip-popover { background: rgba(255, 255, 255, 0.97); }
+}
+
+@media (max-width: 640px) {
+  .term-tooltip-popover {
+    max-width: 220px;
+    font-size: 13px;
+  }
+}
