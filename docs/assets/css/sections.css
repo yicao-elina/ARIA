@@ -132,6 +132,45 @@
   margin-bottom: 8px;
 }
 
+/* Byline superscript markers (* corresponding author, † equal contribution).
+   Inline within the name link so screen readers still announce the name as a
+   single token; the visual cue is a small colored glyph above the baseline. */
+.byline-mark {
+  display: inline-block;
+  font-size: 0.62em;
+  font-weight: var(--weight-semibold, 600);
+  line-height: 0;
+  vertical-align: super;
+  margin-left: 1px;
+  letter-spacing: 0;
+  font-feature-settings: "sups" off;
+}
+.byline-mark--star {
+  color: var(--apple-primary, #002D72);
+}
+.byline-mark--dagger {
+  color: var(--mint, #68ACE5);
+}
+
+/* Legend line under the byline — the conventional "*Corresponding author ·
+   †Equal contribution" footnote. Same color as the byline itself, smaller
+   weight, sits just below with a hair of extra breathing room. */
+.tile--hero .hero-authors-legend {
+  font-size: var(--text-caption);
+  color: var(--apple-ink-muted-48);
+  margin: -4px 0 24px;
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px 10px;
+}
+.byline-legend-sep {
+  opacity: 0.55;
+}
+.byline-legend-item .byline-mark {
+  margin-right: 4px;
+}
+
 .tile--hero .hero-date {
   font-size: var(--text-caption);
   color: var(--apple-ink-muted-48);
