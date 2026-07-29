@@ -8,15 +8,15 @@
    ========================================================================== */
 
 /* ── Callout Boxes ── */
-/* Morandi-JHU frosted callouts: subtle backdrop blur, left accent ring */
+/* Morandi-JHU frosted callouts: full glass border + thin top accent bar,
+   matching the glass-card--tier-N recipe instead of a legacy left rule. */
 .callout {
+  position: relative;
   border-radius: 20px;
   padding: 28px;
   margin: 32px 0;
-  border-left: 4px solid;
-  border-top: 1px solid var(--glass-border, rgba(255, 255, 255, 0.6));
-  border-right: 1px solid var(--glass-border, rgba(255, 255, 255, 0.6));
-  border-bottom: 1px solid var(--glass-border, rgba(255, 255, 255, 0.6));
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.6));
+  border-top: 3px solid;
   font-size: var(--text-body);
   line-height: var(--leading-body);
   letter-spacing: var(--tracking-body);
@@ -41,7 +41,7 @@
 /* Insight — Heritage Blue accent */
 .callout.insight {
   background: rgba(0, 45, 114, 0.05);
-  border-left-color: var(--apple-primary);
+  border-top-color: var(--apple-primary);
 }
 
 .callout.insight .callout-label {
@@ -51,7 +51,7 @@
 /* Definition — Heritage Blue lighter */
 .callout.definition {
   background: rgba(0, 45, 114, 0.03);
-  border-left-color: var(--tier-1);
+  border-top-color: var(--tier-1);
 }
 
 .callout.definition .callout-label {
@@ -61,7 +61,7 @@
 /* Success — Apple green */
 .callout.success {
   background: var(--aria-success-bg);
-  border-left-color: var(--aria-success);
+  border-top-color: var(--aria-success);
 }
 
 .callout.success .callout-label {
@@ -71,7 +71,7 @@
 /* Warning — Apple red */
 .callout.warning {
   background: var(--aria-danger-bg);
-  border-left-color: var(--aria-danger);
+  border-top-color: var(--aria-danger);
 }
 
 .callout.warning .callout-label {
@@ -187,21 +187,19 @@
 }
 
 /* ── Tier Detail Sections ──
-   Quiet frosted container — the *examples* inside should pop, not this.
-   Reduced blur and lower background so each .tier-example inside reads
-   as a clearly distinct card. */
+   Quiet frosted glass container — full rounded border with a thin
+   tier-colored top accent bar (matches .glass-card--tier-N) instead of
+   a legacy left rule. The *examples* inside still pop as opaque cards. */
 .tier-detail {
   margin: 48px 0;
   padding: 28px;
   border-radius: 20px;
-  border-left: 4px solid;
-  border-top: 1px solid var(--apple-divider-soft);
-  border-right: 1px solid var(--apple-divider-soft);
-  border-bottom: 1px solid var(--apple-divider-soft);
-  background: rgba(255, 255, 255, 0.35);
-  backdrop-filter: blur(8px) saturate(160%);
-  -webkit-backdrop-filter: blur(8px) saturate(160%);
-  box-shadow: 0 2px 12px rgba(0, 45, 114, 0.04);
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.6));
+  border-top: 3px solid;
+  background: var(--pearl-glass, rgba(255, 255, 255, 0.45));
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 8px 28px rgba(0, 45, 114, 0.06);
 }
 
 .tier-detail-header {
@@ -213,20 +211,23 @@
 }
 
 /* ── Tier Example (sub-block) ──
-   Each Example 1/2/3 is its OWN visually distinct glass card — opaque
-   white surface, prominent shadow, corner badge "EXAMPLE 01/02/03",
-   tier-coloured left strip, and a subtle hover lift so the user can
-   tell at a glance these are separate, self-contained moments. */
+   Each Example 1/2/3 is its OWN visually distinct glass card — frosted
+   translucent surface, soft shadow, corner badge "EXAMPLE 01/02/03",
+   a tier-coloured TOP accent bar (not a legacy left rule), and a subtle
+   hover lift so the user can tell at a glance these are separate,
+   self-contained moments. */
 .tier-example {
   position: relative;
   margin: 28px 0;
   padding: 28px 26px 24px;
   border-radius: 18px;
-  background: var(--apple-canvas);
-  border: 1px solid var(--apple-divider-soft);
-  border-left: 4px solid var(--apple-primary);
+  background: var(--pearl-glass, rgba(255, 255, 255, 0.6));
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.6));
+  border-top: 3px solid var(--apple-primary);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 1px 0 rgba(255, 255, 255, 0.75),
     0 2px 6px rgba(0, 45, 114, 0.04),
     0 10px 28px rgba(0, 45, 114, 0.08);
   transition:
@@ -235,10 +236,10 @@
     border-color 320ms ease;
 }
 
-/* Tier-tinted left strip for each example */
-.tier-1-detail .tier-example { border-left-color: var(--tier-1); }
-.tier-2-detail .tier-example { border-left-color: var(--tier-2); }
-.tier-3-detail .tier-example { border-left-color: var(--tier-3); }
+/* Tier-tinted top accent for each example */
+.tier-1-detail .tier-example { border-top-color: var(--tier-1); }
+.tier-2-detail .tier-example { border-top-color: var(--tier-2); }
+.tier-3-detail .tier-example { border-top-color: var(--tier-3); }
 
 .tier-example:hover {
   transform: translateY(-3px);
@@ -482,8 +483,8 @@
   gap: 12px;
   background: var(--aria-danger-bg);
   padding: 17px;
-  border-radius: var(--radius-sm);
-  border-left: 4px solid var(--aria-danger);
+  border-radius: 14px;
+  border: 1px solid rgba(184, 80, 74, 0.22);
   margin: 17px 0;
   font-size: var(--text-caption);
   line-height: var(--leading-caption);
@@ -669,9 +670,10 @@
   color: var(--apple-primary);
 }
 
-/* Trace result */
-.trace-result {
-  border-left: 3px solid var(--aria-success);
+/* Trace result — a soft success-tinted glass card instead of a left rule */
+.trace-result .trace-step-content {
+  background: var(--aria-success-bg);
+  border-color: rgba(42, 138, 110, 0.28);
 }
 
 .result-meta {

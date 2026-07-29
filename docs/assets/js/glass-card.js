@@ -1,8 +1,16 @@
 /* ============================================================
    glass-card.js
-   Cursor spotlight + 3D tilt for .glass-card elements.
-   Sets --mx / --my (percent) and --tilt-x / --tilt-y (deg) as
-   CSS custom properties consumed by glass.css.
+   Cursor spotlight + idle float delay for .glass-card elements.
+   Sets --mx / --my (percent) for the radial-gradient cursor glow
+   consumed by glass.css. Also assigns a randomized --float-delay
+   so the CSS keyframe animation drifts cards out of lockstep.
+
+   Notes:
+   - The 3D tilt (--tilt-x / --tilt-y) has been removed — the
+     rotateX/rotateY hover effect was too theatrical for a
+     research-paper aesthetic. The refined micro-motion is now
+     a slow translateY drift (see @keyframes glass-float in
+     glass.css) plus a small lift on hover.
    - No-ops on touch devices and when prefers-reduced-motion: reduce.
    - Adds body.no-motion / body.no-spotlight as global kill-switches.
    - Idempotent: safe to call multiple times.
@@ -11,10 +19,8 @@
 (function () {
   "use strict";
 
-  var MAX_TILT = 8;            // degrees, baseline for small cards
   var SELECTOR = ".glass-card";
   var SPOTLIGHT_SELECTOR = ".glass-card:not(.glass-card--no-spotlight)";
-  var TILT_SELECTOR = ".glass-card:not(.glass-card--no-tilt)";
 
   function reducedMotion() {
     return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -22,17 +28,6 @@
 
   function isTouchDevice() {
     return window.matchMedia("(hover: none)").matches || ("ontouchstart" in window);
-  }
-
-  // Size-proportional tilt cap. Larger cards use a smaller angle so
-  // the 3D effect stays subtle and refined instead of feeling like the
-  // card is wobbling. Recomputed once per card and cached in dataset
-  // so we don't hit getBoundingClientRect on every pointermove.
-  function computeMaxTilt(width) {
-    if (width < 300) return 8;
-    if (width < 600) return 6;
-    if (width < 900) return 4;
-    return 3;
   }
 
   function init() {
@@ -44,9 +39,22 @@
 
     var motionOff = reducedMotion() || isTouchDevice();
 
+    // Assign each card a randomized float delay so the CSS keyframe
+    // animation drifts them out of lockstep. Negative delays start
+    // each card mid-animation, avoiding a synchronized "everyone
+    // lifts at once" effect on first paint. 0–6.5s range matches
+    // the 6.5s float duration in glass.css.
+    for (var i = 0; i < cards.length; i++) {
+      var card = cards[i];
+      if (card.classList.contains("glass-card--no-float")) continue;
+      var delay = -(Math.random() * 6.5);
+      card.style.setProperty("--float-delay", delay.toFixed(2) + "s");
+    }
+
+    if (motionOff) return; // Skip the spotlight listener entirely on touch / reduced-motion.
+
     // Spotlight: document-level pointermove (event delegation).
     document.addEventListener("pointermove", function (e) {
-      if (motionOff) return;
       var target = e.target.closest(SPOTLIGHT_SELECTOR);
       if (!target) return;
       var rect = target.getBoundingClientRect();
@@ -55,42 +63,6 @@
       target.style.setProperty("--mx", xPct.toFixed(2) + "%");
       target.style.setProperty("--my", yPct.toFixed(2) + "%");
     }, { passive: true });
-
-    // 3D tilt: per-card pointermove + pointerleave.
-    for (var i = 0; i < cards.length; i++) {
-      (function (card) {
-        if (motionOff) return;
-        if (!card.matches(TILT_SELECTOR)) return;
-
-        // Compute and cache the size-based tilt cap once per card.
-        // Recomputed on resize so reflows don't strand a stale cap.
-        var cachedMax = NaN;
-        function refreshMax() {
-          var w = card.getBoundingClientRect().width;
-          var cap = computeMaxTilt(w);
-          cachedMax = cap;
-          card.dataset.maxTilt = String(cap);
-        }
-        refreshMax();
-        window.addEventListener("resize", refreshMax, { passive: true });
-
-        card.addEventListener("pointermove", function (e) {
-          var rect = card.getBoundingClientRect();
-          var dx = (e.clientX - (rect.left + rect.width / 2)) / (rect.width / 2);
-          var dy = (e.clientY - (rect.top + rect.height / 2)) / (rect.height / 2);
-          var cx = Math.max(-1, Math.min(1, dx));
-          var cy = Math.max(-1, Math.min(1, -dy));   // invert so up-tilt is positive
-          var tilt = isNaN(cachedMax) ? MAX_TILT : cachedMax;
-          card.style.setProperty("--tilt-x", (cx * tilt).toFixed(2) + "deg");
-          card.style.setProperty("--tilt-y", (cy * tilt).toFixed(2) + "deg");
-        });
-
-        card.addEventListener("pointerleave", function () {
-          card.style.setProperty("--tilt-x", "0deg");
-          card.style.setProperty("--tilt-y", "0deg");
-        });
-      })(cards[i]);
-    }
   }
 
   if (document.readyState === "loading") {

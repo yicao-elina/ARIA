@@ -25,11 +25,12 @@
   border-color: var(--tier-1-border);
 }
 
-/* Tier-N detail uses a QUIET frosted surface so the inner .tier-example
-   cards can pop out as distinct, opaque blocks. Only the colored left
-   strip tells you which tier you're looking at. */
+/* Tier-N detail uses a QUIET frosted glass surface so the inner
+   .tier-example cards can pop out as distinct, translucent blocks.
+   A thin colored TOP bar (matching .glass-card--tier-N) tells you
+   which tier you're looking at — no legacy left rule. */
 .tier-1-detail {
-  border-left-color: var(--tier-1);
+  border-top-color: var(--tier-1);
 }
 
 /* ── Tier 2 Card & Detail ── */
@@ -39,7 +40,7 @@
 }
 
 .tier-2-detail {
-  border-left-color: var(--tier-2);
+  border-top-color: var(--tier-2);
 }
 
 /* ── Tier 3 Card & Detail ── */
@@ -49,7 +50,7 @@
 }
 
 .tier-3-detail {
-  border-left-color: var(--tier-3);
+  border-top-color: var(--tier-3);
 }
 
 /* ── Trace Nodes ── */

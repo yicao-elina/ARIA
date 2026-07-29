@@ -16,6 +16,7 @@
   <link rel="stylesheet" href="assets/css/components-table.css">
   <link rel="stylesheet" href="assets/css/responsive.css">
   <link rel="stylesheet" href="assets/css/glass.css" />
+  <link rel="stylesheet" href="assets/css/glossary.css" />
   <link rel="stylesheet" href="assets/css/header-pill.css" />
   <link rel="stylesheet" href="assets/css/mesh.css" />
 
@@ -113,7 +114,7 @@
     </p>
 
     <p>
-      Consider a materials scientist asking: <em>"What are the electrical properties of CVD-grown MoS₂?"</em> A naive KG+LLM system retrieves every MoS₂-related edge from the knowledge graph—including <strong>Processing → Property shortcuts</strong> like <em>"CVD temperature 750°C increases carrier mobility"</em>—and anchors on these partial facts, bypassing the mechanistic chain through crystallinity.
+      Consider a materials scientist asking: <em>"What are the electrical properties of CVD-grown MoS₂?"</em> A naive KG+LLM system retrieves every MoS₂-related edge from the knowledge graph—including <span class="term-tip" tabindex="0" data-tip="A shortcut edge that links a processing condition directly to a property, skipping the intermediate structure node — e.g. 'CVD temperature 750°C increases carrier mobility.'">Processing → Property shortcuts</span>—and anchors on these partial facts, bypassing the mechanistic chain through crystallinity.
     </p>
 
     <div class="callout insight glass-card glass-card--compact reveal">
@@ -134,13 +135,17 @@
       Our evaluation on 149 expert-validated 2D materials synthesis tasks confirms this: naive KG integration <em>decreases</em> performance by up to 12.7% on inverse design tasks, despite the retrieved evidence being factually correct.
     </p>
 
-    $$
-    \text{Score}_{\text{Naive KG}} = 0.301 \quad < \quad \text{Score}_{\text{Baseline}} = 0.345
-    $$
-
-    <p>
-      Inverse design scores: adding knowledge without causal gating <em>hurts</em>.
-    </p>
+    <details class="detail-toggle glass-card glass-card--compact">
+      <summary>See the quantitative evidence</summary>
+      <div class="detail-toggle__body">
+        $$
+        \text{Score}_{\text{Naive KG}} = 0.301 \quad < \quad \text{Score}_{\text{Baseline}} = 0.345
+        $$
+        <p>
+          Inverse design scores: adding knowledge without causal gating <em>hurts</em>.
+        </p>
+      </div>
+    </details>
   </div>
 </section>
 
@@ -248,21 +253,26 @@
     </figure>
 
     <p>
-      A query $q$ about a material's properties is <strong>PSP-complete</strong> if and only if there exists a path through the knowledge graph that connects processing conditions to properties through an intermediate structure node.
+      A query $q$ about a material's properties is <span class="term-tip" tabindex="0" data-tip="A query is PSP-complete when the knowledge graph contains a full processing-to-structure-to-property path answering it, not just a partial or shortcut edge.">PSP-complete</span> if and only if there exists a path through the knowledge graph that connects processing conditions to properties through an intermediate structure node.
     </p>
 
     <div class="callout definition glass-card glass-card--compact reveal">
       <div class="callout-label">Definition 1: PSP-Complete Path</div>
       <p>
-        Given a causal knowledge graph $G = (V, E)$ with node partition $V = V_P \cup V_S \cup V_{Prop}$, a query $q = (\text{method}, \text{host}, \text{dopant})$ is <strong>PSP-complete</strong> if and only if there exists a path $p = (v_P, v_S, v_{Prop})$ satisfying:
+        Given a causal knowledge graph $G = (V, E)$ with node partition $V = V_P \cup V_S \cup V_{Prop}$, a query $q = (\text{method}, \text{host}, \text{dopant})$ is <strong>PSP-complete</strong> if and only if there exists a path $p = (v_P, v_S, v_{Prop})$ satisfying five conditions.
       </p>
-      <ol>
-        <li>$v_P$ matches the synthesis method and conditions</li>
-        <li>$v_S$ matches the host and dopant</li>
-        <li>$v_{Prop}$ is reachable from $v_S$</li>
-        <li>Both edges $(v_P, v_S)$ and $(v_S, v_{Prop})$ exist in $E$</li>
-        <li>The minimum edge confidence along $p$ is at least $\theta_1$</li>
-      </ol>
+      <details class="detail-toggle glass-card glass-card--compact">
+        <summary>See the full formal criteria</summary>
+        <div class="detail-toggle__body">
+          <ol>
+            <li>$v_P$ matches the synthesis method and conditions</li>
+            <li>$v_S$ matches the host and dopant</li>
+            <li>$v_{Prop}$ is reachable from $v_S$</li>
+            <li>Both edges $(v_P, v_S)$ and $(v_S, v_{Prop})$ exist in $E$</li>
+            <li>The minimum edge confidence along $p$ is at least $\theta_1$</li>
+          </ol>
+        </div>
+      </details>
     </div>
 
     <p>
@@ -277,7 +287,7 @@
     <h2 class="reveal">ARIA's Three-Tier Adaptive Cascade</h2>
 
     <p>
-      ARIA addresses contextual tunneling through a three-tier adaptive reasoning cascade that conditions knowledge integration on <em>mechanistic completeness</em>. Rather than always injecting retrieved evidence, ARIA checks whether the evidence forms a <em>complete causal chain</em> before using it.
+      ARIA addresses <span class="term-tip" tabindex="0" data-tip="When a retrieval system injects evidence that looks relevant by keyword but skips the mechanistic steps connecting cause to effect, leading to unjustified confidence.">contextual tunneling</span> through a three-tier adaptive reasoning cascade that conditions knowledge integration on <em>mechanistic completeness</em>. Rather than always injecting retrieved evidence, ARIA checks whether the evidence forms a <span class="term-tip" tabindex="0" data-tip="A processing → structure → property (PSP) path where every link has direct causal support in the knowledge graph, with no missing intermediate steps.">complete causal chain</span> before using it.
     </p>
 
     <div class="tier-overview" data-reveal-group="tiers">
@@ -360,34 +370,39 @@
       </div>
 
       <p>
-        When a complete PSP chain exists in the knowledge graph, ARIA activates <strong>Tier 1</strong>. The system traces the full causal path from processing conditions through structural mediators to properties, formats the mechanistic evidence as context, and instructs the LLM to use <em>only verified causal mechanisms</em>.
+        When a complete <span class="term-tip" tabindex="0" data-tip="A processing → structure → property (PSP) path where every link has direct causal support in the knowledge graph, with no missing intermediate steps.">PSP chain</span> exists in the knowledge graph, ARIA activates <strong>Tier 1</strong>. The system traces the full causal path from processing conditions through structural mediators to properties, formats the mechanistic evidence as context, and instructs the LLM to use <em>only verified causal mechanisms</em>.
       </p>
 
-      <div class="tier-example">
-        <h4>Example: CVD-grown MoS₂ conductivity</h4>
-        <div class="tier-trace">
-          <div class="trace-node trace-processing">
-            <div class="trace-label">Processing</div>
-            <div class="trace-content">CVD temperature 750°C</div>
-            <div class="trace-confidence">confidence: 0.90</div>
-          </div>
-          <div class="trace-arrow">→ enables →</div>
-          <div class="trace-node trace-structure">
-            <div class="trace-label">Structure</div>
-            <div class="trace-content">crystallinity</div>
-            <div class="trace-confidence">confidence: 0.90</div>
-          </div>
-          <div class="trace-arrow">→ produces →</div>
-          <div class="trace-node trace-property">
-            <div class="trace-label">Property</div>
-            <div class="trace-content">carrier mobility >40 cm²/Vs</div>
-            <div class="trace-confidence">confidence: 0.92</div>
+      <details class="detail-toggle glass-card glass-card--compact" open>
+        <summary>See the worked example: CVD-grown MoS₂ conductivity</summary>
+        <div class="detail-toggle__body">
+          <div class="tier-example">
+            <h4>Example: CVD-grown MoS₂ conductivity</h4>
+            <div class="tier-trace">
+              <div class="trace-node trace-processing">
+                <div class="trace-label">Processing</div>
+                <div class="trace-content">CVD temperature 750°C</div>
+                <div class="trace-confidence">confidence: 0.90</div>
+              </div>
+              <div class="trace-arrow">→ enables →</div>
+              <div class="trace-node trace-structure">
+                <div class="trace-label">Structure</div>
+                <div class="trace-content">crystallinity</div>
+                <div class="trace-confidence">confidence: 0.90</div>
+              </div>
+              <div class="trace-arrow">→ produces →</div>
+              <div class="trace-node trace-property">
+                <div class="trace-label">Property</div>
+                <div class="trace-content">carrier mobility >40 cm²/Vs</div>
+                <div class="trace-confidence">confidence: 0.92</div>
+              </div>
+            </div>
+            <div class="trace-mechanism">
+              <strong>Mechanism:</strong> CVD growth at 750°C on SiO₂ substrate yields large-grain MoS₂ with improved crystallinity → improved crystallinity reduces charged impurity scattering → carrier mobility exceeds 40 cm²/Vs.
+            </div>
           </div>
         </div>
-        <div class="trace-mechanism">
-          <strong>Mechanism:</strong> CVD growth at 750°C on SiO₂ substrate yields large-grain MoS₂ with improved crystallinity → improved crystallinity reduces charged impurity scattering → carrier mobility exceeds 40 cm²/Vs.
-        </div>
-      </div>
+      </details>
 
       <div class="callout success glass-card glass-card--compact reveal">
         <div class="callout-label">✓ Result</div>
@@ -404,38 +419,43 @@
       </div>
 
       <p>
-        When no complete PSP path exists for the queried material, ARIA activates <strong>Tier 2</strong>. It finds the most semantically similar material in the KG and transfers its causal mechanisms—<em>but only after validating physical constraints</em>.
+        When no complete PSP path exists for the queried material, ARIA activates <strong>Tier 2</strong>. It finds the most semantically similar material in the KG and transfers its causal mechanisms—<em>but only after validating <span class="term-tip" tabindex="0" data-tip="Checking that a proposed transfer between materials respects real physics: same structural class, valid elemental substitution rules, and overlapping stability conditions.">physical constraints</span></em>.
       </p>
 
-      <div class="tier-example">
-        <h4>Example: MoSe₂ bandgap prediction via MoS₂ analogy</h4>
-        <div class="constraint-checks">
-          <div class="constraint-check passed">
-            <span class="check-icon">✓</span>
-            <span><strong>Structural class preservation</strong>: MoSe₂ shares 2H hexagonal phase with MoS₂</span>
-          </div>
-          <div class="constraint-check passed">
-            <span class="check-icon">✓</span>
-            <span><strong>Elemental substitution rule</strong>: S→Se substitution reduces bandgap by ~15%</span>
-          </div>
-          <div class="constraint-check passed">
-            <span class="check-icon">✓</span>
-            <span><strong>Thermal stability window</strong>: CVD temperature range overlaps for both materials</span>
+      <details class="detail-toggle glass-card glass-card--compact">
+        <summary>See the worked example: MoSe₂ bandgap prediction via MoS₂ analogy</summary>
+        <div class="detail-toggle__body">
+          <div class="tier-example">
+            <h4>Example: MoSe₂ bandgap prediction via MoS₂ analogy</h4>
+            <div class="constraint-checks">
+              <div class="constraint-check passed">
+                <span class="check-icon">✓</span>
+                <span><strong>Structural class preservation</strong>: MoSe₂ shares 2H hexagonal phase with MoS₂</span>
+              </div>
+              <div class="constraint-check passed">
+                <span class="check-icon">✓</span>
+                <span><strong>Elemental substitution rule</strong>: S→Se substitution reduces bandgap by ~15%</span>
+              </div>
+              <div class="constraint-check passed">
+                <span class="check-icon">✓</span>
+                <span><strong>Thermal stability window</strong>: CVD temperature range overlaps for both materials</span>
+              </div>
+            </div>
+            <div class="analogical-transfer">
+              <div class="transfer-source">
+                <div class="transfer-label">Source (MoS₂)</div>
+                <div class="transfer-content">Direct bandgap: ~1.8 eV</div>
+              </div>
+              <div class="transfer-arrow">S→Se: −15%</div>
+              <div class="transfer-target">
+                <div class="transfer-label">Target (MoSe₂)</div>
+                <div class="transfer-content">Estimated bandgap: ~1.5 eV</div>
+              </div>
+            </div>
+            <div class="disclaimer"><em>⚠ Analogy-based prediction. Mechanisms transferred from MoS₂ with S→Se substitution correction.</em></div>
           </div>
         </div>
-        <div class="analogical-transfer">
-          <div class="transfer-source">
-            <div class="transfer-label">Source (MoS₂)</div>
-            <div class="transfer-content">Direct bandgap: ~1.8 eV</div>
-          </div>
-          <div class="transfer-arrow">S→Se: −15%</div>
-          <div class="transfer-target">
-            <div class="transfer-label">Target (MoSe₂)</div>
-            <div class="transfer-content">Estimated bandgap: ~1.5 eV</div>
-          </div>
-        </div>
-        <div class="disclaimer"><em>⚠ Analogy-based prediction. Mechanisms transferred from MoS₂ with S→Se substitution correction.</em></div>
-      </div>
+      </details>
 
       <div class="callout success glass-card glass-card--compact reveal">
         <div class="callout-label">✓ Result</div>
@@ -452,32 +472,37 @@
       </div>
 
       <p>
-        When neither complete paths nor analogies are available, ARIA activates <strong>Tier 3</strong>. It <em>disables retrieval entirely</em>, relies on the LLM's parametric knowledge, and <strong>explicitly flags</strong> the output as speculative with reduced confidence.
+        When neither complete paths nor analogies are available, ARIA activates <strong>Tier 3</strong>. It <em>disables retrieval entirely</em>, relies on the LLM's <span class="term-tip" tabindex="0" data-tip="Knowledge learned during pretraining and stored in the model's weights, as opposed to evidence retrieved at query time.">parametric knowledge</span>, and <strong>explicitly flags</strong> the output as speculative with reduced confidence.
       </p>
 
-      <div class="tier-example">
-        <h4>Example: ITO alternative for transparent conductors</h4>
-        <div class="uncertainty-flag">
-          <div class="flag-icon">⚠️</div>
-          <div class="flag-content">
-            <strong>Uncertainty Flag:</strong> Insufficient causal evidence in the knowledge graph for this inverse design query. Output is based solely on parametric knowledge and should be treated as speculative.
+      <details class="detail-toggle glass-card glass-card--compact">
+        <summary>See the worked example: ITO alternative for transparent conductors</summary>
+        <div class="detail-toggle__body">
+          <div class="tier-example">
+            <h4>Example: ITO alternative for transparent conductors</h4>
+            <div class="uncertainty-flag">
+              <div class="flag-icon">⚠️</div>
+              <div class="flag-content">
+                <strong>Uncertainty Flag:</strong> Insufficient causal evidence in the knowledge graph for this inverse design query. Output is based solely on parametric knowledge and should be treated as speculative.
+              </div>
+            </div>
+            <div class="confidence-comparison">
+              <div class="comparison-bar">
+                <span class="comparison-label">ARIA Confidence</span>
+                <div class="comparison-fill aria-fill" style="width:52%">0.52</div>
+              </div>
+              <div class="comparison-bar">
+                <span class="comparison-label">Naive KG Confidence</span>
+                <div class="comparison-fill naive-fill" style="width:76%">0.76</div>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="confidence-comparison">
-          <div class="comparison-bar">
-            <span class="comparison-label">ARIA Confidence</span>
-            <div class="comparison-fill aria-fill" style="width:52%">0.52</div>
-          </div>
-          <div class="comparison-bar">
-            <span class="comparison-label">Naive KG Confidence</span>
-            <div class="comparison-fill naive-fill" style="width:76%">0.76</div>
-          </div>
-        </div>
-      </div>
+      </details>
 
       <div class="callout warning glass-card glass-card--compact reveal">
         <div class="callout-label">⚠ Contrast</div>
-        <p>Naive KG+LLM assigns <strong>0.76 confidence</strong> to the same query by concatenating partial ITO edges—<em>despite no complete causal chain existing</em>. ARIA honestly reports <strong>0.52 confidence</strong>, a 32% reduction that signals real epistemic uncertainty.</p>
+        <p>Naive KG+LLM assigns <strong>0.76 confidence</strong> to the same query by concatenating partial ITO edges—<em>despite no complete causal chain existing</em>. ARIA honestly reports <strong>0.52 confidence</strong>, a 32% reduction that signals real <span class="term-tip" tabindex="0" data-tip="Uncertainty about what the model doesn't know or hasn't verified, as opposed to inherent randomness in the underlying physical process.">epistemic uncertainty</span>.</p>
       </div>
     </div>
   </div>
@@ -506,7 +531,7 @@
     </figure>
 
     <p>
-      The tier activation statistics reveal a striking structural asymmetry. For forward prediction, Tier 1 activates 62.5% of the time—most queries find complete PSP paths. For inverse design, Tier 1 <em>never</em> activates because the CKG has only 10.5% reverse reachability.
+      The tier activation statistics reveal a striking structural asymmetry. For forward prediction, <span class="term-tip" tabindex="0" data-tip="Tier 1 = direct reasoning over a complete Processing→Structure→Property path found in the knowledge graph, without needing analogy or fallback.">Tier 1</span> activates 62.5% of the time—most queries find complete PSP paths. For inverse design, Tier 1 <em>never</em> activates because the CKG has only <span class="term-tip" tabindex="0" data-tip="Reverse reachability: the fraction of property nodes that have a traceable path backward to processing conditions, i.e., can be used to answer 'what synthesis gives me this property?' questions.">10.5% reverse reachability</span>.
     </p>
 
     <div id="tier-activation-charts" class="tier-activation-container"></div>
@@ -543,7 +568,7 @@
     <figure id="fig-robustness">
       <div id="robustness-slider" class="interactive-figure"></div>
       <figcaption>
-        <strong>Figure 6:</strong> Edge deletion robustness. Drag the slider to simulate progressive KG degradation. ARIA maintains performance through Tier 2 absorption, while Naive KG performance collapses.
+        <strong>Figure 6:</strong> Edge deletion robustness. Drag the slider to simulate progressive KG degradation. ARIA maintains performance through <span class="term-tip" tabindex="0" data-tip="Tier 2 absorption: when a direct P→S→P path is missing (e.g., after edge deletion), ARIA falls back to reasoning by analogy from the most similar intact pathway instead of failing outright.">Tier 2 absorption</span>, while Naive KG performance collapses.
       </figcaption>
     </figure>
   </div>
@@ -598,10 +623,15 @@
           <div class="trace-step-content">
             <h4>Tier 1: Direct Causal Path Reasoning</h4>
             <p>Using verified causal mechanisms only.</p>
-            <div class="trace-evidence">
-              <div class="evidence-item"><span class="evidence-label">Evidence 1:</span> "CVD growth at 750°C on SiO₂ substrate yields large-grain MoS₂ with improved crystallinity" <span class="evidence-doi">DOI: 10.1038/nnano.2014.1</span></div>
-              <div class="evidence-item"><span class="evidence-label">Evidence 2:</span> "Improved crystallinity reduces charged impurity scattering, leading to carrier mobility exceeding 40 cm²/Vs" <span class="evidence-doi">DOI: 10.1038/nnano.2014.1</span></div>
-            </div>
+            <details class="detail-toggle glass-card glass-card--compact">
+              <summary>Show cited evidence</summary>
+              <div class="detail-toggle__body">
+                <div class="trace-evidence">
+                  <div class="evidence-item"><span class="evidence-label">Evidence 1:</span> "CVD growth at 750°C on SiO₂ substrate yields large-grain MoS₂ with improved crystallinity" <span class="evidence-doi">DOI: 10.1038/nnano.2014.1</span></div>
+                  <div class="evidence-item"><span class="evidence-label">Evidence 2:</span> "Improved crystallinity reduces charged impurity scattering, leading to carrier mobility exceeding 40 cm²/Vs" <span class="evidence-doi">DOI: 10.1038/nnano.2014.1</span></div>
+                </div>
+              </div>
+            </details>
           </div>
         </div>
 
@@ -700,6 +730,7 @@ url={https://openreview.net/forum?id=7LFRS69byw}
 <script src="assets/js/header-tooltip.js" defer></script>
 <script src="assets/js/reveal.js" defer></script>
 <script src="assets/js/figure-viewer.js" defer></script>
+<script src="assets/js/detail-toggle.js" defer></script>
 
 <script src="assets/js/psp-cascade.js" async></script>
 <script src="assets/js/tunneling-demo.js" async></script>

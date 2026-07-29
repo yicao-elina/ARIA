@@ -1,0 +1,166 @@
+/* ============================================================
+   glossary.css
+   Two reusable "read less, learn more on demand" primitives for
+   the ARIA paper site. Both reuse existing design tokens (glass
+   surface, mint accent, spring easing) so they read as native
+   citizens of the page, not bolted-on widgets.
+
+   1. .term-tip        — inline hover/focus glossary popover for
+                          jargon (e.g. "contextual tunneling").
+                          Usage: <span class="term-tip" tabindex="0"
+                          data-tip="Short plain-language gloss.">contextual tunneling</span>
+
+   2. .detail-toggle    — collapsible glass panel for "read more"
+                          detail blocks (derivations, extra examples).
+                          Usage:
+                          <details class="detail-toggle glass-card glass-card--compact">
+                            <summary>Show the formal definition</summary>
+                            <div class="detail-toggle__body">...</div>
+                          </details>
+   ============================================================ */
+
+/* ---------- 1. Inline glossary hover term ---------- */
+
+.term-tip {
+  position: relative;
+  cursor: help;
+  color: var(--apple-primary, #002D72);
+  border-bottom: 1px dotted var(--mint, #68ACE5);
+  text-decoration: none;
+  transition: color 160ms ease, border-color 160ms ease;
+}
+
+.term-tip:hover,
+.term-tip:focus-visible {
+  color: var(--mint, #68ACE5);
+  border-bottom-color: var(--apple-primary, #002D72);
+  outline: none;
+}
+
+.term-tip::after {
+  content: attr(data-tip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 10px);
+  transform: translateX(-50%) translateY(4px);
+  width: max-content;
+  max-width: 280px;
+  padding: 10px 13px;
+  background: var(--pearl-glass-strong, rgba(255, 255, 255, 0.86));
+  color: var(--ink, #141e2d);
+  font: 400 12.5px/1.45 var(--font-body, "SF Pro Text", -apple-system, BlinkMacSystemFont, sans-serif);
+  letter-spacing: 0;
+  text-align: left;
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.6));
+  border-radius: 12px;
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  box-shadow: 0 12px 32px rgba(0, 45, 114, 0.16);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms ease, transform 200ms var(--ease-spring, cubic-bezier(.34, 1.56, .64, 1));
+  z-index: 40;
+}
+
+/* Small triangle nub pointing at the term */
+.term-tip::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 4px);
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--pearl-glass-strong, rgba(255, 255, 255, 0.86));
+  opacity: 0;
+  transition: opacity 200ms ease;
+  pointer-events: none;
+  z-index: 40;
+}
+
+.term-tip:hover::after,
+.term-tip:focus-visible::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.term-tip:hover::before,
+.term-tip:focus-visible::before {
+  opacity: 1;
+}
+
+@media (max-width: 640px) {
+  .term-tip::after {
+    max-width: 220px;
+    font-size: 12px;
+  }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .term-tip::after { background: rgba(255, 255, 255, 0.97); }
+}
+
+/* ---------- 2. Collapsible "read more" glass panel ---------- */
+
+.detail-toggle {
+  cursor: default;
+  margin: 16px 0;
+}
+
+.detail-toggle > summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: var(--weight-semibold, 600);
+  font-size: var(--text-caption, 13px);
+  color: var(--apple-primary, #002D72);
+  user-select: none;
+  transition: color 160ms ease;
+}
+
+.detail-toggle > summary::-webkit-details-marker { display: none; }
+
+.detail-toggle > summary::before {
+  content: "";
+  flex: 0 0 8px;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 240ms var(--ease-spring, cubic-bezier(.34, 1.56, .64, 1));
+}
+
+.detail-toggle[open] > summary::before {
+  transform: rotate(45deg);
+}
+
+.detail-toggle > summary:hover,
+.detail-toggle > summary:focus-visible {
+  color: var(--mint, #68ACE5);
+  outline: none;
+}
+
+.detail-toggle__body {
+  overflow: hidden;
+  padding-top: 14px;
+  animation: detail-toggle-in 280ms var(--ease-spring, cubic-bezier(.34, 1.56, .64, 1));
+}
+
+@keyframes detail-toggle-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .term-tip::after,
+  .term-tip::before,
+  .detail-toggle > summary::before {
+    transition: none;
+  }
+  .detail-toggle__body {
+    animation: none;
+  }
+}
+
+body.no-motion .detail-toggle__body { animation: none; }
