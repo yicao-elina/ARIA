@@ -350,6 +350,18 @@
       <div class="stat glass-card glass-card--compact reveal" data-stat="shortcuts"><span class="stat-number" data-stat="shortcuts">5</span><span class="stat-label">P→P Shortcuts</span></div>
     </div>
 
+    <details class="detail-toggle glass-card glass-card--compact">
+      <summary>Advanced settings: which KG is this demo using?</summary>
+      <div class="detail-toggle__body">
+        <p>
+          This figure loads <code>assets/data/aria_2d_kg_demo.json</code> — a small, curated subset (28 relationships, 34 nodes) chosen so the graph stays responsive and legible in a browser. It is <strong>not</strong> the full literature-derived knowledge graph used in the paper (421 relationships, 777+ nodes), which is too large to ship on a static site.
+        </p>
+        <p>
+          Each fork of this repository can point the explorer at its own KG JSON file to visualize a different PSP knowledge graph. The expected format is <code>{ nodes: [...], edges: [...] }</code>, where each edge carries <code>source</code>, <code>target</code>, <code>relation</code>, <code>psp_type</code> (<code>Processing_to_Structure</code>, <code>Structure_to_Property</code>, or <code>Processing_to_Property</code>), <code>material</code>, <code>confidence</code>, <code>evidence_text</code>, and <code>relationship_id</code>. See <a href="https://github.com/yicao-elina/aria" target="_blank" rel="noopener">the GitHub repository</a> for the full KG construction pipeline and instructions for building or swapping in your own graph.
+        </p>
+      </div>
+    </details>
+
     <p>
       The knowledge graph reveals an important structural asymmetry. In the forward direction (processing → properties), 35.3% of queries find complete PSP paths. In the inverse direction (properties → processing), only 10.5% do—a <strong>3.4× asymmetry</strong> that explains why Tier 1 activates 62.5% of the time for forward prediction but 0% for inverse design.
     </p>

@@ -150,14 +150,19 @@
 
 .detail-toggle__body {
   overflow: hidden;
+  transform-origin: top center;
   padding-top: 14px;
-  animation: detail-toggle-in 360ms cubic-bezier(.16, 1, .3, 1);
+  animation: detail-toggle-in 520ms cubic-bezier(.22, 1, .36, 1);
 }
 
-/* Soft, weightless reveal — small drift + fade, no bounce/overshoot */
+/* Light, jelly-soft reveal — a gentle overshoot on scale + drift (not a
+   hard bounce): settles just past 100% then eases back, so it feels
+   springy without being stiff or theatrical. */
 @keyframes detail-toggle-in {
-  from { opacity: 0; transform: translateY(-3px); }
-  to   { opacity: 1; transform: translateY(0); }
+  0%   { opacity: 0;   transform: translateY(-10px) scaleY(0.92); }
+  55%  { opacity: 1;   transform: translateY(1px)   scaleY(1.015); }
+  80%  { transform: translateY(-0.5px) scaleY(0.998); }
+  100% { opacity: 1;   transform: translateY(0)      scaleY(1); }
 }
 
 @media (prefers-reduced-motion: reduce) {

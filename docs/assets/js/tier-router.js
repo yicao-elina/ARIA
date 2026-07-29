@@ -12,6 +12,13 @@
 /* global d3 */
 
 class TierRouter {
+  // Outer step cadence (ms). Tuned to match the inner D3/CSS transition
+  // durations used inside _drawMiniGraph / the .tr-step-panel reveal, so the
+  // next step never starts animating before the previous one has settled.
+  static START_DELAY_MS = 350;
+  static STEP_DELAY_MS = 750;
+  static RESULT_DELAY_MS = 500;
+
   constructor(containerId) {
     this.container = document.getElementById(containerId);
     if (!this.container) {
@@ -200,9 +207,16 @@ class TierRouter {
     // Reset steps
     this._updateStepIndicators();
 
-    // Animate through steps with delays
-    const stepDelay = 1500; // ms between steps
-    const startDelay = 600;
+    // Animate through steps with delays. Tuned to match the inner D3/CSS
+    // transition durations (see STEP_DELAY_MS) so the outer scheduler never
+    // advances to the next step before the current one has finished animating.
+    this._scheduleQueryTimeline();
+  }
+
+  /** Shared step timeline used by both example queries and custom queries. */
+  _scheduleQueryTimeline() {
+    const stepDelay = TierRouter.STEP_DELAY_MS;
+    const startDelay = TierRouter.START_DELAY_MS;
 
     this._scheduleTimeout(() => this._animateStep(1), startDelay);
     this._scheduleTimeout(() => this._animateStep(2), startDelay + stepDelay);
@@ -211,7 +225,7 @@ class TierRouter {
     this._scheduleTimeout(() => {
       this.isRunning = false;
       this._showResultPanel();
-    }, startDelay + stepDelay * 3 + 800);
+    }, startDelay + stepDelay * 3 + TierRouter.RESULT_DELAY_MS);
   }
 
   // ---------------------------------------------------------------------------
@@ -309,7 +323,7 @@ class TierRouter {
   border: 2px solid var(--tr-border);
   background: var(--tr-bg-card);
   color: var(--tr-text-muted);
-  transition: all 0.5s ease;
+  transition: all 0.32s cubic-bezier(.16, 1, .3, 1);
   position: relative;
 }
 
@@ -337,7 +351,7 @@ class TierRouter {
   text-align: center;
   max-width: 56px;
   line-height: 1.2;
-  transition: color 0.5s ease;
+  transition: color 0.32s cubic-bezier(.16, 1, .3, 1);
 }
 
 .tr-step-label.active {
@@ -352,7 +366,7 @@ class TierRouter {
   width: 2px;
   height: 32px;
   background: var(--tr-border);
-  transition: background 0.5s ease;
+  transition: background 0.32s cubic-bezier(.16, 1, .3, 1);
 }
 
 .tr-step-connector.completed {
@@ -397,7 +411,7 @@ class TierRouter {
   font-size: 14px;
   font-family: inherit;
   outline: none;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  transition: border-color 0.32s cubic-bezier(.16, 1, .3, 1), box-shadow 0.32s cubic-bezier(.16, 1, .3, 1);
 }
 
 .tr-input-field:focus {
@@ -418,7 +432,7 @@ class TierRouter {
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.18s cubic-bezier(.16, 1, .3, 1), box-shadow 0.18s cubic-bezier(.16, 1, .3, 1);
   white-space: nowrap;
 }
 
@@ -452,7 +466,7 @@ class TierRouter {
   color: var(--tr-text-secondary);
   font-size: 12px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(.16, 1, .3, 1);
   font-family: inherit;
 }
 
@@ -486,7 +500,7 @@ class TierRouter {
   padding: 16px 20px;
   opacity: 0;
   transform: translateY(12px);
-  transition: opacity 0.5s ease, transform 0.5s ease;
+  transition: opacity 0.32s cubic-bezier(.16, 1, .3, 1), transform 0.32s cubic-bezier(.16, 1, .3, 1);
   pointer-events: none;
 }
 
@@ -590,7 +604,7 @@ class TierRouter {
 .tr-completeness-bar-fill {
   height: 100%;
   border-radius: 12px;
-  transition: width 1s ease-out;
+  transition: width 0.55s cubic-bezier(.16, 1, .3, 1);
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -683,7 +697,7 @@ class TierRouter {
   padding: 20px;
   opacity: 0;
   transform: translateY(16px);
-  transition: opacity 0.5s ease, transform 0.5s ease;
+  transition: opacity 0.32s cubic-bezier(.16, 1, .3, 1), transform 0.32s cubic-bezier(.16, 1, .3, 1);
 }
 
 .tr-result-panel.visible {
@@ -882,7 +896,7 @@ class TierRouter {
 
 /* ---- Animations ---- */
 .tr-fade-in {
-  animation: trFadeIn 0.5s ease forwards;
+  animation: trFadeIn 0.32s cubic-bezier(.16, 1, .3, 1) forwards;
 }
 
 @keyframes trFadeIn {
@@ -1189,7 +1203,7 @@ class TierRouter {
       // Animate edge
       line
         .transition()
-        .duration(500)
+        .duration(260)
         .attr('stroke-opacity', 0.8);
 
       // Confidence label
@@ -1205,8 +1219,8 @@ class TierRouter {
           .attr('opacity', 0)
           .text(`${(e.confidence * 100).toFixed(0)}%`)
           .transition()
-          .delay(400)
-          .duration(300)
+          .delay(220)
+          .duration(180)
           .attr('opacity', 1);
       }
     });
@@ -1227,8 +1241,8 @@ class TierRouter {
         .attr('stroke-width', 2)
         .attr('class', 'tr-node-circle')
         .transition()
-        .delay(i * 200)
-        .duration(400)
+        .delay(i * 90)
+        .duration(240)
         .attr('r', 16);
 
       // Label
@@ -1240,8 +1254,8 @@ class TierRouter {
         .attr('opacity', 0)
         .text(n.label)
         .transition()
-        .delay(i * 200 + 300)
-        .duration(300)
+        .delay(i * 90 + 140)
+        .duration(180)
         .attr('opacity', 1);
     });
 
@@ -1256,8 +1270,8 @@ class TierRouter {
         .attr('opacity', 0)
         .text('Analogical transfer')
         .transition()
-        .delay(800)
-        .duration(300)
+        .delay(380)
+        .duration(180)
         .attr('opacity', 1);
     }
 
@@ -1272,8 +1286,8 @@ class TierRouter {
       .attr('opacity', 0)
       .text(`Path type: ${path.path_type}`)
       .transition()
-      .delay(800)
-      .duration(300)
+      .delay(380)
+      .duration(180)
       .attr('opacity', 1);
   }
 
@@ -1655,16 +1669,7 @@ class TierRouter {
 
     this._updateStepIndicators();
 
-    const stepDelay = 1500;
-    const startDelay = 600;
-    this._scheduleTimeout(() => this._animateStep(1), startDelay);
-    this._scheduleTimeout(() => this._animateStep(2), startDelay + stepDelay);
-    this._scheduleTimeout(() => this._animateStep(3), startDelay + stepDelay * 2);
-    this._scheduleTimeout(() => this._animateStep(4), startDelay + stepDelay * 3);
-    this._scheduleTimeout(() => {
-      this.isRunning = false;
-      this._showResultPanel();
-    }, startDelay + stepDelay * 3 + 800);
+    this._scheduleQueryTimeline();
   }
 
   _extractEntities(text) {
