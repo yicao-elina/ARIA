@@ -201,6 +201,7 @@
     // Auto-play pacing
     AUTO_PLAY_GAP_MS: 1000,
     CALLOUT_REVEAL_MS: 380, // time for the callout to pop in before action fires
+    AUTOPLAY_SCROLL_SETTLE_MS: 420, // pause for the scroll-to-center to land
     AUTO_PLAY_SETTLE_MS: 1400, // pause after auto-play completes, then auto-dismiss mask
     // Z-indices
     Z_CANVAS: 499,
@@ -971,17 +972,32 @@
           return;
         }
         const h = self._holes[i];
-        // Reveal the callout FIRST, then fire the action. The user
-        // sees the callout pop in (with its dashed leader), then the
-        // action's effect take hold. Pass the label so _fireHole
-        // knows not to re-reveal.
-        const label = self._revealCalloutForHoleIndex(i);
-        i += 1;
+        const reduced = utils.reducedMotion();
+        // Bring this hole to the center of the viewport FIRST, so
+        // "Do it for me" flows down the page one target at a time
+        // instead of jumping between wherever each hole happened to
+        // land when the section first loaded.
+        if (h.el.isConnected) {
+          h.el.scrollIntoView({
+            behavior: reduced ? "auto" : "smooth",
+            block: "center",
+          });
+        }
+        const settleMs = reduced ? 0 : CONSTANTS.AUTOPLAY_SCROLL_SETTLE_MS;
         window.setTimeout(() => {
           if (cancelled || !self._active) return;
-          self._fireHole(h, label);
-          window.setTimeout(step, CONSTANTS.AUTO_PLAY_GAP_MS);
-        }, CONSTANTS.CALLOUT_REVEAL_MS);
+          // Reveal the callout, then fire the action. The user sees
+          // the callout pop in (with its dashed leader), then the
+          // action's effect take hold. Pass the label so _fireHole
+          // knows not to re-reveal.
+          const label = self._revealCalloutForHoleIndex(i);
+          i += 1;
+          window.setTimeout(() => {
+            if (cancelled || !self._active) return;
+            self._fireHole(h, label);
+            window.setTimeout(step, CONSTANTS.AUTO_PLAY_GAP_MS);
+          }, CONSTANTS.CALLOUT_REVEAL_MS);
+        }, settleMs);
       };
       window.setTimeout(step, 60);
     }
@@ -1090,24 +1106,14 @@
       }
 
       const reduced = utils.reducedMotion();
-      sectionEl.scrollIntoView({
-        behavior: reduced ? "auto" : "smooth",
-        block: "center",
-      });
 
-      // Build the canvas frame, mask, and panel up front so the
-      // "clear" beat already has its chrome in place.
-      this._canvas = createCanvasFrame(sectionEl, {
-        stepNumber: this._index + 1,
-        totalSteps: this.stops.length,
-        sectionTitle: stop.title,
-        onEnd: () => this.end(),
-      });
-      this._mask = createMask(sectionEl);
-      // Mask starts visible (will fade in via the is-fading-in
-      // transition applied in _revealAllHoles()).
-
-      // Collect holes.
+      // Collect holes BEFORE scrolling. Some sections (e.g. Results)
+      // are much taller than the viewport and have their holes spread
+      // unevenly through their height (a figure near the top, a table
+      // cell far below) — centering the whole section on itself can
+      // push a hole's target off-screen entirely, which then forces
+      // its label to clamp into a nonsensical spot (e.g. behind the
+      // header). Instead we scroll to fit the actual hole targets.
       const holes = [];
       const fps = stop.focusPoints || [];
       fps.forEach((p) => {
@@ -1143,6 +1149,27 @@
           h.label = String.fromCharCode("a".charCodeAt(0) + i);
         });
       }
+
+      if (holes.length > 0) {
+        this._scrollToFitHoles(holes.map((h) => h.el), reduced);
+      } else {
+        sectionEl.scrollIntoView({
+          behavior: reduced ? "auto" : "smooth",
+          block: "center",
+        });
+      }
+
+      // Build the canvas frame, mask, and panel up front so the
+      // "clear" beat already has its chrome in place.
+      this._canvas = createCanvasFrame(sectionEl, {
+        stepNumber: this._index + 1,
+        totalSteps: this.stops.length,
+        sectionTitle: stop.title,
+        onEnd: () => this.end(),
+      });
+      this._mask = createMask(sectionEl);
+      // Mask starts visible (will fade in via the is-fading-in
+      // transition applied in _revealAllHoles()).
 
       this._panel = createPanel(this._panelState(stop));
       this._mode = "revealing";
@@ -1180,6 +1207,37 @@
       // the fade-in transition begins.
       window.requestAnimationFrame(() => {
         this._revealAllHoles();
+      });
+    }
+
+    // Scroll so that the given elements' combined bounding box is
+    // visible, instead of centering the (possibly much larger)
+    // section they live in. If they all fit in the viewport, center
+    // the union; if not, bring the first one near the top instead of
+    // centering the whole span (which would push later holes off-
+    // screen and mis-place their labels).
+    _scrollToFitHoles(elements, reduced) {
+      const visible = elements.filter((el) => {
+        const r = el.getBoundingClientRect();
+        return r.width > 0 && r.height > 0;
+      });
+      if (visible.length === 0) return;
+      const rects = visible.map((el) => el.getBoundingClientRect());
+      const top = Math.min.apply(null, rects.map((r) => r.top));
+      const bottom = Math.max.apply(null, rects.map((r) => r.bottom));
+      const unionHeight = bottom - top;
+      const viewportH = window.innerHeight;
+      const HEADER_CLEARANCE = 110;
+      let targetTop;
+      if (unionHeight <= viewportH * 0.85) {
+        targetTop = top - (viewportH - unionHeight) / 2;
+      } else {
+        targetTop = top - HEADER_CLEARANCE;
+      }
+      const targetScrollY = window.scrollY + targetTop;
+      window.scrollTo({
+        top: Math.max(0, targetScrollY),
+        behavior: reduced ? "auto" : "smooth",
       });
     }
 
@@ -1270,16 +1328,30 @@
           // Don't double-fire _fireHole.
           return;
         }
-        // No preventDefault / no stopPropagation: the browser must
-        // run its default click behavior so the element actually
-        // reacts (e.g. a <summary> toggles its <details>; a button
-        // fires its own click handler; a select dispatches change).
-        // We only do the tour-side bookkeeping here.
-        this._fireHole(h, label);
+        if (h.action && h.action.kind === "open-details") {
+          const details = h.el.closest("details");
+          if (details && details.open) {
+            // Already open (e.g. the Tier-1 example ships pre-
+            // expanded). The native <summary> click would otherwise
+            // TOGGLE it closed, which contradicts the callout's own
+            // "Already open" copy. Block the native toggle — this
+            // hole is read-only, not a real affordance to collapse.
+            e.preventDefault();
+          }
+        }
+        // No stopPropagation: the browser must still run its default
+        // click behavior so the element actually reacts (e.g. a
+        // <summary> toggles its <details>; a button fires its own
+        // click handler). skipAction:true stops _fireHole from ALSO
+        // re-dispatching the same action — without it, a real click
+        // was double-firing (e.g. toggling a <details> open then
+        // immediately closed again by our own synthetic call).
+        this._fireHole(h, label, { skipAction: true });
       };
     }
 
-    _fireHole(h, label) {
+    _fireHole(h, label, opts) {
+      opts = opts || {};
       // If a specific label is passed, reveal its callout first
       // (the click target is the chip OR somewhere inside the hole).
       // If no label is passed (e.g. "Do it for me" sequence), the
@@ -1289,17 +1361,20 @@
         // Layout shifts when the callout expands (root grows).
         window.requestAnimationFrame(() => this._reposition());
       }
-      // Fire the action. The element's own click / open / change
-      // handlers will mutate the DOM (e.g. expand <details>); the
-      // layout will shift, so we re-measure on the next frame.
-      if (h.action) {
-        if (h.action.kind === "click") utils.dispatchClick(h.el);
-        else if (h.action.kind === "open-details") utils.openDetails(h.el);
-        else if (h.action.kind === "change") utils.dispatchChange(h.el);
-      } else {
-        // No action: still "settle" the hole so the user gets
-        // feedback that they did the right thing.
-        utils.dispatchClick(h.el);
+      // Fire the action ourselves ONLY when the click didn't already
+      // land on the real element (chip clicks, "Do it for me"). A
+      // real click on the element already ran its own native/handler
+      // behavior; re-dispatching here would double-fire it.
+      if (!opts.skipAction) {
+        if (h.action) {
+          if (h.action.kind === "click") utils.dispatchClick(h.el);
+          else if (h.action.kind === "open-details") utils.openDetails(h.el);
+          else if (h.action.kind === "change") utils.dispatchChange(h.el);
+        } else {
+          // No action: still "settle" the hole so the user gets
+          // feedback that they did the right thing.
+          utils.dispatchClick(h.el);
+        }
       }
       this._mask.settleHole(h.el);
       // Use a simpler lookup: match by text.
