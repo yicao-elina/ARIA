@@ -1,0 +1,140 @@
+/* ==========================================================================
+   ARIA — Tier Themes (Morandi-JHU)
+
+   Tier-specific colors for light/parchment backgrounds only.
+   All sections use white or parchment backgrounds — no dark tiles.
+
+   Tier 1 = JHU Heritage Blue (#002D72)
+   Tier 2 = JHU Sable Gold (#A99400)
+   Tier 3 = Morandi slate-blue (#6c7a92)
+   ========================================================================== */
+
+/* ── Visualization Theme Variables (light context only) ── */
+.interactive-figure {
+  --viz-bg: var(--apple-parchment);
+  --viz-text: var(--apple-ink);
+  --viz-text-muted: var(--apple-ink-muted-48);
+  --viz-grid: var(--apple-hairline);
+  --viz-border: var(--apple-divider-soft);
+  --viz-accent: var(--apple-primary);
+}
+
+/* ── Tier 1 Card & Detail ── */
+.tier-1-card {
+  background: var(--tier-1-bg);
+  border-color: var(--tier-1-border);
+}
+
+.tier-1-detail {
+  background: var(--tier-1-bg);
+  border-left-color: var(--tier-1);
+}
+
+/* ── Tier 2 Card & Detail ── */
+.tier-2-card {
+  background: var(--tier-2-bg);
+  border-color: var(--tier-2-border);
+}
+
+.tier-2-detail {
+  background: var(--tier-2-bg);
+  border-left-color: var(--tier-2);
+}
+
+/* ── Tier 3 Card & Detail ── */
+.tier-3-card {
+  background: var(--tier-3-bg);
+  border-color: var(--tier-3-border);
+}
+
+.tier-3-detail {
+  background: var(--tier-3-bg);
+  border-left-color: var(--tier-3);
+}
+
+/* ── Trace Nodes ── */
+.trace-processing {
+  background: var(--tier-1-bg);
+  border-color: var(--tier-1);
+}
+
+.trace-structure {
+  background: var(--tier-2-bg);
+  border-color: var(--tier-2);
+}
+
+.trace-property {
+  background: var(--aria-success-bg);
+  border-color: var(--aria-success);
+}
+
+/* ── Confidence Badges (Apple: colored chip, ink-muted-80 text for AA contrast) ── */
+.confidence-high {
+  background: var(--aria-success-bg);
+  color: #1f6f2c;            /* darker green, AA on success-bg */
+  font-weight: var(--weight-semibold);
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+}
+
+.confidence-medium {
+  background: var(--aria-warning-bg);
+  color: #8a5a00;            /* darker gold, AA on warning-bg */
+  font-weight: var(--weight-semibold);
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+}
+
+.confidence-low {
+  background: var(--tier-3-bg);
+  color: var(--apple-ink-muted-80);
+  font-weight: var(--weight-semibold);
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+}
+
+/* ── Entity Highlights (Apple-tier tokens) ── */
+.entity.processing {
+  background: var(--tier-1-bg);
+  color: var(--tier-1);
+  font-weight: var(--weight-semibold);
+}
+
+.entity.structure {
+  background: var(--tier-2-bg);
+  color: #8a5a00;            /* darker gold on warm-gold bg */
+  font-weight: var(--weight-semibold);
+}
+
+.entity.property {
+  background: var(--aria-success-bg);
+  color: #1f6f2c;
+  font-weight: var(--weight-semibold);
+}
+
+/* ── Comparison Bars ── */
+.aria-fill {
+  background: var(--apple-primary);
+}
+
+.naive-fill {
+  background: var(--aria-danger);
+}
+
+/* ── Completeness Bar ── */
+.completeness-fill.complete {
+  background: var(--aria-success);
+}
+
+/* ── Toggle Buttons ── */
+.toggle-btn.active {
+  background: var(--apple-primary);
+  color: var(--apple-on-primary);
+  border-color: var(--apple-primary);
+}
+/* ── Tier 2 badges need a darker ink for AA contrast on warm-gold ── */
+.tier-badge--tier2,
+.tier-badge-large--tier2 {
+  color: #1d1d1f;
+  font-weight: var(--weight-semibold);
+}

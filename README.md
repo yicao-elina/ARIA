@@ -93,8 +93,12 @@ ARIA prevents this by checking PSP-completeness *at inference time* — not at r
 
 ## Installation
 
+`aria-materials` is not yet published to PyPI — install from source:
+
 ```bash
-pip install aria-materials
+git clone https://github.com/yicao-elina/ARIA.git
+cd ARIA
+pip install -e .
 ```
 
 For development with all optional dependencies:
@@ -102,11 +106,44 @@ For development with all optional dependencies:
 pip install -e ".[all]"
 ```
 
+**Known limitation:** ARIA currently requires a local [Ollama](https://ollama.com) server (`ollama serve`, with a model pulled via `ollama pull qwen2:7b`). OpenAI-backend support is not yet implemented.
+
 ### Optional: Install Ollama for local LLM inference
 
 ```bash
 curl -fsSL https://ollama.ai/install.sh | sh
 ollama pull qwen2:7b
+```
+
+## CLI quickstart
+
+Once installed, the bundled demo knowledge graph lets you run a query with zero configuration:
+
+```bash
+aria predict --material MoS2 --target-property "carrier mobility" \
+  --temperature 750C --method CVD
+```
+
+Other commands: `aria design` (inverse design), `aria explain` (full reasoning trace), `aria diagnose` (KG quality report). Run `aria --help` or `aria <command> --help` for all options. Add `--json` to any of `predict`/`design`/`explain` for machine-readable output.
+
+## MCP server
+
+`aria-mcp` exposes the same four operations (`predict`, `design`, `explain`, `diagnose`) as MCP tools over stdio, for use from Claude Desktop, Claude Code, or any other MCP host:
+
+```json
+{
+  "mcpServers": {
+    "aria": {
+      "command": "aria-mcp"
+    }
+  }
+}
+```
+
+Or register it directly with Claude Code:
+
+```bash
+claude mcp add --transport stdio aria -- aria-mcp
 ```
 
 ## Quick Start

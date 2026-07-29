@@ -16,17 +16,22 @@
   'use strict';
 
   // ─── Constants ────────────────────────────────────────────────────────────
-  const PSP_LAYERS = {
-    Processing: { color: '#1E88E5', label: 'Processing (P)' },
-    Structure:  { color: '#FFC107', label: 'Structure (S)' },
-    Property:   { color: '#4CAF50', label: 'Property (P\')' }
-  };
+  /* PSP_LAYERS and EDGE_TYPES colors are loaded per-instance from ARIA.theme */
+  var PSP_LAYERS, EDGE_TYPES;
 
-  const EDGE_TYPES = {
-    Processing_to_Structure: { color: '#1E88E5', dash: 'none',   label: 'P → S' },
-    Structure_to_Property:   { color: '#4CAF50', dash: 'none',   label: 'S → P\'' },
-    Processing_to_Property:  { color: '#E53935', dash: '6,3',    label: 'P → P\' shortcut' }
-  };
+  function initColors(contextEl) {
+    var c = ARIA.theme.getColors(contextEl);
+    PSP_LAYERS = {
+      Processing: { color: c.tier1, label: 'Processing (P)' },
+      Structure:  { color: c.tier2, label: 'Structure (S)' },
+      Property:   { color: c.success, label: 'Property (P\')' }
+    };
+    EDGE_TYPES = {
+      Processing_to_Structure: { color: c.tier1,   dash: 'none',   label: 'P → S' },
+      Structure_to_Property:   { color: c.success,  dash: 'none',   label: 'S → P\'' },
+      Processing_to_Property:  { color: c.danger,    dash: '6,3',    label: 'P → P\' shortcut' }
+    };
+  }
 
   const MIN_NODE_RADIUS = 8;
   const MAX_NODE_RADIUS = 28;
@@ -39,13 +44,12 @@
   function classifyNode(nodeId, edges) {
     var types = new Set();
     edges.forEach(function (e) {
-      if (e.source === nodeId || e.source === nodeId) {
-        // nodeId is the source
+      if (e.source === nodeId) {
         if (e.psp_type === 'Processing_to_Structure' || e.psp_type === 'Processing_to_Property') {
-          if (e.source === nodeId) types.add('Processing');
+          types.add('Processing');
         }
       }
-      if (e.target === nodeId || e.target === nodeId) {
+      if (e.target === nodeId) {
         if (e.psp_type === 'Structure_to_Property') {
           if (e.target === nodeId) types.add('Property');
         }
@@ -68,8 +72,32 @@
   }
 
   // ─── KGExplorer Class ─────────────────────────────────────────────────────
-  function KGExplorer(containerSelector) {
-    this.containerSelector = containerSelector || '#kg-explorer';
+  function KGExplorer(arg1, arg2) {
+    // Backward/forward compatible signature:
+    //   new KGExplorer('#kg-explorer')              -> existing
+    //   new KGExplorer(kgData, containerElOrSel)   -> from main.js
+    var data = null;
+    var selector = '#kg-explorer';
+    if (typeof arg1 === 'string') {
+      selector = arg1;
+    } else if (arg1 && typeof arg1 === 'object') {
+      data = arg1;
+      if (typeof arg2 === 'string') selector = arg2;
+      else if (arg2 && (arg2.nodeType === 1 || arg2.select)) selector = arg2;
+    } else if (arg1 && (arg1.nodeType === 1 || arg1.select)) {
+      selector = arg1;
+    }
+    if (typeof selector === 'object' && selector && selector.select) {
+      // d3 selection passed as selector
+      this._externalContainer = selector;
+      selector = selector.node() ? '#' + (selector.node().id || 'kg-explorer') : '#kg-explorer';
+    } else if (typeof selector === 'object' && selector && selector.nodeType === 1) {
+      this._externalContainer = d3.select(selector);
+      var id = selector.id || 'kg-explorer';
+      selector = '#' + id;
+    }
+    this.containerSelector = selector;
+    this.presetData = data;
     this.container = null;
     this.svg = null;
     this.simulation = null;
@@ -106,11 +134,17 @@
 
   // ─── Initialization ────────────────────────────────────────────────────────
   KGExplorer.prototype.init = function () {
-    this.container = d3.select(this.containerSelector);
-    if (this.container.empty()) {
+    if (this._externalContainer) {
+      this.container = this._externalContainer;
+    } else {
+      this.container = d3.select(this.containerSelector);
+    }
+    if (!this.container || this.container.empty()) {
       console.error('[KGExplorer] Container not found:', this.containerSelector);
       return;
     }
+
+    initColors(this.container.node());
 
     this._buildControls();
     this._buildDetailPanel();
@@ -137,7 +171,7 @@
       .style('gap', '16px')
       .style('padding', '10px 0')
       .style('align-items', 'flex-end')
-      .style('font-family', '"Inter", "Segoe UI", system-ui, sans-serif')
+      .style('font-family', ARIA.theme.fontStack)
       .style('font-size', '13px');
 
     // Material filter
@@ -234,7 +268,7 @@
       .style('border-radius', '8px')
       .style('box-shadow', '0 2px 12px rgba(0,0,0,0.15)')
       .style('padding', '14px')
-      .style('font-family', '"Inter", "Segoe UI", system-ui, sans-serif')
+      .style('font-family', ARIA.theme.fontStack)
       .style('font-size', '13px')
       .style('z-index', '10');
   };
@@ -337,10 +371,24 @@
   // ─── Load data ───────────────────────────────────────────────────────────
   KGExplorer.prototype._loadData = function () {
     var self = this;
-    d3.json('../data/aria_2d_kg_demo.json').then(function (data) {
+    var url = 'assets/data/aria_2d_kg_demo.json';
+    var done = function (data) {
+      if (!data) {
+        console.error('[KGExplorer] No data received');
+        return;
+      }
       self._processData(data);
       self._applyFilters();
-    }).catch(function (err) {
+    };
+    if (self.presetData) {
+      done(self.presetData);
+      return;
+    }
+    if (typeof d3 === 'undefined' || !d3.json) {
+      console.error('[KGExplorer] d3.json unavailable and no preset data');
+      return;
+    }
+    d3.json(url).then(done).catch(function (err) {
       console.error('[KGExplorer] Failed to load data:', err);
       self.container.select('.kg-svg').append('text')
         .attr('x', '50%').attr('y', '50%')
@@ -355,8 +403,8 @@
   KGExplorer.prototype._processData = function (data) {
     var self = this;
 
-    // Handle both { nodes, edges } and flat edge-list formats
-    var rawEdges = data.edges || data.relationships || (Array.isArray(data) ? data : []);
+    // Handle { nodes, edges } / { relationships } / { causal_relationships } / flat edge-list formats
+    var rawEdges = data.edges || data.relationships || data.causal_relationships || (Array.isArray(data) ? data : []);
 
     // Build node set from edges
     var nodeIdSet = new Set();
@@ -443,6 +491,33 @@
     this._render();
   };
 
+  // ─── Update the kg-stats numbers in index.html from real data ─────────
+  KGExplorer.prototype._updateStats = function () {
+    var statsRoot = document.getElementById('kg-stats');
+    if (!statsRoot) return;
+    var rels = this.filteredEdges.length;
+    var nodes = this.filteredNodes.length;
+    var layers = new Set(this.filteredNodes.map(function (n) { return n.layer; })).size;
+    // Find complete P->S->P chains
+    var ps = this.filteredEdges.filter(function (e) { return e.psp_type === 'Processing_to_Structure'; });
+    var sp = this.filteredEdges.filter(function (e) { return e.psp_type === 'Structure_to_Property'; });
+    var chains = 0;
+    ps.forEach(function (a) {
+      sp.forEach(function (b) {
+        if (a.target === b.source) chains++;
+      });
+    });
+    var shortcuts = this.filteredEdges.filter(function (e) { return e.psp_type === 'Processing_to_Property'; }).length;
+    var setNum = function (key, val) {
+      var el = statsRoot.querySelector('[data-stat="' + key + '"]');
+      if (el) el.textContent = val;
+    };
+    setNum('relationships', rels);
+    setNum('layers', layers);
+    setNum('chains', chains);
+    setNum('shortcuts', shortcuts);
+  };
+
   // ─── Render the graph ────────────────────────────────────────────────────
   KGExplorer.prototype._render = function () {
     this._buildSimulation();
@@ -450,6 +525,7 @@
     this._drawNodes();
     this._drawLabels();
     this._highlightPSPChains();
+    this._updateStats();
   };
 
   // ─── Force simulation ────────────────────────────────────────────────────
@@ -589,17 +665,19 @@
       .attr('stroke-width', 2)
       .style('cursor', 'pointer');
 
-    nodeEnter
-      .transition().duration(400)
-      .attr('r', function (d) { return self._nodeRadius(d); })
-      .attr('opacity', 1);
-
     // Merge
+    // NOTE: entering and merged selections must share a single .transition()
+    // call per element. Two separate .transition() calls on overlapping
+    // selections (one on nodeEnter, one on the merge) interrupt each other —
+    // the first (opacity 0→1) gets canceled after its first frame, leaving
+    // nodes permanently stuck at ~0 opacity. Only the merged transition
+    // below runs, so it must also carry the opacity 0→1 fade-in.
     var nodeMerge = nodeSel.merge(nodeEnter);
 
     nodeMerge
-      .transition().duration(300)
+      .transition().duration(400)
       .attr('r', function (d) { return self._nodeRadius(d); })
+      .attr('opacity', 1)
       .attr('fill', function (d) { return PSP_LAYERS[d.layer] ? PSP_LAYERS[d.layer].color : '#999'; });
 
     // Drag behavior
@@ -637,18 +715,18 @@
       .attr('dy', function (d) { return self._nodeRadius(d) + 14; })
       .attr('fill', '#333')
       .attr('font-size', '11px')
-      .attr('font-family', '"Inter", "Segoe UI", system-ui, sans-serif')
+      .attr('font-family', ARIA.theme.fontStack)
       .attr('pointer-events', 'none')
       .attr('opacity', 0)
       .text(function (d) { return self._truncateLabel(d.id); });
 
-    labelEnter
-      .transition().duration(400)
-      .attr('opacity', 1);
-
     // Update
+    // (See _drawNodes for why opacity must be set on this single merged
+    // transition rather than a separate one on labelEnter — two competing
+    // .transition() calls on overlapping selections interrupt each other.)
     labelSel.merge(labelEnter)
-      .transition().duration(300)
+      .transition().duration(400)
+      .attr('opacity', 1)
       .attr('dy', function (d) { return self._nodeRadius(d) + 14; })
       .text(function (d) { return self._truncateLabel(d.id); });
   };
@@ -859,7 +937,7 @@
     if (chains.length > 0) {
       html += '<div style="font-weight:600;font-size:13px;margin:8px 0 4px;color:#333">P→S→P\' Chains</div>';
       chains.forEach(function (chain) {
-        html += '<div style="background:#f0f4ff;padding:6px 8px;border-radius:4px;margin-bottom:4px;font-size:12px;border-left:3px solid #1E88E5">';
+        html += '<div style="background:#f0f4ff;padding:6px 8px;border-radius:4px;margin-bottom:4px;font-size:12px;border-left:3px solid ' + PSP_LAYERS.Processing.color + '">';
         html += chain.steps.join(' → ');
         html += '<div style="color:#888;font-size:11px">Confidence: ' + chain.confidence.toFixed(2) + '</div>';
         html += '</div>';
@@ -891,8 +969,8 @@
 
     // Warning for P->P shortcuts
     if (shortcuts.length > 0) {
-      html += '<div style="margin-top:8px;padding:8px;background:#fff3e0;border-radius:4px;border-left:3px solid #E53935;font-size:12px">';
-      html += '<strong style="color:#E53935">⚠ Contextual Tunneling</strong><br>';
+      html += '<div style="margin-top:8px;padding:8px;background:#fff3e0;border-radius:4px;border-left:3px solid ' + EDGE_TYPES.Processing_to_Property.color + ';font-size:12px">';
+      html += '<strong style="color:' + EDGE_TYPES.Processing_to_Property.color + '">⚠ Contextual Tunneling</strong><br>';
       html += '<span style="color:#666">P→P\' shortcuts bypass the structure layer:</span>';
       shortcuts.forEach(function (s) {
         var other = s.source.id === d.id ? s.target.id : s.source.id;
@@ -952,7 +1030,7 @@
       this.linkGroup.append('polygon')
         .attr('class', 'kg-shortcut-indicator')
         .attr('points', mx + ',' + (my - 6) + ' ' + (mx + 5) + ',' + my + ' ' + mx + ',' + (my + 6) + ' ' + (mx - 5) + ',' + my)
-        .attr('fill', '#E53935')
+        .attr('fill', EDGE_TYPES.Processing_to_Property.color)
         .attr('stroke', '#fff')
         .attr('stroke-width', 1)
         .style('filter', 'url(#kg-warning-glow)');
@@ -967,7 +1045,7 @@
       .style('flex-wrap', 'wrap')
       .style('gap', '16px')
       .style('padding', '8px 0')
-      .style('font-family', '"Inter", "Segoe UI", system-ui, sans-serif')
+      .style('font-family', ARIA.theme.fontStack)
       .style('font-size', '12px')
       .style('color', '#555')
       .style('align-items', 'center');
@@ -1002,12 +1080,12 @@
     var glowLegend = legend.append('div').style('display', 'flex').style('gap', '10px').style('align-items', 'center');
     glowLegend.append('span')
       .style('padding', '2px 6px')
-      .style('background', 'rgba(30,136,229,0.15)')
+      .style('background', 'rgba(0,102,204,0.15)')
       .style('border-radius', '3px')
       .text('P→S→P\' chain glow');
     glowLegend.append('span')
       .style('padding', '2px 6px')
-      .style('background', 'rgba(229,57,53,0.15)')
+      .style('background', 'rgba(255,59,48,0.15)')
       .style('border-radius', '3px')
       .html('⚠ P→P\' contextual tunneling');
   };

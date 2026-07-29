@@ -1,0 +1,229 @@
+/* ==========================================================================
+   ARIA — Base Styles
+
+   Reset, font loading, typography, and layout primitives.
+   All values reference design-tokens.css custom properties.
+   ========================================================================== */
+
+/* ── Font Loading ──
+   SF Pro is Apple's proprietary system font. Inter (Google Fonts) is the
+   closest open-source equivalent per DESIGN-apple.md.
+   On macOS/iOS/Safari, system-ui resolves to SF Pro. */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+
+/* ── Reset ── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-body);
+  letter-spacing: var(--tracking-body);
+  color: var(--apple-ink);
+  background: var(--pearl);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Inter-specific tuning (per DESIGN-apple.md §Note on Font Substitutes) */
+@supports (font-family: Inter) {
+  body {
+    letter-spacing: -0.01em;
+    line-height: 1.44;  /* tighten from 1.47 by 0.03 for Inter's taller x-height */
+  }
+}
+
+/* ── Typography Hierarchy ── */
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: var(--weight-semibold);
+  color: var(--apple-ink);
+}
+
+/* Hero — paper title */
+h1, .h1 {
+  font-size: var(--text-hero);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-hero);
+  letter-spacing: var(--tracking-hero);
+}
+
+/* Display — section headings */
+h2, .h2 {
+  font-size: var(--text-display-md);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-display-md);
+  letter-spacing: var(--tracking-display-md);
+}
+
+/* Sub-sections */
+h3, .h3 {
+  font-size: var(--text-tagline);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-tagline);
+  letter-spacing: var(--tracking-tagline);
+}
+
+h4, .h4 {
+  font-size: var(--text-body-strong);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-body-strong);
+  letter-spacing: var(--tracking-body);
+}
+
+h5, h6 {
+  font-size: var(--text-caption-strong);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-caption-strong);
+  letter-spacing: var(--tracking-caption);
+}
+
+/* Lead paragraph — hero subtitle, tile subcopy */
+.lead {
+  font-family: var(--font-display);
+  font-size: var(--text-lead);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-lead);
+  letter-spacing: var(--tracking-lead);
+  color: var(--apple-ink-muted-80);
+}
+
+/* Lead airy — lightweight large body (rare weight 300) */
+.lead-airy {
+  font-family: var(--font-display);
+  font-size: var(--text-lead-airy);
+  font-weight: var(--weight-light);
+  line-height: var(--leading-lead-airy);
+  letter-spacing: var(--tracking-lead-airy);
+}
+
+/* Body text defaults */
+p {
+  font-size: var(--text-body);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-body);
+  letter-spacing: var(--tracking-body);
+  margin: 0 0 var(--sp-md) 0;
+}
+
+/* Strong inline emphasis */
+strong, b {
+  font-weight: var(--weight-semibold);
+}
+
+/* ── Links ──
+   JHU Heritage Blue (#002D72) for every interactive element. Period. */
+a {
+  color: var(--apple-primary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  text-decoration: underline;
+  color: var(--spirit-blue, #68ACE5);
+}
+
+a:focus-visible {
+  outline: 2px solid var(--spirit-blue, #68ACE5);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+
+/* Global keyboard focus ring — Spirit Blue halo across the page */
+:focus-visible {
+  outline: 2px solid var(--spirit-blue, #68ACE5);
+  outline-offset: 2px;
+}
+
+/* ── Lists ── */
+ol, ul {
+  padding-left: var(--sp-lg);
+  margin: 0 0 var(--sp-md) 0;
+}
+
+li {
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  letter-spacing: var(--tracking-body);
+  margin-bottom: var(--sp-xs);
+}
+
+/* ── Code / Pre ── */
+code {
+  font-family: "SF Mono", "Fira Code", "Cascadia Code", Consolas, monospace;
+  font-size: 0.9em;
+  background: var(--apple-parchment);
+  padding: 0.1em 0.3em;
+  border-radius: var(--radius-xs);
+}
+
+pre {
+  font-family: "SF Mono", "Fira Code", "Cascadia Code", Consolas, monospace;
+  font-size: var(--text-caption);
+  line-height: 1.5;
+  background: var(--apple-parchment);
+  padding: var(--sp-lg);
+  border-radius: var(--radius-sm);
+  overflow-x: auto;
+  margin: var(--sp-xl) 0;
+}
+
+pre code {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+}
+
+/* ── Figures ── */
+figure {
+  margin: 0;
+  padding: 0;
+}
+
+figcaption {
+  font-size: var(--text-caption);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-caption);
+  letter-spacing: var(--tracking-caption);
+  color: var(--apple-ink-muted-48);
+  margin-top: var(--sp-sm);
+  text-align: center;
+}
+
+/* ── Images ── */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ── Horizontal Rule ── */
+hr {
+  border: none;
+  border-top: 1px solid var(--apple-divider-soft);
+  margin: var(--sp-xxl) 0;
+}
+
+/* ── Math (KaTeX) ── */
+.katex-display {
+  margin: var(--sp-lg) 0;
+}
+
+/* ── Selection ── */
+::selection {
+  background: rgba(0, 45, 114, 0.15);
+  color: var(--apple-ink);
+}

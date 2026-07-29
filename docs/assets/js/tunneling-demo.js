@@ -7,18 +7,7 @@
 (function () {
   'use strict';
 
-  const COLORS = {
-    jhuBlue:   '#002D72',
-    accent:    '#E8600A',
-    green:     '#2E7D32',
-    red:       '#C62828',
-    grey:      '#757575',
-    greenBg:   '#E8F5E9',
-    redBg:     '#FFEBEE',
-    greyBg:    '#F5F5F5',
-    panelBg:   '#FAFAFA',
-    border:    '#E0E0E0',
-  };
+  /* Color palette is loaded per-instance from ARIA.theme in constructor */
 
   /* ── pre-computed comparison data ─────────────────────────────────── */
   const QUERIES = [
@@ -139,6 +128,7 @@
      */
     constructor(selector, opts = {}) {
       this.container = d3.select(selector);
+      this.colors = ARIA.theme.getColors(this.container.node());
       this.queries = opts.queries || [0, 1, 2];
       this.currentIdx = 0;
       this.activeSegment = null;
@@ -150,7 +140,7 @@
 
       this.root = this.container.append('div')
         .attr('class', 'tunneling-demo')
-        .style('font-family', "'Inter', 'Helvetica Neue', Arial, sans-serif")
+        .style('font-family', ARIA.theme.fontStack)
         .style('max-width', '960px')
         .style('margin', '0 auto');
 
@@ -173,10 +163,10 @@
       this.queries.forEach((qi, i) => {
         const btn = bar.append('button')
           .style('padding', '6px 14px')
-          .style('border', `2px solid ${i === 0 ? COLORS.jhuBlue : COLORS.border}`)
+          .style('border', `2px solid ${i === 0 ? this.colors.primary : this.colors.border}`)
           .style('border-radius', '6px')
-          .style('background', i === 0 ? COLORS.jhuBlue : '#fff')
-          .style('color', i === 0 ? '#fff' : COLORS.jhuBlue)
+          .style('background', i === 0 ? this.colors.primary : '#fff')
+          .style('color', i === 0 ? '#fff' : this.colors.primary)
           .style('font-size', '13px')
           .style('font-weight', 600)
           .style('cursor', 'pointer')
@@ -192,9 +182,9 @@
       this.activeSegment = null;
       this.buttons.forEach((btn, i) => {
         btn
-          .style('border-color', i === idx ? COLORS.jhuBlue : COLORS.border)
-          .style('background', i === idx ? COLORS.jhuBlue : '#fff')
-          .style('color', i === idx ? '#fff' : COLORS.jhuBlue);
+          .style('border-color', i === idx ? this.colors.primary : this.colors.border)
+          .style('background', i === idx ? this.colors.primary : '#fff')
+          .style('color', i === idx ? '#fff' : this.colors.primary);
       });
       this._render(idx);
     }
@@ -202,8 +192,8 @@
     /* ── query banner ────────────────────────────────────────────────── */
     _buildQueryBanner() {
       this.queryBanner = this.root.append('div')
-        .style('background', COLORS.panelBg)
-        .style('border', `1px solid ${COLORS.border}`)
+        .style('background', this.colors.parchment)
+        .style('border', `1px solid ${this.colors.border}`)
         .style('border-radius', '8px')
         .style('padding', '14px 18px')
         .style('margin-bottom', '16px')
@@ -244,7 +234,7 @@
       this.queryBanner.html('');
       this.queryBanner.append('div')
         .style('font-size', '11px')
-        .style('color', COLORS.grey)
+        .style('color', this.colors.inkMuted48)
         .style('text-transform', 'uppercase')
         .style('letter-spacing', '0.08em')
         .style('margin-bottom', '4px')
@@ -252,7 +242,7 @@
       this.queryBanner.append('div')
         .style('font-size', '16px')
         .style('font-weight', 600)
-        .style('color', COLORS.jhuBlue)
+        .style('color', this.colors.primary)
         .text(q.query);
 
       /* Left panel */
@@ -269,11 +259,12 @@
     }
 
     _renderPanel(panelEl, data, type, qi) {
+      const c = this.colors;
       panelEl.html('');
 
       const card = panelEl.append('div')
         .style('background', '#fff')
-        .style('border', `1px solid ${COLORS.border}`)
+        .style('border', `1px solid ${this.colors.border}`)
         .style('border-radius', '10px')
         .style('padding', '16px')
         .style('box-shadow', '0 1px 4px rgba(0,0,0,0.06)');
@@ -285,12 +276,12 @@
       header.append('div')
         .style('font-size', '15px')
         .style('font-weight', 700)
-        .style('color', type === 'baseline' ? COLORS.jhuBlue : COLORS.red)
+        .style('color', type === 'baseline' ? this.colors.primary : this.colors.danger)
         .text(data.title);
 
       header.append('div')
         .style('font-size', '11px')
-        .style('color', COLORS.grey)
+        .style('color', this.colors.inkMuted48)
         .style('margin-top', '2px')
         .text(data.subtitle);
 
@@ -311,35 +302,35 @@
 
         if (seg.type === 'green') {
           span
-            .style('background', COLORS.greenBg)
+            .style('background', this.colors.successBg)
             .style('padding', '1px 3px')
             .style('border-radius', '3px')
-            .style('color', COLORS.green)
+            .style('color', this.colors.success)
             .style('font-weight', 600);
         } else if (seg.type === 'red') {
           span
-            .style('background', COLORS.redBg)
+            .style('background', this.colors.dangerBg)
             .style('padding', '1px 3px')
             .style('border-radius', '3px')
-            .style('color', COLORS.red)
+            .style('color', this.colors.danger)
             .style('font-weight', 600)
             .style('cursor', 'pointer')
-            .style('border-bottom', '2px wavy ' + COLORS.red)
+            .style('border-bottom', '2px wavy ' + this.colors.danger)
             .on('mouseenter', function () {
               d3.select(this).style('background', '#FCA5A5');
             })
             .on('mouseleave', function () {
-              d3.select(this).style('background', COLORS.redBg);
+              d3.select(this).style('background', c.dangerBg);
             })
             .on('click', () => {
               this._showExplainer(qi, si);
             });
         } else if (seg.type === 'grey') {
           span
-            .style('background', COLORS.greyBg)
+            .style('background', c.parchment)
             .style('padding', '1px 3px')
             .style('border-radius', '3px')
-            .style('color', COLORS.grey)
+            .style('color', c.inkMuted80)
             .style('font-style', 'italic');
         }
       });
@@ -352,9 +343,9 @@
         .style('flex-wrap', 'wrap');
 
       const legendItems = [
-        { color: COLORS.green, bg: COLORS.greenBg, label: 'Well-grounded' },
-        { color: COLORS.red, bg: COLORS.redBg, label: 'Contextual tunneling' },
-        { color: COLORS.grey, bg: COLORS.greyBg, label: 'Uncertain' },
+        { color: c.success, bg: c.successBg, label: 'Well-grounded' },
+        { color: c.danger, bg: c.dangerBg, label: 'Contextual tunneling' },
+        { color: c.inkMuted80, bg: c.parchment, label: 'Uncertain' },
       ];
 
       legendItems.forEach(item => {
@@ -373,7 +364,7 @@
 
         row.append('span')
           .style('font-size', '10px')
-          .style('color', COLORS.grey)
+          .style('color', c.inkMuted48)
           .text(item.label);
       });
     }
@@ -406,7 +397,7 @@
               inner.append('div')
                 .style('font-size', '13px')
                 .style('font-weight', 700)
-                .style('color', COLORS.red)
+                .style('color', this.colors.danger)
                 .style('margin-bottom', '4px')
                 .text('What went wrong? — Contextual Tunneling Detected');
 

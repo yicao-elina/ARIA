@@ -1,0 +1,131 @@
+/* ============================================================
+   glass.css
+   Glassmorphic card recipe for the ARIA paper site.
+   Standalone stylesheet — no @imports. Drop the :root block
+   below into design-tokens.css if these vars are not yet
+   defined globally.
+
+   Usage: <article class="glass-card"> ... </article>
+   Add .glass-card--compact, .glass-card--tier-1/2/3 as needed.
+   Spotlight is auto-disabled on touch + reduced-motion.
+   ============================================================ */
+
+/* ---------- Design tokens (mirror of design-tokens.css) ----------
+:root {
+  --ink: #141e2d;
+  --graphite: #4a5568;
+  --mint: #68ACE5;
+  --mint-bright: #8fc1ea;
+  --mint-glow: rgba(104, 172, 229, 0.20);
+  --pearl-glass: rgba(255, 255, 255, 0.55);
+  --glass-border: rgba(255, 255, 255, 0.6);
+  --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.06);
+  --shadow-glass-hover: 0 20px 48px rgba(0, 0, 0, 0.10);
+  --tier-1: #002D72;
+  --tier-2: #A99400;
+  --tier-3: #6c7a92;
+  --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+}
+------------------------------------------------------------------- */
+
+/* ---------- Glass card ---------- */
+
+.glass-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  background: var(--pearl-glass, rgba(255, 255, 255, 0.55));
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.6));
+  border-radius: 24px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), var(--shadow-glass, 0 8px 32px rgba(0, 0, 0, 0.06));
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  transform: perspective(800px) rotateX(0) rotateY(0) translateY(0);
+  transform-style: preserve-3d;
+  transition: transform 220ms ease-out, box-shadow 220ms ease;
+  will-change: transform;
+  overflow: hidden;
+}
+
+.glass-card:hover,
+.glass-card:focus-within {
+  transform: perspective(800px) rotateX(var(--tilt-y, 0deg)) rotateY(var(--tilt-x, 0deg)) translateY(-4px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 24px 56px rgba(0, 45, 114, 0.14);
+}
+
+.glass-card:focus-within {
+  outline: 2px solid var(--spirit-blue, #68ACE5);
+  outline-offset: 2px;
+}
+
+/* Cursor-following spotlight — driven by --mx / --my from glass-card.js */
+
+.glass-card::before {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  border-radius: inherit;
+  background: radial-gradient(
+    360px circle at var(--mx, 50%) var(--my, 50%),
+    var(--mint-glow, rgba(104, 172, 229, 0.20)),
+    transparent 50%
+  );
+  opacity: 0;
+  transition: opacity 220ms ease;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.glass-card:hover::before,
+.glass-card:focus-within::before { opacity: 1; }
+
+/* Card children sit above the spotlight glow */
+
+.glass-card > * { position: relative; z-index: 1; }
+
+/* ---------- Variants ---------- */
+
+.glass-card--compact {
+  padding: 16px;
+  border-radius: 20px;
+}
+
+.glass-card--tier-1 { border-top: 3px solid var(--tier-1, #002D72); }
+.glass-card--tier-2 { border-top: 3px solid var(--tier-2, #A99400); }
+.glass-card--tier-3 { border-top: 3px solid var(--tier-3, #6c7a92); }
+
+/* ---------- Reduced motion (CSS-side fallback) ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .glass-card,
+  .glass-card:hover,
+  .glass-card:focus-within {
+    transition: none;
+    transform: none;
+  }
+  .glass-card::before,
+  .glass-card:hover::before,
+  .glass-card:focus-within::before {
+    transition: none;
+  }
+}
+
+body.no-motion .glass-card,
+body.no-motion .glass-card:hover,
+body.no-motion .glass-card:focus-within {
+  transform: none;
+  transition: none;
+}
+
+body.no-motion .glass-card::before { opacity: 0; }
+
+/* ---------- Browser fallback for missing backdrop-filter ---------- */
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass-card { background: rgba(255, 255, 255, 0.92); }
+}
+
+/* JS-driven spotlight kill-switch (set on <body> by glass-card.js) */
+
+body.no-spotlight .glass-card::before { opacity: 0 !important; }
