@@ -1,8 +1,9 @@
-/* Hover-to-preview behavior for .detail-toggle <details> panels.
+/* Hover-to-open behavior for .detail-toggle <details> panels.
    Hovering the <summary> for a moment opens the panel without a click,
    mirroring the hp-tooltip hover reveal used elsewhere on the page.
-   Once a user clicks (pinning it open/closed deliberately), hover no
-   longer auto-closes it — the click always wins. */
+   Once opened (by hover or click) it STAYS open — moving the mouse
+   away never auto-collapses it. The only way to close it again is an
+   explicit click on the summary. */
 (function () {
   'use strict';
 
@@ -11,13 +12,6 @@
   document.querySelectorAll('.detail-toggle > summary').forEach(function (summary) {
     var details = summary.parentElement;
     var timer = null;
-    // Panels marked open in the HTML (e.g. the default-expanded Tier 1
-    // example) start pinned so a stray hover-out doesn't collapse them.
-    var pinned = details.open;
-
-    summary.addEventListener('click', function () {
-      pinned = true;
-    });
 
     summary.addEventListener('mouseenter', function () {
       if (details.open) return;
@@ -28,9 +22,6 @@
 
     summary.addEventListener('mouseleave', function () {
       window.clearTimeout(timer);
-      if (!pinned) {
-        details.open = false;
-      }
     });
 
     summary.addEventListener('focus', function () {
