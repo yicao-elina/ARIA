@@ -135,9 +135,6 @@
   animation-duration: 7.5s;
 }
 
-.glass-card--tier-1 { border-top: 3px solid var(--tier-1, #002D72); }
-.glass-card--tier-2 { border-top: 3px solid var(--tier-2, #A99400); }
-.glass-card--tier-3 { border-top: 3px solid var(--tier-3, #6c7a92); }
 
 /* ---------- No-tilt / no-spotlight / no-float modifiers ----------
    Apply to containers whose contents need to stay perfectly still:
