@@ -334,15 +334,18 @@
 
   // ════════════════════════════════════════════════════════════════
   // RENDERER: mask (SVG cutouts)
-  // A single SVG that covers the section. One dark glass layer with
-  // rounded-rect holes punched through it. Holes have a "breathing"
-  // pulse via a CSS animation.
+  // A single SVG that covers the WHOLE VIEWPORT (fixed, appended to
+  // <body>), not just the current section — so the dark shadow reads
+  // as one global dimming layer while holes are cut out wherever
+  // their target elements currently sit on screen. Fading in/out
+  // therefore also happens globally, all at once, since there's only
+  // ever one mask instance alive per tour step.
   // ════════════════════════════════════════════════════════════════
-  function createMask(sectionEl) {
+  function createMask() {
     const root = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     root.setAttribute("class", "tour-mask-svg");
     root.setAttribute("aria-hidden", "true");
-    sectionEl.appendChild(root);
+    document.body.appendChild(root);
 
     const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
     const mask = document.createElementNS("http://www.w3.org/2000/svg", "mask");
@@ -376,14 +379,15 @@
     root.appendChild(layer);
 
     function render() {
-      const sRect = sectionEl.getBoundingClientRect();
-      root.setAttribute("viewBox", "0 0 " + sRect.width + " " + sRect.height);
-      root.setAttribute("width", sRect.width);
-      root.setAttribute("height", sRect.height);
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      root.setAttribute("viewBox", "0 0 " + w + " " + h);
+      root.setAttribute("width", w);
+      root.setAttribute("height", h);
       root.style.left = "0px";
       root.style.top = "0px";
-      root.style.width = sRect.width + "px";
-      root.style.height = sRect.height + "px";
+      root.style.width = w + "px";
+      root.style.height = h + "px";
     }
 
     // holes: [{ el, label, text, action, rect, hole, settled }]
@@ -399,12 +403,11 @@
       // not render).
       root.querySelectorAll("rect.hole-glow").forEach((n) => n.remove());
       holes.length = 0;
-      const sRect = sectionEl.getBoundingClientRect();
       const reduced = utils.reducedMotion();
       newHoles.forEach((h, i) => {
         const r = h.el.getBoundingClientRect();
-        const x = r.left - sRect.left - 8;
-        const y = r.top - sRect.top - 8;
+        const x = r.left - 8;
+        const y = r.top - 8;
         const w = r.width + 16;
         const hgt = r.height + 16;
         const hole = document.createElementNS("http://www.w3.org/2000/svg", "rect");
@@ -467,7 +470,6 @@
     }
 
     function updateHoleRects() {
-      const sRect = sectionEl.getBoundingClientRect();
       holes.forEach((h) => {
         if (!h.el.isConnected) {
           // Element was removed from the DOM entirely. Hide its hole.
@@ -498,8 +500,8 @@
         h.hole.style.display = "";
         if (h.glow) h.glow.style.display = "";
         h.rect = {
-          x: r.left - sRect.left - 8,
-          y: r.top - sRect.top - 8,
+          x: r.left - 8,
+          y: r.top - 8,
           w: r.width + 16,
           h: r.height + 16,
         };
@@ -648,9 +650,14 @@
       const tRect = root.getBoundingClientRect();
       const margin = 12;
       const gap = 22;
+      // Keep clear of the fixed site header pill + the tour canvas's
+      // own corner pill, both of which live near the top of the
+      // viewport — a callout placed at plain `margin` can land right
+      // on top of them.
+      const TOP_SAFE = 96;
       // Prefer to put the callout above the target; if no room,
       // put it to the right of the target.
-      const wantTop = r.top - tRect.height - gap > margin;
+      const wantTop = r.top - tRect.height - gap > TOP_SAFE;
       let left, top, x1, y1, x2, y2;
       if (wantTop) {
         // Center horizontally over the target, clamped to viewport.
@@ -678,7 +685,7 @@
         );
         top = r.top + r.height / 2 - tRect.height / 2;
         top = Math.min(
-          Math.max(top, margin),
+          Math.max(top, TOP_SAFE),
           window.innerHeight - tRect.height - margin
         );
         const calloutL = left;
@@ -880,6 +887,8 @@
       this._panel = null;
       this._labels = []; // array of createHoleLabel instances
       this._holes = [];  // [{ el, label, text, action }]
+      this._dynamicAnchors = []; // synthetic union-rect anchors (e.g. PSP chain hole)
+      this._pspChainHoleAdded = false;
       this._onKeydown = this._onKeydown.bind(this);
       this._onViewportChange = this._reposition.bind(this);
       this._rafScheduled = false;
@@ -895,7 +904,51 @@
         passive: true,
       });
       window.addEventListener("resize", this._onViewportChange);
-      this._goto(0);
+      this._introduceNavRail(() => this._goto(0));
+    }
+
+    // A brief, one-off callout pointing at the floating nav rail
+    // before the tour proper begins. It's `position:fixed` chrome
+    // living outside every section, so it doesn't fit the per-
+    // section dim+cutout machinery — this reuses the same chip +
+    // dashed-leader-line callout styling without a full-page mask.
+    // Shown at the START (not the end) because knowing the rail can
+    // jump to any section or the GitHub repo is most useful WHILE
+    // exploring, not after the tour is already over.
+    _introduceNavRail(next) {
+      const navEl = utils.getEl(".app-header");
+      if (!navEl) {
+        next();
+        return;
+      }
+      const label = createHoleLabel(
+        navEl,
+        "★",
+        "This rail stays put while you explore — jump straight to any section, or open the repo on GitHub. Click anywhere to continue."
+      );
+      label.revealCallout();
+      label.settle();
+      let done = false;
+      const finish = () => {
+        if (done) return;
+        done = true;
+        document.removeEventListener("click", onClick, true);
+        document.removeEventListener("keydown", onKey, true);
+        label.destroy();
+        next();
+      };
+      const onClick = () => finish();
+      const onKey = (e) => {
+        if (e.key === "Escape" || e.key === "Enter" || e.key === " ") finish();
+      };
+      // Defer listening by a tick so the click that triggered
+      // start() (the "Take a Tour" button) doesn't immediately
+      // dismiss this callout.
+      window.setTimeout(() => {
+        if (!this._active) return;
+        document.addEventListener("click", onClick, true);
+        document.addEventListener("keydown", onKey, true);
+      }, 50);
     }
 
     end() {
@@ -1019,6 +1072,25 @@
     // forwards through whatever is left of the current section
     // before advancing) so nothing is left half-shown.
     _revealAllCallouts() {
+      // For any hole the user hasn't interacted with yet, actually
+      // FIRE its action too — not just cosmetically reveal the
+      // callout — so Skip/Next land in the exact same end state a
+      // manual click would: the full PSP chain lit up, every
+      // <details> actually expanded (with its dynamic hole), etc.
+      // _fireHole is safe to call even if the hole has no matching
+      // label (it just skips the reveal step).
+      this._holes.slice().forEach((h) => {
+        const label = this._labels.find(
+          (l) =>
+            l.root.querySelector(".tour-hole-label__chip").textContent ===
+            h.label
+        );
+        if (label && label.root.classList.contains("is-settled")) return;
+        this._fireHole(h, label);
+      });
+      // Catch-all safety net: force anything still not settled
+      // (e.g. a hole with no action and no matching label) into its
+      // finished visual state.
       this._holes.forEach((h) => this._mask.settleHole(h.el));
       this._labels.forEach((l) => {
         if (!l.isCalloutRevealed()) l.revealCallout();
@@ -1077,6 +1149,9 @@
       this._labels.forEach((l) => l.destroy());
       this._labels = [];
       this._holes = [];
+      (this._dynamicAnchors || []).forEach((a) => a.remove());
+      this._dynamicAnchors = [];
+      this._pspChainHoleAdded = false;
     }
 
     _goto(index) {
@@ -1170,7 +1245,7 @@
         sectionTitle: stop.title,
         onEnd: () => this.end(),
       });
-      this._mask = createMask(sectionEl);
+      this._mask = createMask();
       // Mask starts visible (will fade in via the is-fading-in
       // transition applied in _revealAllHoles()).
 
@@ -1508,43 +1583,82 @@
         }
       }
 
-      // 3) click on a PSP node: the cascade lights up the active
-      //    chain. Add a hole for the destination (last) node of
-      //    the chain so the user can see where the path lands.
+      // 3) click on a PSP node: the cascade lights up the ENTIRE
+      //    P→S→P chain (every node + every edge on the path), not
+      //    just the clicked node. Walk the full downstream chain
+      //    (not just one hop) and cut a single hole covering the
+      //    union of every node on it, so the whole lit-up pathway is
+      //    visible through the mask — not just the clicked node plus
+      //    one neighbor.
       if (h.action && h.action.kind === "click" && h.el.classList.contains("psp-node")) {
-        // Find any chain edge whose source equals the clicked node
-        // id. If found, target the destination node of the LAST
-        // segment of that chain.
         const pspId = h.el.getAttribute("data-psp-id");
-        if (pspId) {
-          // The cascade's instance is on window via lazy init. Find
-          // the activeChain via a data attribute the cascade sets,
-          // or fall back to the destination node of the chain
-          // whose first segment starts at pspId.
-          // Simpler: look for edges in the SVG that have
-          // data-src == pspId, and walk to its data-tgt.
+        if (pspId && !this._pspChainHoleAdded) {
           const edges = document.querySelectorAll("#psp-cascade svg .psp-edges path[data-src]");
-          let lastTgt = null;
-          edges.forEach((e) => {
-            if (e.getAttribute("data-src") === pspId) {
-              lastTgt = e.getAttribute("data-tgt");
-            }
-          });
-          if (lastTgt) {
-            const destNode = document.querySelector(
-              '#psp-cascade svg .psp-node[data-psp-id="' + lastTgt + '"]'
-            );
-            if (destNode && this._canAddHoleFor(destNode)) {
-              this._addDynamicHole(
-                destNode,
+          const chainIds = [pspId];
+          let cursor = pspId;
+          for (let hop = 0; hop < 10; hop++) {
+            let next = null;
+            edges.forEach((e) => {
+              if (e.getAttribute("data-src") === cursor) next = e.getAttribute("data-tgt");
+            });
+            if (!next || chainIds.indexOf(next) !== -1) break;
+            chainIds.push(next);
+            cursor = next;
+          }
+          if (chainIds.length > 1) {
+            const nodeEls = chainIds
+              .map((id) =>
+                document.querySelector('#psp-cascade svg .psp-node[data-psp-id="' + id + '"]')
+              )
+              .filter(Boolean);
+            const union = this._unionRect(nodeEls);
+            if (union) {
+              this._pspChainHoleAdded = true;
+              this._addDynamicHoleForRect(
+                union,
                 "Pathway",
-                "The full P→S→P chain through this node — the causal backbone ARIA reasons over."
+                "The full P→S→P chain this node belongs to — the causal backbone ARIA reasons over."
               );
               return;
             }
           }
         }
       }
+    }
+
+    // Bounding box that encloses every element's current rect (in
+    // viewport coordinates), or null if none are visible.
+    _unionRect(elements) {
+      const rects = elements
+        .map((el) => el.getBoundingClientRect())
+        .filter((r) => r.width > 0 && r.height > 0);
+      if (rects.length === 0) return null;
+      const left = Math.min.apply(null, rects.map((r) => r.left));
+      const top = Math.min.apply(null, rects.map((r) => r.top));
+      const right = Math.max.apply(null, rects.map((r) => r.right));
+      const bottom = Math.max.apply(null, rects.map((r) => r.bottom));
+      return { left, top, right, bottom, width: right - left, height: bottom - top };
+    }
+
+    // Add a dynamic hole covering an arbitrary rect (e.g. the union
+    // of several real elements — a whole highlighted chain — rather
+    // than a single element). The hole/label machinery tracks a real
+    // element via getBoundingClientRect(), so we create an invisible,
+    // absolutely-positioned anchor sized to the computed rect and
+    // reuse _addDynamicHole with it.
+    _addDynamicHoleForRect(rect, chipText, bodyText) {
+      const anchor = document.createElement("div");
+      anchor.className = "tour-dynamic-anchor";
+      anchor.style.position = "absolute";
+      anchor.style.left = rect.left + window.scrollX + "px";
+      anchor.style.top = rect.top + window.scrollY + "px";
+      anchor.style.width = rect.width + "px";
+      anchor.style.height = rect.height + "px";
+      anchor.style.pointerEvents = "none";
+      anchor.setAttribute("aria-hidden", "true");
+      document.body.appendChild(anchor);
+      this._dynamicAnchors.push(anchor);
+      this._addDynamicHole(anchor, chipText, bodyText);
     }
 
     // Decide whether it's safe to add a hole pointing at `el`.
@@ -1707,7 +1821,17 @@
         self._rafScheduled = false;
         if (!self._active) return;
         if (self._canvas) self._canvas.render();
-        if (self._mask) self._mask.updateHoleRects();
+        if (self._mask) {
+          // Re-sync the mask SVG's own viewBox/width/height to the
+          // section's CURRENT size, not just each hole's rect. The
+          // section can grow taller after this point (e.g. a
+          // <details> expands) — without this, the SVG's internal
+          // coordinate system goes stale relative to its CSS-
+          // stretched render box, and every hole/glow renders
+          // stretched/mis-scaled instead of at its real position.
+          self._mask.render();
+          self._mask.updateHoleRects();
+        }
         self._labels.forEach((l) => l.place());
       });
     }
