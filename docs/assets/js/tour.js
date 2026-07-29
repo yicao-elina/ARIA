@@ -57,7 +57,14 @@
     {
       id: "psp",
       title: "The PSP Hierarchy",
-      body: "Processing, Structure, and Property form the causal backbone ARIA reasons over. Hover the nodes in the diagram below to see how each layer connects.",
+      body: "Processing, Structure, and Property form the causal backbone ARIA reasons over. Click the highlighted node to see a complete P→S→P pathway light up.",
+      focusPoints: [
+        {
+          selector: "#psp-cascade svg .psp-node[data-psp-id='p4']",
+          label: "Click the Sulfur-Rich Atmosphere node to see the P→S→P pathway light up — the causal chain ARIA reasons over.",
+          action: { kind: "click" },
+        },
+      ],
     },
     {
       id: "cascade",
@@ -381,6 +388,11 @@
     function setHoles(newHoles) {
       // Clear existing
       mask.querySelectorAll("rect.hole").forEach((n) => n.remove());
+      // Also clear any pre-existing glow rects (they live in the
+      // visible SVG, not inside <mask>, since mask elements only
+      // contribute fill alpha — strokes/glows on mask rects would
+      // not render).
+      root.querySelectorAll("rect.hole-glow").forEach((n) => n.remove());
       holes.length = 0;
       const sRect = sectionEl.getBoundingClientRect();
       const reduced = utils.reducedMotion();
@@ -406,6 +418,26 @@
         }
         hole.setAttribute("fill", "black");
         mask.appendChild(hole);
+        // Visible glow ring around the hole. Lives in the root SVG
+        // (not inside <mask>) so its stroke + drop-shadow actually
+        // render. pointer-events:none keeps it from intercepting
+        // clicks on the highlighted element.
+        const glow = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        glow.setAttribute("class", "hole-glow");
+        glow.setAttribute("x", x);
+        glow.setAttribute("y", y);
+        glow.setAttribute("width", w);
+        glow.setAttribute("height", hgt);
+        glow.setAttribute("rx", 14);
+        glow.setAttribute("ry", 14);
+        glow.setAttribute("fill", "none");
+        glow.setAttribute("stroke", "rgba(104, 172, 229, 0.7)");
+        glow.setAttribute("stroke-width", "2");
+        glow.setAttribute("pointer-events", "none");
+        if (!reduced) glow.classList.add("hole-glow--blooming");
+        // Append AFTER the dimmed layer so the ring sits on top of
+        // the mask and is clearly visible around the cutout.
+        root.appendChild(glow);
         holes.push({
           el: h.el,
           label: h.label,
@@ -413,6 +445,7 @@
           action: h.action,
           rect: { x, y, w, h: hgt },
           hole,
+          glow,
           settled: false,
         });
       });
@@ -421,8 +454,34 @@
     function updateHoleRects() {
       const sRect = sectionEl.getBoundingClientRect();
       holes.forEach((h) => {
-        if (!h.el.isConnected) return;
+        if (!h.el.isConnected) {
+          // Element was removed from the DOM entirely. Hide its hole.
+          h.hole.setAttribute("width", "0");
+          h.hole.setAttribute("height", "0");
+          h.hole.style.display = "none";
+          if (h.glow) {
+            h.glow.setAttribute("width", "0");
+            h.glow.setAttribute("height", "0");
+            h.glow.style.display = "none";
+          }
+          return;
+        }
         const r = h.el.getBoundingClientRect();
+        if (r.width === 0 || r.height === 0) {
+          // Element is in a display:none ancestor. Hide its hole
+          // until the ancestor becomes visible again.
+          h.hole.setAttribute("width", "0");
+          h.hole.setAttribute("height", "0");
+          h.hole.style.display = "none";
+          if (h.glow) {
+            h.glow.setAttribute("width", "0");
+            h.glow.setAttribute("height", "0");
+            h.glow.style.display = "none";
+          }
+          return;
+        }
+        h.hole.style.display = "";
+        if (h.glow) h.glow.style.display = "";
         h.rect = {
           x: r.left - sRect.left - 8,
           y: r.top - sRect.top - 8,
@@ -433,6 +492,12 @@
         h.hole.setAttribute("y", h.rect.y);
         h.hole.setAttribute("width", h.rect.w);
         h.hole.setAttribute("height", h.rect.h);
+        if (h.glow) {
+          h.glow.setAttribute("x", h.rect.x);
+          h.glow.setAttribute("y", h.rect.y);
+          h.glow.setAttribute("width", h.rect.w);
+          h.glow.setAttribute("height", h.rect.h);
+        }
       });
     }
 
@@ -442,6 +507,10 @@
       h.settled = true;
       h.hole.classList.remove("hole--blooming");
       h.hole.classList.add("hole--settled");
+      if (h.glow) {
+        h.glow.classList.remove("hole-glow--blooming");
+        h.glow.classList.add("hole-glow--settled");
+      }
     }
 
     function fadeIn() {
@@ -459,6 +528,7 @@
     function clear() {
       holes.length = 0;
       mask.querySelectorAll("rect.hole").forEach((n) => n.remove());
+      root.querySelectorAll("rect.hole-glow").forEach((n) => n.remove());
       root.classList.remove("is-fading-in", "is-fading-out");
     }
 
@@ -524,7 +594,41 @@
     svg.appendChild(line);
     document.body.appendChild(svg);
 
+    function isVisible() {
+      // Walk up the ancestor chain. If any ancestor (including self)
+      // has display:none or has a zero-sized bounding rect, the hole
+      // is not currently visible. position:fixed descendants of a
+      // hidden ancestor are still considered hidden, because
+      // getBoundingClientRect on a fixed element inside display:none
+      // returns zeros.
+      let el = targetEl;
+      while (el && el !== document.body) {
+        if (el.nodeType !== 1) {
+          el = el.parentNode;
+          continue;
+        }
+        const cs = window.getComputedStyle(el);
+        if (cs.display === "none" || cs.visibility === "hidden") return false;
+        el = el.parentNode;
+      }
+      const r = targetEl.getBoundingClientRect();
+      if (r.width === 0 || r.height === 0) return false;
+      return true;
+    }
+
     function place() {
+      // If the hole is not currently visible (e.g. its parent is
+      // display:none because a click elsewhere switched the visible
+      // panel), hide the label and its leader line entirely. The
+      // next rAF will re-check and restore if it becomes visible.
+      if (!isVisible()) {
+        root.style.display = "none";
+        svg.style.display = "none";
+        return;
+      }
+      // Restore visibility — previous frame may have hidden us.
+      root.style.display = "flex";
+      svg.style.display = "";
       const r = targetEl.getBoundingClientRect();
       const tRect = root.getBoundingClientRect();
       const margin = 12;
@@ -606,7 +710,18 @@
     }
 
     place();
-    return { root, svg, line, place, settle, revealCallout, isCalloutRevealed, destroy };
+    return {
+      root,
+      svg,
+      line,
+      place,
+      settle,
+      revealCallout,
+      isCalloutRevealed,
+      isVisible,
+      targetEl,
+      destroy,
+    };
   }
 
   // ════════════════════════════════════════════════════════════════
@@ -896,6 +1011,12 @@
       }
       this._sectionClickHandler = null;
       this._sectionEl = null;
+      if (this._holeListeners) {
+        this._holeListeners.forEach(({ el, handler }) => {
+          el.removeEventListener("click", handler, true);
+        });
+      }
+      this._holeListeners = [];
       this._labels.forEach((l) => l.destroy());
       this._labels = [];
       this._holes = [];
@@ -1062,12 +1183,16 @@
       this._mask.fadeIn();
       this._setHintOnStop(this.stops[this._index], "revealing");
       // Build labels.
+      this._holeListeners = [];
       this._holes.forEach((h) => {
         const label = createHoleLabel(h.el, h.label, h.text);
         // Click on the label's chip also fires the action — same as
         // clicking the hole itself.
         label.root.addEventListener("click", (e) => {
-          e.preventDefault();
+          // The chip is purely a tour-rendered element with no
+          // native behavior to preserve, so stopping propagation is
+          // safe and avoids triggering other listeners — but we
+          // don't need preventDefault since the chip has none.
           e.stopPropagation();
           this._fireHole(h, label);
         });
@@ -1076,11 +1201,9 @@
         // the event runs before any inner element's own click
         // handler, and stop propagation so the inner element does
         // not see the same click twice.
-        h.el.addEventListener(
-          "click",
-          this._holeClickHandler(h, label),
-          true
-        );
+        const handler = this._holeClickHandler(h, label);
+        h.el.addEventListener("click", handler, true);
+        this._holeListeners.push({ el: h.el, handler });
         this._labels.push(label);
       });
       this._refreshPanel();
@@ -1093,12 +1216,16 @@
         if (this._mode !== "revealing") return;
         if (label && label.isCalloutRevealed && label.isCalloutRevealed()) {
           // Callout already revealed — let the inner element handle
-          // the click normally (e.g. a button needs to actually fire
-          // its own handler). Don't double-fire _fireHole.
+          // the click natively (e.g. a <details> summary needs the
+          // browser's default toggle to actually open the body).
+          // Don't double-fire _fireHole.
           return;
         }
-        e.preventDefault();
-        e.stopPropagation();
+        // No preventDefault / no stopPropagation: the browser must
+        // run its default click behavior so the element actually
+        // reacts (e.g. a <summary> toggles its <details>; a button
+        // fires its own click handler; a select dispatches change).
+        // We only do the tour-side bookkeeping here.
         this._fireHole(h, label);
       };
     }
@@ -1134,13 +1261,166 @@
         }
       });
       this._refreshPanel();
-      // After layout shifts, re-measure the mask and labels.
-      window.requestAnimationFrame(() => this._reposition());
+      // After firing the action, the DOM may have changed (a
+      // sibling panel became visible, a <details> body opened, a
+      // PSP pathway lit up). On the next frame, scan for newly-
+      // visible content and add a fresh annotation hole for it.
+      // The new hole is action:null and immediately settled — it's
+      // just a "look at this" beat the user can read.
+      const self = this;
+      window.requestAnimationFrame(() => {
+        if (!self._active) return;
+        self._maybeAddDynamicHole(h);
+        self._reposition();
+        self._refreshPanel();
+        // If all holes settled (including any dynamic ones), move
+        // on. This re-check must happen AFTER dynamic holes are
+        // added, otherwise a section that becomes hole-free after
+        // a click (e.g. all original holes were hidden) would skip
+        // the wait state. Skip during auto-play — the auto-play
+        // step() loop handles the final transition itself.
+        if (self._mode === "revealing" && self._allHolesSettled()) {
+          self._settleAllHoles();
+        }
+      });
+    }
 
-      // If all holes settled, transition to clearing.
-      if (this._allHolesSettled()) {
-        this._settleAllHoles();
+    // After an action fires, look for newly-visible content that
+    // wasn't there before. If found, add a fresh annotation hole
+    // (no action — just "look at this") and a label for it.
+    _maybeAddDynamicHole(h) {
+      if (!this._active) return;
+      if (this._mode !== "revealing") return;
+
+      // 1) open-details: the <details> body is the new visible
+      //    content. Add a hole pointing at the first non-summary
+      //    child of the <details>. Try both the canonical class
+      //    (.detail-toggle__body) AND a fallback to "the first
+      //    child of <details> that isn't <summary>", since some
+      //    <details> in the site use a different body wrapper.
+      if (h.action && h.action.kind === "open-details") {
+        const details = h.el.closest("details");
+        if (details && details.open) {
+          let body = details.querySelector(".detail-toggle__body");
+          if (!body) {
+            // Fallback: pick the first direct child that isn't the
+            // <summary>. Anything that's now visible after the
+            // toggle is the body.
+            for (let i = 0; i < details.children.length; i++) {
+              const c = details.children[i];
+              if (c && c.tagName && c.tagName.toLowerCase() !== "summary") {
+                body = c;
+                break;
+              }
+            }
+          }
+          if (body && this._canAddHoleFor(body)) {
+            this._addDynamicHole(body, "Result", "The result of the worked example — this is what ARIA actually reasoned over.");
+            return;
+          }
+        }
       }
+
+      // 2) click on a tunneling example button: the active panel
+      //    re-rendered. Add a hole for the new error segment in
+      //    the naive-kg panel.
+      if (h.action && h.action.kind === "click" && h.el.classList.contains("tunneling-example-btn")) {
+        // Re-resolve the selector — the panel was rebuilt.
+        const naivePanel = document.querySelector("#problem .tunneling-panel--naive-kg .tunneling-segment--error");
+        if (naivePanel && this._canAddHoleFor(naivePanel)) {
+          this._addDynamicHole(naivePanel, "Same failure", "The same contextual tunneling failure, on a different query — ARIA prevents this.");
+          return;
+        }
+      }
+
+      // 3) click on a PSP node: the cascade lights up the active
+      //    chain. Add a hole for the destination (last) node of
+      //    the chain so the user can see where the path lands.
+      if (h.action && h.action.kind === "click" && h.el.classList.contains("psp-node")) {
+        // Find any chain edge whose source equals the clicked node
+        // id. If found, target the destination node of the LAST
+        // segment of that chain.
+        const pspId = h.el.getAttribute("data-psp-id");
+        if (pspId) {
+          // The cascade's instance is on window via lazy init. Find
+          // the activeChain via a data attribute the cascade sets,
+          // or fall back to the destination node of the chain
+          // whose first segment starts at pspId.
+          // Simpler: look for edges in the SVG that have
+          // data-src == pspId, and walk to its data-tgt.
+          const edges = document.querySelectorAll("#psp-cascade svg .psp-edges path[data-src]");
+          let lastTgt = null;
+          edges.forEach((e) => {
+            if (e.getAttribute("data-src") === pspId) {
+              lastTgt = e.getAttribute("data-tgt");
+            }
+          });
+          if (lastTgt) {
+            const destNode = document.querySelector(
+              '#psp-cascade svg .psp-node[data-psp-id="' + lastTgt + '"]'
+            );
+            if (destNode && this._canAddHoleFor(destNode)) {
+              this._addDynamicHole(
+                destNode,
+                "Pathway",
+                "The full P→S→P chain through this node — the causal backbone ARIA reasons over."
+              );
+              return;
+            }
+          }
+        }
+      }
+    }
+
+    // Decide whether it's safe to add a hole pointing at `el`.
+    // Avoid adding duplicate holes for the same element, and avoid
+    // adding a hole to an element that's not actually visible.
+    _canAddHoleFor(el) {
+      if (!el) return false;
+      if (this._holes.some((h) => h.el === el)) return false;
+      const r = el.getBoundingClientRect();
+      if (r.width === 0 || r.height === 0) return false;
+      return true;
+    }
+
+    // Add a fresh annotation hole + label. The new hole is
+    // action:null and immediately settled (callout shown) — it's
+    // not something the user needs to click.
+    _addDynamicHole(el, chipText, bodyText) {
+      const label = String(this._holes.length + 1);
+      const newHole = {
+        el,
+        label,
+        text: bodyText,
+        action: null,
+        // Mark as a dynamic, already-settled hole so the panel
+        // counts it correctly from the start.
+        _dynamic: true,
+      };
+      this._holes.push(newHole);
+      // Rebuild the mask holes so the new element gets a cutout.
+      // This also re-creates the pre-existing holes from scratch,
+      // so we re-apply their settled visual state below.
+      this._mask.setHoles(this._holes);
+      // Re-apply settled state to any pre-existing holes whose
+      // labels are already settled (setHoles starts every hole
+      // un-settled, which would visually "un-bloom" them).
+      this._labels.forEach((l) => {
+        if (l.root.classList.contains("is-settled") && l.targetEl) {
+          this._mask.settleHole(l.targetEl);
+        }
+      });
+      // Create the label. Use a short chip text (e.g. "Pathway")
+      // for dynamic holes; otherwise use the numeric label.
+      const chipDisplay = chipText || label;
+      const newLabel = createHoleLabel(el, chipDisplay, bodyText);
+      // Reveal the callout immediately — dynamic holes are
+      // "look at this" annotations, no click required.
+      newLabel.revealCallout();
+      // Mark it as settled so the panel counts it as done.
+      newLabel.settle();
+      this._mask.settleHole(el);
+      this._labels.push(newLabel);
     }
 
     _revealCalloutForHoleIndex(i) {
@@ -1160,7 +1440,20 @@
 
     _allHolesSettled() {
       if (this._holes.length === 0) return false;
-      return this._labels.every((l) => l.root.classList.contains("is-settled"));
+      // A label is "done" if it's settled OR if its hole is no
+      // longer visible (e.g. the DOM was switched by another hole's
+      // action — there's nothing for the user to click anymore).
+      return this._labels.every((l) => {
+        if (l.root.classList.contains("is-settled")) return true;
+        if (l.isVisible && !l.isVisible()) {
+          // Auto-settle the hidden label so the panel count is
+          // correct and the user isn't stuck waiting to click
+          // something they can't see.
+          l.settle();
+          return true;
+        }
+        return false;
+      });
     }
 
     _settleAllHoles() {
@@ -1378,6 +1671,35 @@
 @keyframes tour-hole-breath {
   0%, 100% { rx: 14; ry: 14; }
   50%      { rx: 16; ry: 16; }
+}
+
+/* ── Soft blue glow ring around each hole ──
+   The glow is rendered as a separate <rect class="hole-glow">
+   appended to the visible SVG (NOT inside <mask>, since mask
+   elements only contribute fill alpha — a stroke on a mask
+   rect would not render). pointer-events:none keeps it from
+   intercepting clicks on the highlighted element. */
+.tour-mask-svg rect.hole-glow {
+  fill: none;
+  stroke: rgba(104, 172, 229, 0.7);
+  stroke-width: 2;
+  filter: drop-shadow(0 0 6px rgba(104, 172, 229, 0.5));
+  pointer-events: none;
+  transition: stroke-opacity 0.3s ${CONSTANTS.SMOOTH},
+              filter 0.3s ${CONSTANTS.SMOOTH};
+}
+/* Settled glow: stays softly lit, no animation, slightly more solid. */
+.tour-mask-svg rect.hole-glow--settled {
+  stroke-opacity: 0.9;
+  filter: drop-shadow(0 0 8px rgba(104, 172, 229, 0.65));
+}
+/* Breathing glow (matches the hole's rx/ry pulse rhythm). */
+.tour-mask-svg rect.hole-glow--blooming {
+  animation: tour-hole-glow-breath ${CONSTANTS.BREATH_PERIOD_MS}ms ease-in-out infinite;
+}
+@keyframes tour-hole-glow-breath {
+  0%, 100% { stroke-opacity: 0.55; filter: drop-shadow(0 0 4px rgba(104, 172, 229, 0.4)); }
+  50%      { stroke-opacity: 0.9;  filter: drop-shadow(0 0 9px rgba(104, 172, 229, 0.65)); }
 }
 
 /* The mask LAYER's mask cutouts (the white rects in the mask)

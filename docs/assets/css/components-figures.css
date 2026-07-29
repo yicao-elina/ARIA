@@ -8,6 +8,11 @@
 
 .figure-block {
   margin: var(--sp-xl) 0;
+  /* Anchor targets (e.g. #fig-paper-1) used by section "View in paper"
+     links and the fig-hotspot reverse jumps. Without this, the browser
+     scrolls the figure's top to the viewport top, where the fixed
+     pill header covers it. */
+  scroll-margin-top: calc(var(--header-offset, 96px) + 12px);
 }
 
 .figure-block__stage {

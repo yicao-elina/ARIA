@@ -306,6 +306,9 @@
         .data(allNodes, d => d.id)
         .join('g')
         .attr('class', 'psp-node')
+        .attr('data-psp-id', d => d.id)
+        .attr('data-psp-label', d => d.label.replace(/\n/g, ' '))
+        .attr('data-psp-tier', d => d.tier)
         .attr('transform', d => `translate(${d.cx},${d.cy})`)
         .style('cursor', 'pointer')
         .attr('opacity', 0);
