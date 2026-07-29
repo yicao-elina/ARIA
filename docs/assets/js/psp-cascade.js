@@ -9,17 +9,7 @@
 (function () {
   'use strict';
 
-  /* ── colour palette ─────────────────────────────────────────────── */
-  const COLORS = {
-    jhuBlue:   '#002D72',
-    accent:    '#E8600A',
-    processing: { bg: '#E8F4FD', border: '#1B6CA8', text: '#002D72' },
-    structure:  { bg: '#FFF8E1', border: '#D4930D', text: '#7A5600' },
-    property:   { bg: '#E8F5E9', border: '#2E7D32', text: '#1B5E20' },
-    shortcut:   '#D32F2F',
-    chainLink:  '#002D72',
-    highlight:  '#E8600A',
-  };
+  /* ── colour palette (loaded per-instance from ARIA.theme) ─────────── */
 
   /* ── PSP data derived from the demo KG ──────────────────────────── */
   const NODES = {
@@ -93,6 +83,7 @@
      */
     constructor(selector, opts = {}) {
       this.container = d3.select(selector);
+      this.colors = ARIA.theme.getColors(this.container.node());
       this.width  = opts.width  || 900;
       this.height = opts.height || 520;
       this.animated = false;
@@ -102,10 +93,11 @@
 
     /* ── layout constants ──────────────────────────────────────────── */
     get band() {
+      const c = this.colors;
       return {
-        p: { y: 50,  h: 110, color: COLORS.processing },
-        s: { y: 210, h: 110, color: COLORS.structure },
-        x: { y: 370, h: 110, color: COLORS.property },
+        p: { y: 50,  h: 110, color: { bg: c.tier1Bg, border: c.tier1, text: c.tier1 } },
+        s: { y: 210, h: 110, color: { bg: c.tier2Bg, border: c.tier2, text: c.tier2 } },
+        x: { y: 370, h: 110, color: { bg: c.successBg, border: c.success, text: c.success } },
       };
     }
 
@@ -119,7 +111,7 @@
         .attr('preserveAspectRatio', 'xMidYMid meet')
         .style('width', '100%')
         .style('max-width', W + 'px')
-        .style('font-family', "'Inter', 'Helvetica Neue', Arial, sans-serif");
+        .style('font-family', ARIA.theme.fontStack);
 
       /* Defs: glow filter */
       const defs = this.svg.append('defs');
@@ -139,7 +131,7 @@
         .attr('orient', 'auto')
         .append('path')
         .attr('d', 'M0,0 L10,3 L0,6 Z')
-        .attr('fill', COLORS.chainLink);
+        .attr('fill', this.colors.primary);
 
       defs.append('marker')
         .attr('id', 'psp-arrow-shortcut')
@@ -149,7 +141,7 @@
         .attr('orient', 'auto')
         .append('path')
         .attr('d', 'M0,0 L10,3 L0,6 Z')
-        .attr('fill', COLORS.shortcut);
+        .attr('fill', this.colors.danger);
 
       /* Band backgrounds */
       const band = this.band;
@@ -203,7 +195,7 @@
 
       this.badge.append('rect')
         .attr('rx', 4).attr('ry', 4)
-        .attr('fill', COLORS.shortcut)
+        .attr('fill', this.colors.danger)
         .attr('width', 210).attr('height', 28);
 
       this.badge.append('text')
@@ -260,7 +252,7 @@
           const el = this.edgeGroup.append('path')
             .attr('d', pathD)
             .attr('fill', 'none')
-            .attr('stroke', COLORS.chainLink)
+            .attr('stroke', this.colors.primary)
             .attr('stroke-width', 2)
             .attr('marker-end', 'url(#psp-arrow)')
             .attr('opacity', 0)
@@ -288,7 +280,7 @@
         const el = this.edgeGroup.append('path')
           .attr('d', pathD)
           .attr('fill', 'none')
-          .attr('stroke', COLORS.shortcut)
+          .attr('stroke', this.colors.danger)
           .attr('stroke-width', 1.5)
           .attr('stroke-dasharray', '6 3')
           .attr('marker-end', 'url(#psp-arrow-shortcut)')
@@ -355,7 +347,7 @@
         if (s === id || t === id) {
           connectedIds.add(s);
           connectedIds.add(t);
-          el.attr('stroke', COLORS.highlight).attr('stroke-width', 3);
+          el.attr('stroke', this.colors.primaryFocus).attr('stroke-width', 3);
         }
       });
       this.shortcutEdges.forEach(el => {
@@ -364,7 +356,7 @@
         if (s === id || t === id) {
           connectedIds.add(s);
           connectedIds.add(t);
-          el.attr('stroke', COLORS.accent).attr('stroke-width', 2.5);
+          el.attr('stroke', this.colors.warning).attr('stroke-width', 2.5);
         }
       });
 
@@ -376,10 +368,10 @@
     _unhover() {
       if (this.activeChain !== null) return;
       this.chainEdges.forEach(el => {
-        el.attr('stroke', COLORS.chainLink).attr('stroke-width', 2);
+        el.attr('stroke', this.colors.primary).attr('stroke-width', 2);
       });
       this.shortcutEdges.forEach(el => {
-        el.attr('stroke', COLORS.shortcut).attr('stroke-width', 1.5);
+        el.attr('stroke', this.colors.danger).attr('stroke-width', 1.5);
       });
       this.nodeEls.transition().duration(200).attr('opacity', 1);
     }
@@ -416,7 +408,7 @@
       this.chainEdges.forEach(el => {
         const eCI = +el.attr('data-chain');
         if (eCI === ci) {
-          el.attr('stroke', COLORS.highlight)
+          el.attr('stroke', this.colors.primaryFocus)
             .attr('stroke-width', 3)
             .attr('filter', 'url(#psp-glow)');
         } else {
@@ -435,7 +427,7 @@
       this.shortcutEdges.forEach(el => {
         const eSI = +el.attr('data-shortcut');
         if (eSI === si) {
-          el.attr('stroke', COLORS.shortcut)
+          el.attr('stroke', this.colors.danger)
             .attr('stroke-width', 3)
             .attr('filter', 'url(#psp-glow)');
         } else {
@@ -462,13 +454,13 @@
       this.badge.transition().duration(200).attr('opacity', 0);
 
       this.chainEdges.forEach(el => {
-        el.attr('stroke', COLORS.chainLink)
+        el.attr('stroke', this.colors.primary)
           .attr('stroke-width', 2)
           .attr('opacity', 1)
           .attr('filter', null);
       });
       this.shortcutEdges.forEach(el => {
-        el.attr('stroke', COLORS.shortcut)
+        el.attr('stroke', this.colors.danger)
           .attr('stroke-width', 1.5)
           .attr('opacity', 1)
           .attr('filter', null);
@@ -532,7 +524,7 @@
 
       g.append('line')
         .attr('x1', 0).attr('y1', 0).attr('x2', 28).attr('y2', 0)
-        .attr('stroke', COLORS.chainLink).attr('stroke-width', 2)
+        .attr('stroke', this.colors.primary).attr('stroke-width', 2)
         .attr('marker-end', 'url(#psp-arrow)');
       g.append('text')
         .attr('x', 34).attr('y', 4)
@@ -542,7 +534,7 @@
 
       g.append('line')
         .attr('x1', 0).attr('y1', 18).attr('x2', 28).attr('y2', 18)
-        .attr('stroke', COLORS.shortcut).attr('stroke-width', 1.5)
+        .attr('stroke', this.colors.danger).attr('stroke-width', 1.5)
         .attr('stroke-dasharray', '6 3')
         .attr('marker-end', 'url(#psp-arrow-shortcut)');
       g.append('text')

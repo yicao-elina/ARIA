@@ -76,10 +76,19 @@
 }
 
 .stat {
-  background: var(--apple-parchment);
-  padding: 17px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--apple-divider-soft);
+  background: var(--pearl-glass, rgba(255, 255, 255, 0.55));
+  padding: 22px 17px;
+  border-radius: 20px;
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.6));
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 6px 22px rgba(0, 45, 114, 0.08);
+  transition: transform 200ms ease-out, box-shadow 200ms ease;
+}
+
+.stat:hover {
+  transform: translateY(-2px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 12px 32px rgba(0, 45, 114, 0.12);
 }
 
 .stat-number {

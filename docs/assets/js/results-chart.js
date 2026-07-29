@@ -1,30 +1,14 @@
 /**
  * ResultsChart — D3 bar charts and visualizations for the ARIA results section.
  *
- * Loads data from '../data/benchmark_results.json' (falls back to built-in defaults).
+ * Loads data from 'assets/data/benchmark_results.json' (falls back to built-in defaults).
  *
  * Exposes global class: ResultsChart
  */
 (function () {
   'use strict';
 
-  /* ── colour palette ─────────────────────────────────────────────── */
-  const COLORS = {
-    jhuBlue:   '#002D72',
-    accent:    '#E8600A',
-    ariaFull:  '#002D72',
-    ariaCore:  '#5B9BD5',
-    selfRAG:   '#7B2D8E',
-    baseline:  '#9E9E9E',
-    naiveKG:   '#E53935',
-    t1Blue:    '#1565C0',
-    t2Amber:   '#F9A825',
-    t3Grey:    '#9E9E9E',
-    bg:        '#FAFAFA',
-    gridLine:  '#E0E0E0',
-    text:      '#333333',
-    labelGrey: '#666666',
-  };
+  /* ── colour palette loaded per-instance from ARIA.theme ──────────── */
 
   /* ── default benchmark data ──────────────────────────────────────── */
   const DEFAULT_DATA = {
@@ -47,13 +31,7 @@
     ],
   };
 
-  const METHOD_COLORS = {
-    'Baseline':  COLORS.baseline,
-    'Naive KG':  COLORS.naiveKG,
-    'Self-RAG':  COLORS.selfRAG,
-    'ARIA-CORE': COLORS.ariaCore,
-    'ARIA-FULL': COLORS.ariaFull,
-  };
+  /* this.METHOD_COLORS is now set per-instance in constructor from ARIA.theme */
 
   /* ── ResultsChart class ──────────────────────────────────────────── */
   class ResultsChart {
@@ -64,9 +42,19 @@
      */
     constructor(selector, opts = {}) {
       this.container = d3.select(selector);
-      this.dataPath = opts.dataPath || '../data/benchmark_results.json';
+      this.colors = ARIA.theme.getColors(this.container.node());
+      this.dataPath = opts.dataPath || 'assets/data/benchmark_results.json';
       this.data = null;
       this.activeMetric = 'overall';
+
+      const c = this.colors;
+      this.METHOD_COLORS = {
+        'Baseline':  c.inkMuted48,
+        'Naive KG':  c.danger,
+        'Self-RAG':  c.warning,
+        'ARIA-CORE': c.primaryFocus,
+        'ARIA-FULL': c.primary,
+      };
 
       this._loadData().then(() => {
         this._build();
@@ -78,16 +66,60 @@
         const response = await fetch(this.dataPath);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const json = await response.json();
-        /* Merge: prefer JSON fields, fall back to defaults */
-        this.data = {
-          methods:             json.methods             || DEFAULT_DATA.methods,
-          scores:             json.scores             || DEFAULT_DATA.scores,
-          tier_distribution:  json.tier_distribution  || DEFAULT_DATA.tier_distribution,
-          physical_consistency: json.physical_consistency || DEFAULT_DATA.physical_consistency,
-        };
+        this.data = this._normalize(json);
       } catch {
         this.data = DEFAULT_DATA;
       }
+    }
+
+    /**
+     * assets/data/benchmark_results.json ships one object per method
+     * (`{name, short, forward_in_domain, forward_ood, inverse_in_domain,
+     * inverse_ood, overall, physical_consistency, tier_distribution}`)
+     * rather than the parallel-array shape this component renders from
+     * (`methods: [string]`, `scores: {forward_prediction, inverse_design,
+     * overall}`, etc). Without this adapter, `json.methods` (an array of
+     * objects) silently overrides DEFAULT_DATA.methods, producing
+     * "[object Object]" axis labels, while `json.scores` is simply absent
+     * so the chart quietly falls back to made-up placeholder percentages
+     * instead of the paper's real numbers. Adapt the real shape here
+     * instead of rewriting every render function.
+     */
+    _normalize(json) {
+      if (!Array.isArray(json.methods) || !json.methods.length || typeof json.methods[0] !== 'object') {
+        return {
+          methods:              json.methods              || DEFAULT_DATA.methods,
+          scores:                json.scores                || DEFAULT_DATA.scores,
+          tier_distribution:    json.tier_distribution    || DEFAULT_DATA.tier_distribution,
+          physical_consistency: json.physical_consistency || DEFAULT_DATA.physical_consistency,
+        };
+      }
+
+      const pooled = (a, b) => (typeof a === 'number' && typeof b === 'number') ? (a + b) / 2 : null;
+      const methods = json.methods.map((m) => m.short || m.name);
+      const scores = {
+        forward_prediction: json.methods.map((m) => pooled(m.forward_in_domain, m.forward_ood)),
+        inverse_design:     json.methods.map((m) => pooled(m.inverse_in_domain, m.inverse_ood)),
+        overall:             json.methods.map((m) => m.overall),
+      };
+
+      const toTierKeys = (d) => (d ? { T1: d.tier1, T2: d.tier2, T3: d.tier3 } : null);
+      const tierSource = json.methods.find((m) => m.tier_distribution && (m.tier_distribution.forward || m.tier_distribution.inverse));
+      const tier_distribution = tierSource ? {
+        forward_prediction: toTierKeys(tierSource.tier_distribution.forward) || DEFAULT_DATA.tier_distribution.forward_prediction,
+        inverse_design:     toTierKeys(tierSource.tier_distribution.inverse) || DEFAULT_DATA.tier_distribution.inverse_design,
+      } : DEFAULT_DATA.tier_distribution;
+
+      const physical_consistency = json.methods
+        .filter((m) => typeof m.physical_consistency === 'number')
+        .map((m) => ({ method: m.short || m.name, value: m.physical_consistency }));
+
+      return {
+        methods,
+        scores,
+        tier_distribution,
+        physical_consistency: physical_consistency.length ? physical_consistency : DEFAULT_DATA.physical_consistency,
+      };
     }
 
     _build() {
@@ -95,7 +127,7 @@
 
       this.root = this.container.append('div')
         .attr('class', 'results-chart-root')
-        .style('font-family', "'Inter', 'Helvetica Neue', Arial, sans-serif")
+        .style('font-family', ARIA.theme.fontStack)
         .style('max-width', '960px')
         .style('margin', '0 auto');
 
@@ -119,7 +151,7 @@
       section.append('h3')
         .style('font-size', '18px')
         .style('font-weight', 700)
-        .style('color', COLORS.jhuBlue)
+        .style('color', this.colors.primary)
         .style('margin', '0 0 4px 0')
         .text('Benchmark Scores');
 
@@ -144,9 +176,9 @@
           .style('font-weight', 600)
           .style('border-radius', '5px')
           .style('cursor', 'pointer')
-          .style('border', `2px solid ${m.key === this.activeMetric ? COLORS.jhuBlue : COLORS.gridLine}`)
-          .style('background', m.key === this.activeMetric ? COLORS.jhuBlue : '#fff')
-          .style('color', m.key === this.activeMetric ? '#fff' : COLORS.jhuBlue)
+          .style('border', `2px solid ${m.key === this.activeMetric ? this.colors.primary : this.colors.gridLine}`)
+          .style('background', m.key === this.activeMetric ? this.colors.primary : '#fff')
+          .style('color', m.key === this.activeMetric ? '#fff' : this.colors.primary)
           .style('transition', 'all 0.2s ease')
           .text(m.label)
           .on('click', () => this._switchMetric(m.key));
@@ -194,7 +226,7 @@
         svg.append('line')
           .attr('x1', 0).attr('x2', W)
           .attr('y1', y(t)).attr('y2', y(t))
-          .attr('stroke', COLORS.gridLine)
+          .attr('stroke', this.colors.gridLine)
           .attr('stroke-dasharray', '3 3')
           .attr('stroke-width', 0.5);
       });
@@ -204,16 +236,16 @@
         .attr('class', 'y-axis')
         .call(d3.axisLeft(y).ticks(5).tickFormat(d3.format('.0%')))
         .call(g => g.select('.domain').remove())
-        .call(g => g.selectAll('text').attr('fill', COLORS.labelGrey).attr('font-size', 11));
+        .call(g => g.selectAll('text').attr('fill', this.colors.inkMuted80).attr('font-size', 11));
 
       /* X axis */
       svg.append('g')
         .attr('class', 'x-axis')
         .attr('transform', `translate(0,${H})`)
         .call(d3.axisBottom(x))
-        .call(g => g.select('.domain').attr('stroke', COLORS.gridLine))
+        .call(g => g.select('.domain').attr('stroke', this.colors.gridLine))
         .call(g => g.selectAll('text')
-          .attr('fill', COLORS.labelGrey)
+          .attr('fill', this.colors.inkMuted80)
           .attr('font-size', 11)
           .attr('font-weight', d => d === 'ARIA-FULL' ? 700 : 400));
 
@@ -229,7 +261,7 @@
         .attr('width', x.bandwidth())
         .attr('height', 0)
         .attr('rx', 4)
-        .attr('fill', d => METHOD_COLORS[d.method] || COLORS.jhuBlue)
+        .attr('fill', d => this.METHOD_COLORS[d.method] || this.colors.primary)
         .attr('opacity', d => d.method === 'ARIA-FULL' ? 1 : 0.85)
         .transition()
         .duration(800)
@@ -263,7 +295,7 @@
         .attr('text-anchor', 'middle')
         .attr('font-size', 12)
         .attr('font-weight', 700)
-        .attr('fill', COLORS.text)
+        .attr('fill', this.colors.ink)
         .text(d => (d.value * 100).toFixed(0) + '%')
         .attr('opacity', 0)
         .transition()
@@ -278,7 +310,7 @@
           .attr('class', 'results-tooltip')
           .style('position', 'absolute')
           .style('background', '#fff')
-          .style('border', `1px solid ${COLORS.gridLine}`)
+          .style('border', `1px solid ${this.colors.gridLine}`)
           .style('border-radius', '6px')
           .style('padding', '8px 12px')
           .style('font-size', '12px')
@@ -310,9 +342,9 @@
       this.activeMetric = key;
       this._barButtons.forEach(b => {
         b.el
-          .style('border-color', b.key === key ? COLORS.jhuBlue : COLORS.gridLine)
-          .style('background', b.key === key ? COLORS.jhuBlue : '#fff')
-          .style('color', b.key === key ? '#fff' : COLORS.jhuBlue);
+          .style('border-color', b.key === key ? this.colors.primary : this.colors.gridLine)
+          .style('background', b.key === key ? this.colors.primary : '#fff')
+          .style('color', b.key === key ? '#fff' : this.colors.primary);
       });
       this._drawGroupedBar();
     }
@@ -328,7 +360,7 @@
       section.append('h3')
         .style('font-size', '18px')
         .style('font-weight', 700)
-        .style('color', COLORS.jhuBlue)
+        .style('color', this.colors.primary)
         .style('margin', '0 0 4px 0')
         .text('Tier Activation Distribution');
 
@@ -343,7 +375,7 @@
         { key: 'inverse_design',     label: 'Inverse Design' },
       ];
 
-      const tierColors = { T1: COLORS.t1Blue, T2: COLORS.t2Amber, T3: COLORS.t3Grey };
+      const tierColors = { T1: this.colors.tier1, T2: this.colors.tier2, T3: this.colors.tier3 };
       const tierLabels = { T1: 'T1 Direct', T2: 'T2 Analogical', T3: 'T3 Fallback' };
 
       configs.forEach(cfg => {
@@ -356,7 +388,7 @@
         wrapper.append('div')
           .style('font-size', '13px')
           .style('font-weight', 600)
-          .style('color', COLORS.text)
+          .style('color', this.colors.ink)
           .style('margin-bottom', '8px')
           .text(cfg.label);
 
@@ -414,7 +446,7 @@
           .attr('dy', '-0.2em')
           .attr('font-size', 11)
           .attr('font-weight', 600)
-          .attr('fill', COLORS.jhuBlue)
+          .attr('fill', this.colors.primary)
           .text(cfg.key === 'forward_prediction' ? 'Mostly' : 'Mostly')
           .attr('opacity', 0)
           .transition().duration(400).delay(600).attr('opacity', 1);
@@ -422,7 +454,7 @@
           .attr('text-anchor', 'middle')
           .attr('dy', '1.2em')
           .attr('font-size', 10)
-          .attr('fill', COLORS.labelGrey)
+          .attr('fill', this.colors.inkMuted80)
           .text(cfg.key === 'forward_prediction' ? 'Tier 1 (Direct)' : 'Tier 3 (Fallback)')
           .attr('opacity', 0)
           .transition().duration(400).delay(600).attr('opacity', 1);
@@ -451,7 +483,7 @@
 
         item.append('span')
           .style('font-size', '11px')
-          .style('color', COLORS.labelGrey)
+          .style('color', this.colors.inkMuted80)
           .text(label);
       });
     }
@@ -466,13 +498,13 @@
       section.append('h3')
         .style('font-size', '18px')
         .style('font-weight', 700)
-        .style('color', COLORS.jhuBlue)
+        .style('color', this.colors.primary)
         .style('margin', '0 0 4px 0')
         .text('Physical Consistency');
 
       section.append('p')
         .style('font-size', '12px')
-        .style('color', COLORS.labelGrey)
+        .style('color', this.colors.inkMuted80)
         .style('margin', '0 0 12px 0')
         .text('Percentage of predictions consistent with known physical constraints.');
 
@@ -495,7 +527,7 @@
 
       data.forEach((d, i) => {
         const yOff = i * (barH + gap);
-        const color = METHOD_COLORS[d.method] || COLORS.jhuBlue;
+        const color = this.METHOD_COLORS[d.method] || this.colors.primary;
         const isFull = d.method === 'ARIA-FULL';
 
         /* Background track */
@@ -538,7 +570,7 @@
           .attr('dy', '0.35em')
           .attr('font-size', 12)
           .attr('font-weight', isFull ? 700 : 400)
-          .attr('fill', COLORS.text)
+          .attr('fill', this.colors.ink)
           .text(d.method);
 
         /* Value label */

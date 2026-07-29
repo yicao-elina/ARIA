@@ -51,12 +51,29 @@
     document.body.style.overflow = '';
   }
 
+  // If a figure image fails to load (e.g. a cloud-sync placeholder file
+  // that hasn't hydrated yet), swap the native broken-image icon + raw
+  // alt-text overflow for a calm placeholder so hotspots and layout
+  // still look intentional instead of broken.
+  function showFigureFallback(img) {
+    img.classList.add('figure-block__image--broken');
+    var stage = img.closest('.figure-block__stage');
+    if (!stage || stage.querySelector('.figure-block__fallback')) return;
+    var fallback = document.createElement('div');
+    fallback.className = 'figure-block__fallback';
+    fallback.innerHTML =
+      '<span class="figure-block__fallback-icon" aria-hidden="true">&#128444;&#65039;</span>' +
+      '<span class="figure-block__fallback-text">Figure still syncing — check back shortly.</span>';
+    stage.appendChild(fallback);
+  }
+
   function bindImages() {
     var imgs = document.querySelectorAll('.figure-block__image');
     Array.prototype.forEach.call(imgs, function (img) {
       if (img.dataset.bound === '1') return;
       img.dataset.bound = '1';
       img.addEventListener('click', function () {
+        if (img.classList.contains('figure-block__image--broken')) return;
         var full = img.getAttribute('data-full-src') || img.getAttribute('src');
         openLightbox(full, img.getAttribute('alt') || '');
       });
@@ -66,6 +83,10 @@
           img.click();
         }
       });
+      img.addEventListener('error', function () { showFigureFallback(img); });
+      // Image may have already failed before this listener attached
+      // (e.g. cached error state on a fast reload).
+      if (img.complete && img.naturalWidth === 0) showFigureFallback(img);
       // Make focusable for keyboard activation
       if (!img.getAttribute('tabindex')) img.setAttribute('tabindex', '0');
       img.setAttribute('role', 'button');

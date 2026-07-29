@@ -9,10 +9,10 @@
    ========================================================================== */
 
 :root {
-  /* ── Colors: Brand & Accent ── */
-  --apple-primary:            #0066cc;   /* Action Blue — single interactive color */
-  --apple-primary-focus:       #0071e3;   /* Focus ring */
-  --apple-primary-on-dark:     #2997ff;   /* Sky Link Blue — links/buttons on dark tiles */
+  /* ── Colors: Brand & Accent (Morandi-JHU) ── */
+  --apple-primary:            #002D72;   /* JHU Heritage Blue — single interactive color */
+  --apple-primary-focus:       #1a3d8f;   /* Slightly lighter Heritage Blue for hover/focus ring */
+  --apple-primary-on-dark:     #68ACE5;   /* JHU Spirit Blue — links/buttons on dark tiles */
   --apple-ink:                 #1d1d1f;   /* Near-black for all text on light surfaces */
   --apple-body:                #1d1d1f;   /* Same as ink — one near-black for text */
   --apple-body-on-dark:        #ffffff;   /* White text on dark tiles */
@@ -32,24 +32,24 @@
   --apple-on-primary:          #ffffff;   /* White on Action Blue */
   --apple-on-dark:             #ffffff;   /* White on dark surfaces */
 
-  /* ── Tier Colors (semantic, derived from Apple palette) ── */
-  --tier-1:                    #0066cc;   /* Tier 1 Direct = Action Blue */
-  --tier-1-bg:                 rgba(0, 102, 204, 0.08);
-  --tier-1-border:             #0066cc;
-  --tier-2:                    #c9930a;   /* Tier 2 Analogical = Warm gold */
-  --tier-2-bg:                 rgba(201, 147, 10, 0.10);
-  --tier-2-border:             #c9930a;
-  --tier-3:                    #86868b;   /* Tier 3 Fallback = Apple grey */
-  --tier-3-bg:                 rgba(134, 134, 139, 0.08);
-  --tier-3-border:             #86868b;
+  /* ── Tier Colors (Morandi-JHU) ── */
+  --tier-1:                    #002D72;   /* Tier 1 Direct = Heritage Blue */
+  --tier-1-bg:                 rgba(0, 45, 114, 0.06);
+  --tier-1-border:             #002D72;
+  --tier-2:                    #A99400;   /* Tier 2 Analogical = Sable Gold */
+  --tier-2-bg:                 rgba(169, 148, 0, 0.08);
+  --tier-2-border:             #A99400;
+  --tier-3:                    #6c7a92;   /* Tier 3 Fallback = Morandi slate-blue */
+  --tier-3-bg:                 rgba(108, 122, 146, 0.06);
+  --tier-3-border:             #6c7a92;
 
-  /* ── Semantic Accents ── */
-  --aria-success:              #34c759;   /* Apple system green */
-  --aria-success-bg:           rgba(52, 199, 89, 0.08);
-  --aria-warning:              #ff9f0a;   /* Apple system orange */
-  --aria-warning-bg:           rgba(255, 159, 10, 0.10);
-  --aria-danger:               #ff3b30;   /* Apple system red */
-  --aria-danger-bg:            rgba(255, 59, 48, 0.08);
+  /* ── Semantic Accents (Morandi-JHU) ── */
+  --aria-success:              #2a8a6e;   /* Morandi muted green (replaces mint-aligned #34c759) */
+  --aria-success-bg:           rgba(42, 138, 110, 0.08);
+  --aria-warning:              #A99400;   /* Sable Gold — same as tier 2 for harmony */
+  --aria-warning-bg:           rgba(169, 148, 0, 0.10);
+  --aria-danger:               #b8504a;   /* Morandi muted red */
+  --aria-danger-bg:            rgba(184, 80, 74, 0.08);
 
   /* ── Typography: Font Families ── */
   --font-display:  "SF Pro Display", "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
@@ -139,21 +139,23 @@
 }
 
 /* ==========================================================================
-   Personal Accent + Glassmorphic Tokens
+   Morandi-JHU Personal Accent + Glassmorphic Tokens
 
-   The mint system is a PERSONAL accent that lives ALONGSIDE the Apple +
-   tier system. It is the bridge to the yicao-elina personal site aesthetic.
-   All visual rules may reference these tokens by name. Existing --apple-*
-   and --tier-* tokens are NOT replaced — only supplemented.
+   The Spirit-Blue accent replaces the prior mint system to harmonize with
+   the Heritage / Spirit / Sable palette of Johns Hopkins. Spirit Blue
+   (JHU secondary, #68ACE5) carries the personal accent role: focus rings,
+   glass glows, hover tints. Existing --apple-* and --tier-* tokens are
+   the source of truth and now resolve to JHU Heritage Blue / Sable Gold.
    ========================================================================== */
 
 :root {
-  /* ── Mint accent (personal) ── */
-  --mint:              #49bf9d;                       /* Personal accent (links, glass focus rings) */
-  --mint-bright:       #49bf9d;                       /* Brighter mint for hover */
-  --mint-soft:         rgba(73, 191, 157, 0.10);      /* Soft mint wash */
-  --mint-glow:         rgba(73, 191, 157, 0.18);      /* Spotlight glow */
-  --mint-shadow:       rgba(73, 191, 157, 0.20);      /* CTA shadow on hover */
+  /* ── Spirit-Blue accent (personal — replaces prior mint) ── */
+  --mint:              #68ACE5;                       /* JHU Spirit Blue — focus rings, glass halos */
+  --mint-bright:       #8fc1ea;                       /* Lighter Spirit for hover */
+  --mint-soft:         rgba(104, 172, 229, 0.10);      /* Soft Spirit wash */
+  --mint-glow:         rgba(104, 172, 229, 0.20);      /* Spotlight glow (Heritage-tinted blue) */
+  --mint-shadow:       rgba(104, 172, 229, 0.22);      /* CTA shadow on hover */
+  --spirit-blue:       #68ACE5;                       /* Alias for Spirit Blue in glass recipes */
 
   /* ── Ink / graphite (personal) ── */
   --ink-deep:          #141e2d;                       /* Deep ink for hero text on light bg */
