@@ -324,12 +324,15 @@
     const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
     const mask = document.createElementNS("http://www.w3.org/2000/svg", "mask");
     mask.setAttribute("id", "tour-mask-cutout");
+    // SVG mask convention: WHITE = visible (dark layer shows), BLACK = hidden (hole).
+    // Background = white (everywhere dimmed); holes are punched BLACK so the
+    // section content shows through them clearly.
     const bg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
     bg.setAttribute("x", "0");
     bg.setAttribute("y", "0");
     bg.setAttribute("width", "100%");
     bg.setAttribute("height", "100%");
-    bg.setAttribute("fill", "black");
+    bg.setAttribute("fill", "white");
     mask.appendChild(bg);
     defs.appendChild(mask);
     root.appendChild(defs);
@@ -385,7 +388,7 @@
           hole.setAttribute("ry", 4);
           hole.classList.add("hole--blooming");
         }
-        hole.setAttribute("fill", "white");
+        hole.setAttribute("fill", "black");
         mask.appendChild(hole);
         holes.push({
           el: h.el,
@@ -965,7 +968,7 @@
         label.root.addEventListener("click", (e) => {
           e.preventDefault();
           e.stopPropagation();
-          if (h.action) this._fireHole(h);
+          this._fireHole(h);
         });
         this._labels.push(label);
       });
@@ -1195,8 +1198,7 @@
   inset: 0;
   z-index: ${CONSTANTS.Z_MASK};
   pointer-events: none;
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
+  /* No backdrop-filter here: it would blur the holes (lit regions) too. */
   opacity: 0;
   transition: opacity ${CONSTANTS.MASK_FADE_IN_MS}ms ${CONSTANTS.SMOOTH};
 }
