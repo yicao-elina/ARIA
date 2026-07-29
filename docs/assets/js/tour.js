@@ -1267,21 +1267,30 @@
       // visible content and add a fresh annotation hole for it.
       // The new hole is action:null and immediately settled — it's
       // just a "look at this" beat the user can read.
+      //
+      // We use a double rAF: the first frame lets the browser
+      // process the action's native mutation (e.g. the <details>
+      // toggle — the real DOM change happens during the click
+      // handler we no longer preventDefault on). The second frame
+      // gives the browser a layout/style flush so getBoundingClientRect
+      // on the newly-revealed body returns non-zero dimensions.
       const self = this;
       window.requestAnimationFrame(() => {
-        if (!self._active) return;
-        self._maybeAddDynamicHole(h);
-        self._reposition();
-        self._refreshPanel();
-        // If all holes settled (including any dynamic ones), move
-        // on. This re-check must happen AFTER dynamic holes are
-        // added, otherwise a section that becomes hole-free after
-        // a click (e.g. all original holes were hidden) would skip
-        // the wait state. Skip during auto-play — the auto-play
-        // step() loop handles the final transition itself.
-        if (self._mode === "revealing" && self._allHolesSettled()) {
-          self._settleAllHoles();
-        }
+        window.requestAnimationFrame(() => {
+          if (!self._active) return;
+          self._maybeAddDynamicHole(h);
+          self._reposition();
+          self._refreshPanel();
+          // If all holes settled (including any dynamic ones), move
+          // on. This re-check must happen AFTER dynamic holes are
+          // added, otherwise a section that becomes hole-free after
+          // a click (e.g. all original holes were hidden) would skip
+          // the wait state. Skip during auto-play — the auto-play
+          // step() loop handles the final transition itself.
+          if (self._mode === "revealing" && self._allHolesSettled()) {
+            self._settleAllHoles();
+          }
+        });
       });
     }
 
