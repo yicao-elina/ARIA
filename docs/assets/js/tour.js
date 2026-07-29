@@ -35,6 +35,22 @@
   // ════════════════════════════════════════════════════════════════
   const STOPS = [
     {
+      id: "nav-rail",
+      title: "Navigate Anytime",
+      body: "This floating rail stays with you throughout — jump straight to any section, or open the repo on GitHub, at any point during (or after) this tour.",
+      // The rail is position:fixed chrome, not part of the document
+      // flow — scrolling it "into view" or drawing a canvas outline
+      // sized to a whole <section> doesn't apply here.
+      noScroll: true,
+      noCanvas: true,
+      actionPoint: {
+        selector: "#nav-rail",
+        label:
+          "This rail stays put while you explore — jump straight to any section, or open the repo on GitHub.",
+        action: null,
+      },
+    },
+    {
       id: "problem",
       title: "The Problem: Contextual Tunneling",
       body: "Compare a baseline LLM against a naive KG+LLM system below — the naive system over-anchors on partial evidence. Try the demo to see the failure mode ARIA is built to prevent.",
@@ -164,6 +180,10 @@
         // (first in document order), which has no `.value` to drag.
         // Target the actual range input explicitly.
         selector: "#robustness-slider input[type=\"range\"]",
+        // Cut the mask hole out around the chart too (not just the
+        // slider) so the whole plot is visible while "Do it for me"
+        // drags the slider and the chart redraws live.
+        unionSelector: "#robustness-slider .robustness-slider-root > svg",
         label: "Drag this to delete graph edges and watch ARIA adapt versus a naive KG baseline.",
         action: { kind: "drag-range" },
       },
@@ -256,6 +276,22 @@
           view: window,
         })
       );
+    },
+    // Bounding rect of `el`, expanded to also cover `extraEl` if given
+    // and currently visible (connected + non-zero size). Used so a
+    // hole's cutout can span two related elements — e.g. a slider AND
+    // the chart it drives — while `el` alone stays the click/action
+    // target and the label's anchor point.
+    unionRect(el, extraEl) {
+      const r = el.getBoundingClientRect();
+      if (!extraEl || !extraEl.isConnected) return r;
+      const u = extraEl.getBoundingClientRect();
+      if (u.width === 0 || u.height === 0) return r;
+      const left = Math.min(r.left, u.left);
+      const top = Math.min(r.top, u.top);
+      const right = Math.max(r.right, u.right);
+      const bottom = Math.max(r.bottom, u.bottom);
+      return { left, top, right, bottom, width: right - left, height: bottom - top };
     },
     openDetails(summaryEl) {
       if (!summaryEl) return;
@@ -460,7 +496,7 @@
       holes.length = 0;
       const reduced = utils.reducedMotion();
       newHoles.forEach((h, i) => {
-        const r = h.el.getBoundingClientRect();
+        const r = utils.unionRect(h.el, h.unionEl);
         const x = r.left - 8;
         const y = r.top - 8;
         const w = r.width + 16;
@@ -513,6 +549,7 @@
         root.appendChild(glow);
         holes.push({
           el: h.el,
+          unionEl: h.unionEl || null,
           label: h.label,
           text: h.text,
           action: h.action,
@@ -538,7 +575,7 @@
           }
           return;
         }
-        const r = h.el.getBoundingClientRect();
+        const r = utils.unionRect(h.el, h.unionEl);
         if (r.width === 0 || r.height === 0) {
           // Element is in a display:none ancestor. Hide its hole
           // until the ancestor becomes visible again.
@@ -701,6 +738,18 @@
       // Restore visibility — previous frame may have hidden us.
       root.style.display = "flex";
       svg.style.display = "";
+      // `root` is position:fixed with only `left` ever set (no
+      // `right`, no explicit width) — its width:auto is sized via
+      // the browser's shrink-to-fit algorithm, which bounds it by
+      // the space between `left` and the viewport edge. If a PRIOR
+      // call left `left` sitting near the right edge (e.g. next to
+      // a right-docked target like the nav rail), that starves this
+      // call's measurement of the box's true content width, which
+      // then computes a new `left` that's *still* near the edge —
+      // a self-reinforcing loop that never recovers. Reset off-
+      // screen first so this measurement reflects the natural,
+      // unconstrained width before we decide where it really goes.
+      root.style.left = "-9999px";
       const r = targetEl.getBoundingClientRect();
       const tRect = root.getBoundingClientRect();
       const margin = 12;
@@ -988,85 +1037,7 @@
         passive: true,
       });
       window.addEventListener("resize", this._onViewportChange);
-      this._introduceNavRail(() => this._goto(0));
-    }
-
-    // A brief, one-off callout pointing at the floating nav rail
-    // before the tour proper begins. It's `position:fixed` chrome
-    // living outside every section, so it doesn't fit the per-
-    // section dim+cutout machinery — this reuses the same chip +
-    // dashed-leader-line callout styling without a full-page mask.
-    // Shown at the START (not the end) because knowing the rail can
-    // jump to any section or the GitHub repo is most useful WHILE
-    // exploring, not after the tour is already over.
-    _introduceNavRail(next) {
-      const navEl = utils.getEl(".app-header");
-      if (!navEl) {
-        next();
-        return;
-      }
-      // The mask is viewport-fixed (see createMask() above), so it
-      // works just as well for this fixed-position rail as it does
-      // for an in-section hole — reuse the real mask/hole machinery
-      // (same dim + cutout + glow) instead of a bare tooltip.
-      const introMask = createMask();
-      introMask.setHoles([
-        {
-          el: navEl,
-          label: "★",
-          text:
-            "This rail stays put while you explore — jump straight to any section, or open the repo on GitHub. Click anywhere to continue.",
-          action: null,
-        },
-      ]);
-      window.requestAnimationFrame(() => introMask.fadeIn());
-
-      const label = createHoleLabel(
-        navEl,
-        "★",
-        "This rail stays put while you explore — jump straight to any section, or open the repo on GitHub. Click anywhere to continue."
-      );
-      label.revealCallout();
-      label.settle();
-      introMask.settleHole(navEl);
-      // place() was measured while the callout was still hidden
-      // (chip-only width) — re-measure now that it has expanded to
-      // its full text width, or it renders anchored to the wrong
-      // spot and can overflow off-screen.
-      window.requestAnimationFrame(() => label.place());
-
-      let done = false;
-      const reposition = () => {
-        if (done) return;
-        introMask.render();
-        introMask.updateHoleRects();
-        label.place();
-      };
-      window.addEventListener("resize", reposition);
-
-      const finish = () => {
-        if (done) return;
-        done = true;
-        document.removeEventListener("click", onClick, true);
-        document.removeEventListener("keydown", onKey, true);
-        window.removeEventListener("resize", reposition);
-        label.destroy();
-        introMask.fadeOut();
-        window.setTimeout(() => introMask.destroy(), CONSTANTS.MASK_FADE_OUT_MS);
-        next();
-      };
-      const onClick = () => finish();
-      const onKey = (e) => {
-        if (e.key === "Escape" || e.key === "Enter" || e.key === " ") finish();
-      };
-      // Defer listening by a tick so the click that triggered
-      // start() (the "Take a Tour" button) doesn't immediately
-      // dismiss this callout.
-      window.setTimeout(() => {
-        if (!this._active) return;
-        document.addEventListener("click", onClick, true);
-        document.addEventListener("keydown", onKey, true);
-      }, 50);
+      this._goto(0);
     }
 
     end() {
@@ -1322,6 +1293,9 @@
               label: "",
               text: p.label || "",
               action: p.action || null,
+              // Optional: extend this hole's cutout to also cover a
+              // related element (e.g. a chart driven by a slider).
+              unionEl: p.unionSelector ? utils.getEl(p.unionSelector) : null,
             });
           }
         });
@@ -1333,6 +1307,9 @@
               label: "",
               text: stop.actionPoint.label || "",
               action: stop.actionPoint.action || null,
+              unionEl: stop.actionPoint.unionSelector
+                ? utils.getEl(stop.actionPoint.unionSelector)
+                : null,
             });
           }
         }
@@ -1360,25 +1337,36 @@
         // stop's hole targets off-screen or behind the sticky header —
         // e.g. a very tall section like Results, where a hole near the
         // top and one much lower can't both be "centered" at once.
-        sectionEl.scrollIntoView({
-          behavior: reduced ? "auto" : "smooth",
-          block: "center",
-        });
-        if (holes.length > 0) {
-          this._scheduleHoleVisibilityCorrection(
-            holes.map((h) => h.el),
-            reduced
-          );
+        // Skipped for stops whose target is fixed-position chrome
+        // (e.g. the nav rail) rather than part of the document flow.
+        if (!stop.noScroll) {
+          sectionEl.scrollIntoView({
+            behavior: reduced ? "auto" : "smooth",
+            block: "center",
+          });
+          if (holes.length > 0) {
+            this._scheduleHoleVisibilityCorrection(
+              holes.map((h) => h.el),
+              reduced
+            );
+          }
         }
 
         // Build the canvas frame, mask, and panel up front so the
-        // "clear" beat already has its chrome in place.
-        this._canvas = createCanvasFrame(sectionEl, {
-          stepNumber: this._index + 1,
-          totalSteps: this.stops.length,
-          sectionTitle: stop.title,
-          onEnd: () => this.end(),
-        });
+        // "clear" beat already has its chrome in place. Some stops
+        // (e.g. the nav rail) have no meaningful <section> to outline
+        // and skip the canvas — the panel alone carries the step
+        // count / title / controls for them.
+        if (!stop.noCanvas) {
+          this._canvas = createCanvasFrame(sectionEl, {
+            // Same "0 / N" convention as the panel badge — see
+            // _panelState().
+            stepNumber: this._index,
+            totalSteps: this.stops.length - 1,
+            sectionTitle: stop.title,
+            onEnd: () => this.end(),
+          });
+        }
         this._mask = createMask();
         // Mask starts visible (will fade in via the is-fading-in
         // transition applied in _revealAllHoles()).
@@ -1951,8 +1939,10 @@
         hint = "Click the highlighted elements";
       }
       return {
-        stepNumber: this._index + 1,
-        totalSteps: this.stops.length,
+        // Stop 0 is the nav-rail intro, shown as "0 / N" rather than
+        // folding it into (and inflating) the original N-step count.
+        stepNumber: this._index,
+        totalSteps: this.stops.length - 1,
         sectionTitle: stop.title,
         holesTotal,
         holesDone,
