@@ -1107,13 +1107,9 @@
 
       const reduced = utils.reducedMotion();
 
-      // Collect holes BEFORE scrolling. Some sections (e.g. Results)
-      // are much taller than the viewport and have their holes spread
-      // unevenly through their height (a figure near the top, a table
-      // cell far below) — centering the whole section on itself can
-      // push a hole's target off-screen entirely, which then forces
-      // its label to clamp into a nonsensical spot (e.g. behind the
-      // header). Instead we scroll to fit the actual hole targets.
+      // Collect holes BEFORE scrolling so we can check afterward
+      // whether the default section-centered scroll left any of them
+      // off-screen.
       const holes = [];
       const fps = stop.focusPoints || [];
       fps.forEach((p) => {
@@ -1150,13 +1146,20 @@
         });
       }
 
+      // Default: center the section as a whole, same as before. Only
+      // correct the scroll afterward if that leaves one of this
+      // stop's hole targets off-screen or behind the sticky header —
+      // e.g. a very tall section like Results, where a hole near the
+      // top and one much lower can't both be "centered" at once.
+      sectionEl.scrollIntoView({
+        behavior: reduced ? "auto" : "smooth",
+        block: "center",
+      });
       if (holes.length > 0) {
-        this._scrollToFitHoles(holes.map((h) => h.el), reduced);
-      } else {
-        sectionEl.scrollIntoView({
-          behavior: reduced ? "auto" : "smooth",
-          block: "center",
-        });
+        this._scheduleHoleVisibilityCorrection(
+          holes.map((h) => h.el),
+          reduced
+        );
       }
 
       // Build the canvas frame, mask, and panel up front so the
@@ -1208,6 +1211,45 @@
       window.requestAnimationFrame(() => {
         this._revealAllHoles();
       });
+    }
+
+    // After the default section-centered scroll, check whether it
+    // actually left any of this stop's holes off-screen (or tucked
+    // behind the sticky header) and only THEN correct the scroll
+    // position. Most sections fit fine as-is — this is a fallback
+    // for the rare tall/uneven ones (e.g. Results).
+    _scheduleHoleVisibilityCorrection(elements, reduced) {
+      const HEADER_CLEARANCE = 110;
+      const BOTTOM_MARGIN = 24;
+      let done = false;
+      const check = () => {
+        if (done || !this._active) return;
+        done = true;
+        const viewportH = window.innerHeight;
+        const offscreen = elements.some((el) => {
+          const r = el.getBoundingClientRect();
+          if (r.width === 0 || r.height === 0) return false; // hidden
+          return r.top < HEADER_CLEARANCE || r.bottom > viewportH - BOTTOM_MARGIN;
+        });
+        if (offscreen) this._scrollToFitHoles(elements, reduced);
+      };
+      if (reduced) {
+        // No smooth-scroll animation to wait for.
+        check();
+        return;
+      }
+      // 'scrollend' is the accurate signal where supported; a timed
+      // fallback covers browsers/scroll paths that never fire it.
+      if ("onscrollend" in window) {
+        const handler = () => {
+          window.removeEventListener("scrollend", handler);
+          check();
+        };
+        window.addEventListener("scrollend", handler);
+        this._addTimer(window.setTimeout(handler, 900));
+      } else {
+        this._addTimer(window.setTimeout(check, 650));
+      }
     }
 
     // Scroll so that the given elements' combined bounding box is
