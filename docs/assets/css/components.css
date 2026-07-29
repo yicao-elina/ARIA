@@ -699,13 +699,6 @@
    REMOVED: Hard-coded stats. Data comes from interactive visualizations.
    See .results-toggle for the paper reference toggle. */
 
-/* ── Chart Toggle Buttons ── */
-.chart-toggles {
-  display: flex;
-  gap: 8px;
-  margin: 17px 0;
-}
-
 .toggle-btn {
   padding: 5px 14px;
   border: 2px solid var(--apple-hairline);

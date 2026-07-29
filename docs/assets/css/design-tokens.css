@@ -56,22 +56,22 @@
   --font-body:     "SF Pro Text", "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 
   /* ── Typography: Size Scale ── */
-  --text-hero:           58px;
-  --text-display-lg:     42px;
-  --text-display-md:     36px;
-  --text-lead:           29px;
-  --text-lead-airy:      25px;
-  --text-tagline:        22px;
-  --text-body:           18px;
-  --text-body-strong:    18px;
-  --text-dense-link:     18px;
-  --text-caption:        15px;
-  --text-caption-strong: 15px;
-  --text-button-large:   19px;
-  --text-button-utility: 15px;
-  --text-fine-print:     13px;
-  --text-micro-legal:    11px;
-  --text-nav-link:       13px;
+  --text-hero:           64px;
+  --text-display-lg:     48px;
+  --text-display-md:     40px;
+  --text-lead:           32px;
+  --text-lead-airy:      27px;
+  --text-tagline:        24px;
+  --text-body:           20px;
+  --text-body-strong:    20px;
+  --text-dense-link:     20px;
+  --text-caption:        17px;
+  --text-caption-strong: 17px;
+  --text-button-large:   20px;
+  --text-button-utility: 16px;
+  --text-fine-print:     14px;
+  --text-micro-legal:    12px;
+  --text-nav-link:       14px;
 
   /* ── Typography: Weight ── */
   --weight-light:     300;
@@ -80,17 +80,17 @@
   --weight-bold:      700;
 
   /* ── Typography: Line Height ── */
-  --leading-hero:          1.07;
+  --leading-hero:          1.06;
   --leading-display-lg:   1.10;
-  --leading-display-md:   1.47;
-  --leading-lead:         1.14;
-  --leading-lead-airy:    1.50;
-  --leading-tagline:      1.19;
-  --leading-body:         1.47;
-  --leading-body-strong:  1.24;
+  --leading-display-md:   1.20;
+  --leading-lead:         1.18;
+  --leading-lead-airy:    1.45;
+  --leading-tagline:      1.25;
+  --leading-body:         1.55;
+  --leading-body-strong:  1.30;
   --leading-dense-link:   2.41;
-  --leading-caption:      1.43;
-  --leading-caption-strong: 1.29;
+  --leading-caption:      1.45;
+  --leading-caption-strong: 1.30;
   --leading-fine-print:   1.0;
   --leading-nav-link:     1.0;
 
@@ -99,16 +99,16 @@
      rendered fallback, since "SF Pro Text/Display" never resolve as
      named web fonts) has a denser default spacing, so body/caption/
      fine-print tracking is opened up for comfortable reading. */
-  --tracking-hero:         -0.22px;
-  --tracking-display-lg:   0;
-  --tracking-display-md:   -0.28px;
-  --tracking-lead:         0.24px;
-  --tracking-lead-airy:    0.1px;
-  --tracking-tagline:      0.28px;
-  --tracking-body:         -0.14px;
-  --tracking-caption:      -0.06px;
-  --tracking-fine-print:   0.05px;
-  --tracking-nav-link:     0.05px;
+  --tracking-hero:         -0.30px;
+  --tracking-display-lg:   -0.10px;
+  --tracking-display-md:   -0.25px;
+  --tracking-lead:         0.10px;
+  --tracking-lead-airy:    0.05px;
+  --tracking-tagline:      0.12px;
+  --tracking-body:         0.01px;
+  --tracking-caption:      0.00px;
+  --tracking-fine-print:   0.02px;
+  --tracking-nav-link:     0.02px;
 
   /* ── Spacing ── */
   --sp-xxs:     4px;

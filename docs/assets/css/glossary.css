@@ -28,6 +28,7 @@
   border-bottom: 1px dotted var(--mint, #68ACE5);
   text-decoration: none;
   transition: color 160ms ease, border-color 160ms ease;
+  z-index: 2;
 }
 
 .term-tip:hover,
@@ -59,7 +60,7 @@
   opacity: 0;
   pointer-events: none;
   transition: opacity 200ms ease, transform 200ms var(--ease-spring, cubic-bezier(.34, 1.56, .64, 1));
-  z-index: 40;
+  z-index: 1000;
 }
 
 /* Small triangle nub pointing at the term */
@@ -74,7 +75,7 @@
   opacity: 0;
   transition: opacity 200ms ease;
   pointer-events: none;
-  z-index: 40;
+  z-index: 1000;
 }
 
 .term-tip:hover::after,
@@ -85,6 +86,25 @@
 .term-tip:hover::before,
 .term-tip:focus-visible::before {
   opacity: 1;
+}
+
+/* Modifier: pop the popover below the term instead of above.
+   Use for terms near the top of a card (so the popover would
+   otherwise collide with the card's title row). */
+.term-tip--below::after {
+  bottom: auto;
+  top: calc(100% + 10px);
+  transform: translateX(-50%) translateY(-4px);
+}
+.term-tip--below::before {
+  bottom: auto;
+  top: calc(100% + 4px);
+  border-top-color: transparent;
+  border-bottom-color: var(--pearl-glass-strong, rgba(255, 255, 255, 0.86));
+}
+.term-tip--below:hover::after,
+.term-tip--below:focus-visible::after {
+  transform: translateX(-50%) translateY(0);
 }
 
 @media (max-width: 640px) {
@@ -186,3 +206,55 @@
 }
 
 body.no-motion .detail-toggle > .detail-toggle__body { transition: none; }
+
+/* ---------- Portal popover (rendered into <body> by term-tooltip.js) ----------
+   Uses position:fixed so it lives in the page-level stacking context and
+   is never clipped by ancestor overflow:hidden (e.g. .glass-card,
+   .callout, .detail-toggle) or visually overrun by sibling stacking
+   contexts. Hides the legacy CSS ::after/::before popover when this
+   script is active so we don't render two popovers at once. */
+.has-term-tooltip .term-tip::after,
+.has-term-tooltip .term-tip::before {
+  display: none !important;
+}
+
+.term-tooltip-popover {
+  position: fixed;
+  z-index: 10000;
+  max-width: 280px;
+  padding: 10px 13px;
+  background: var(--pearl-glass-strong, rgba(255, 255, 255, 0.92));
+  color: var(--ink-deep, #141e2d);
+  font: 400 14px/1.5 var(--font-body, "SF Pro Text", -apple-system, BlinkMacSystemFont, sans-serif);
+  letter-spacing: 0;
+  text-align: left;
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.7));
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0, 45, 114, 0.18);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 160ms ease, transform 200ms var(--ease-spring, cubic-bezier(.34, 1.56, .64, 1));
+}
+
+.term-tooltip-popover--above { transform: translateY(4px); }
+.term-tooltip-popover--below { transform: translateY(-4px); }
+
+.term-tooltip-popover[style*="left"] {
+  opacity: 1;
+}
+.term-tooltip-popover[style*="left"][class*="--above"] { transform: translateY(0); }
+.term-tooltip-popover[style*="left"][class*="--below"] { transform: translateY(0); }
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .term-tooltip-popover { background: rgba(255, 255, 255, 0.97); }
+}
+
+@media (max-width: 640px) {
+  .term-tooltip-popover {
+    max-width: 220px;
+    font-size: 13px;
+  }
+}

@@ -44,7 +44,7 @@ body {
    up above) instead of being tightened further. */
 @supports (font-family: Inter) {
   body {
-    line-height: 1.5;
+    line-height: 1.6;
   }
 }
 

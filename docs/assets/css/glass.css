@@ -157,6 +157,13 @@
   animation: none !important;
 }
 
+/* Glass card that lets its children's hover popovers escape the
+   rounded overflow:hidden mask. Used for callouts containing
+   .term-tip / glossary popovers that need to overflow upward. */
+.glass-card--bleed {
+  overflow: visible;
+}
+
 /* ---------- Reduced motion (CSS-side fallback) ---------- */
 
 @media (prefers-reduced-motion: reduce) {

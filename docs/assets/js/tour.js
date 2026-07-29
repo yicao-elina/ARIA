@@ -2,10 +2,10 @@
  * tour.js — Guided, operational walkthrough of the ARIA site.
  *
  * v2 (2026-07-29, revised): "all-holes-at-once" tour.
- *   - Section enters fully clear for 2s (no mask, no callouts, no panel noise).
- *   - After 2s, ALL clickable elements in the section are revealed
- *     simultaneously: each gets an SVG-mask cutout, a dashed-leader
- *     label chip (1, 2, 3...), and a soft breathing ring.
+ *   - Section enters with the mask and holes immediately visible:
+ *     each clickable element in the section is revealed together
+ *     with an SVG-mask cutout, a dashed-leader label chip
+ *     (1, 2, 3...), and a soft breathing ring.
  *   - User clicks each hole (or hits "Do it for me" to automate the
  *     same sequence). Clicking fires the element's action
  *     (open-details / click / change) and the hole settles.
@@ -24,8 +24,8 @@
   // DATA: stops
   // Each stop is a section. The section's `focusPoints` (plus the
   // `actionPoint`, treated as the last hole) are the clickable
-  // elements that get revealed together after a 2s "look at the
-  // section first" beat.
+  // elements that get revealed together as soon as the section
+  // is entered.
   // ════════════════════════════════════════════════════════════════
   const STOPS = [
     {
@@ -133,8 +133,8 @@
         },
       ],
       actionPoint: {
-        selector: '#results-toggles button[data-metric="inverse"]',
-        label: "Switch to Inverse Design — this is where the tier asymmetry really shows.",
+        selector: "#fig-results",
+        label: "This is where the tier asymmetry really shows — forward prediction vs. inverse design.",
         action: { kind: "click" },
       },
     },
@@ -171,7 +171,6 @@
   // ════════════════════════════════════════════════════════════════
   const CONSTANTS = {
     // Per-section timing (ms)
-    CLEAR_BEFORE_REVEAL_MS: 2000,   // fully clear at section entry
     CLEAR_BETWEEN_SECTIONS_MS: 3000, // fully clear after all holes clicked
     MASK_FADE_IN_MS: 380,
     MASK_FADE_OUT_MS: 400,
@@ -476,9 +475,11 @@
 
   // ════════════════════════════════════════════════════════════════
   // RENDERER: hole label
-  // A small numbered/lettered chip with a dashed SVG leader line
-  // to the target element. The chip carries a hover tooltip with
-  // the explanatory text.
+  // A persistent callout pill containing the number AND the
+  // explanatory text, with a dashed SVG leader line to the hole.
+  // The text is always visible at body-text size (no hover-only
+  // tooltip). The pill sits above the hole by default; if there
+  // is no room, it falls back to the right of the hole.
   // ════════════════════════════════════════════════════════════════
   function createHoleLabel(targetEl, label, text) {
     const root = document.createElement("div");
@@ -486,11 +487,11 @@
     const chip = document.createElement("div");
     chip.className = "tour-hole-label__chip";
     chip.textContent = label;
-    const tt = document.createElement("div");
-    tt.className = "tour-hole-label__tooltip";
-    tt.textContent = text || "";
+    const callout = document.createElement("div");
+    callout.className = "tour-hole-label__callout";
+    callout.textContent = text || "";
+    root.appendChild(callout);
     root.appendChild(chip);
-    root.appendChild(tt);
     document.body.appendChild(root);
 
     // Dashed leader line in its own SVG so it can sit behind the chip.
@@ -506,25 +507,26 @@
       const r = targetEl.getBoundingClientRect();
       const tRect = root.getBoundingClientRect();
       const margin = 12;
-      const gap = 26;
-      // Prefer to put the chip above the target; if no room, put it to the right.
+      const gap = 22;
+      // Prefer to put the callout above the target; if no room,
+      // put it to the right of the target.
       const wantTop = r.top - tRect.height - gap > margin;
       let left, top, x1, y1, x2, y2;
       if (wantTop) {
-        // Center horizontally over the target.
+        // Center horizontally over the target, clamped to viewport.
         left = r.left + r.width / 2 - tRect.width / 2;
         left = Math.min(
           Math.max(left, margin),
           window.innerWidth - tRect.width - margin
         );
         top = r.top - tRect.height - gap;
-        // Leader line: from chip's bottom-center to target's top-center.
-        const chipCx = left + tRect.width / 2;
-        const chipBy = top + tRect.height;
+        // Leader line: from callout's bottom-center down to target's top-center.
+        const calloutCx = left + tRect.width / 2;
+        const calloutBy = top + tRect.height;
         const tx = r.left + r.width / 2;
         const ty = r.top;
-        x1 = chipCx;
-        y1 = chipBy;
+        x1 = calloutCx;
+        y1 = calloutBy;
         x2 = tx;
         y2 = ty;
       } else {
@@ -539,12 +541,12 @@
           Math.max(top, margin),
           window.innerHeight - tRect.height - margin
         );
-        const chipL = left;
-        const chipCy = top + tRect.height / 2;
+        const calloutL = left;
+        const calloutCy = top + tRect.height / 2;
         const tx = r.right;
         const ty = r.top + r.height / 2;
-        x1 = chipL;
-        y1 = chipCy;
+        x1 = calloutL;
+        y1 = calloutCy;
         x2 = tx;
         y2 = ty;
       }
@@ -880,9 +882,8 @@
         onEnd: () => this.end(),
       });
       this._mask = createMask(sectionEl);
-      this._mask.root.classList.add("is-fading-in");
-      // Mask starts FADED OUT (clear). We toggle is-fading-out below.
-      this._mask.root.classList.add("is-fading-out");
+      // Mask starts visible (will fade in via the is-fading-in
+      // transition applied in _revealAllHoles()).
 
       // Collect holes.
       const holes = [];
@@ -922,17 +923,15 @@
       }
 
       this._panel = createPanel(this._panelState(stop));
-      this._mode = "revealing"; // technically still in clear beat, but
-      // the panel needs the right primary action.
+      this._mode = "revealing";
       this._refreshPanel();
-      this._setHintOnStop(stop, "clear");
-      this._setHint("");
 
-      // Schedule the "reveal all holes" moment.
-      const revealDelay = utils.reducedMotion() ? 60 : CONSTANTS.CLEAR_BEFORE_REVEAL_MS;
-      this._addTimer(
-        window.setTimeout(() => this._revealAllHoles(), revealDelay)
-      );
+      // Reveal holes and fade in the mask immediately. Use a single
+      // rAF to let the browser paint the freshly-mounted canvas before
+      // the fade-in transition begins.
+      window.requestAnimationFrame(() => {
+        this._revealAllHoles();
+      });
     }
 
     _setHint(text) {
@@ -1229,15 +1228,39 @@
    the breath is a faint inset ring rendered as the rect's
    box-shadow on the section element behind the mask. */
 
-/* ── Tour hole label (chip + dashed leader line) ── */
+/* ── Tour hole label (callout pill with chip + dashed leader line) ── */
 .tour-hole-label {
   position: fixed;
   z-index: ${CONSTANTS.Z_LABEL};
-  pointer-events: auto;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: min(420px, calc(100vw - 32px));
   animation: tour-chip-in ${CONSTANTS.CHIP_ENTRANCE_MS}ms ${CONSTANTS.SPRING} both;
 }
-.tour-hole-label.is-settled { opacity: 0.45; }
+/* The callout is the persistent text label — always visible. */
+.tour-hole-label__callout {
+  font-family: var(--font-display, inherit);
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--apple-text-primary, #002D72);
+  background: rgba(255, 255, 255, 0.96);
+  padding: 7px 12px;
+  border-radius: 10px;
+  box-shadow: 0 4px 14px -4px rgba(4, 8, 18, 0.25),
+              0 0 0 1px rgba(0, 45, 114, 0.12);
+  white-space: normal;
+  text-align: left;
+  /* The text is non-interactive so it never blocks section clicks. */
+  pointer-events: none;
+  user-select: none;
+}
+/* The chip keeps its own click target so clicking the number still
+   fires the hole action (the click listener is on the parent root). */
 .tour-hole-label__chip {
+  flex: 0 0 auto;
   width: 28px;
   height: 28px;
   border-radius: 50%;
@@ -1252,6 +1275,7 @@
   box-shadow: 0 4px 14px -4px rgba(4, 8, 18, 0.55),
               0 0 0 4px rgba(104, 172, 229, 0.22);
   cursor: pointer;
+  pointer-events: auto;
   transition: transform 0.2s ${CONSTANTS.SPRING},
               box-shadow 0.2s ${CONSTANTS.SMOOTH};
   user-select: none;
@@ -1261,30 +1285,10 @@
   box-shadow: 0 6px 18px -4px rgba(4, 8, 18, 0.6),
               0 0 0 6px rgba(104, 172, 229, 0.35);
 }
-.tour-hole-label__tooltip {
-  position: absolute;
-  left: 50%;
-  top: calc(100% + 8px);
-  transform: translateX(-50%);
-  width: max-content;
-  max-width: 240px;
-  padding: 6px 10px;
-  border-radius: 8px;
-  background: var(--apple-primary, #002D72);
-  color: #fff;
-  font-size: 11.5px;
-  line-height: 1.35;
-  white-space: normal;
-  text-align: left;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.15s ${CONSTANTS.SMOOTH};
-  box-shadow: 0 6px 16px -4px rgba(4, 8, 18, 0.4);
-  z-index: 1;
-}
-.tour-hole-label:hover .tour-hole-label__tooltip {
-  opacity: 1;
-}
+/* On settled state, the callout stays at full opacity (so the user
+   can still read the explanation while the action's effect persists),
+   and the leader line dims to a moderate level — still visible, just
+   less emphatic than before. */
 .tour-hole-label.is-settled .tour-hole-label__chip {
   cursor: default;
 }
@@ -1308,7 +1312,9 @@
   opacity: 0.85;
   transition: opacity 0.3s ${CONSTANTS.SMOOTH};
 }
-.tour-hole-label__line.is-settled { opacity: 0.25; }
+/* Settled leader line: visible but de-emphasized (between the
+   previous 0.25 and the unsuppressed 0.85). */
+.tour-hole-label__line.is-settled { opacity: 0.5; }
 
 /* ── Tour panel (bottom-right) ── */
 .tour-panel {
