@@ -56,22 +56,22 @@
   --font-body:     "SF Pro Text", "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 
   /* ── Typography: Size Scale ── */
-  --text-hero:           56px;
-  --text-display-lg:     40px;
-  --text-display-md:     34px;
-  --text-lead:           28px;
-  --text-lead-airy:      24px;
-  --text-tagline:        21px;
-  --text-body:           17px;
-  --text-body-strong:    17px;
-  --text-dense-link:     17px;
-  --text-caption:        14px;
-  --text-caption-strong: 14px;
-  --text-button-large:   18px;
-  --text-button-utility: 14px;
-  --text-fine-print:     12px;
-  --text-micro-legal:    10px;
-  --text-nav-link:       12px;
+  --text-hero:           58px;
+  --text-display-lg:     42px;
+  --text-display-md:     36px;
+  --text-lead:           29px;
+  --text-lead-airy:      25px;
+  --text-tagline:        22px;
+  --text-body:           18px;
+  --text-body-strong:    18px;
+  --text-dense-link:     18px;
+  --text-caption:        15px;
+  --text-caption-strong: 15px;
+  --text-button-large:   19px;
+  --text-button-utility: 15px;
+  --text-fine-print:     13px;
+  --text-micro-legal:    11px;
+  --text-nav-link:       13px;
 
   /* ── Typography: Weight ── */
   --weight-light:     300;
@@ -94,17 +94,21 @@
   --leading-fine-print:   1.0;
   --leading-nav-link:     1.0;
 
-  /* ── Typography: Letter Spacing ── */
-  --tracking-hero:         -0.28px;
+  /* ── Typography: Letter Spacing ──
+     Loosened relative to strict SF Pro metrics: Inter (our actual
+     rendered fallback, since "SF Pro Text/Display" never resolve as
+     named web fonts) has a denser default spacing, so body/caption/
+     fine-print tracking is opened up for comfortable reading. */
+  --tracking-hero:         -0.22px;
   --tracking-display-lg:   0;
-  --tracking-display-md:   -0.374px;
-  --tracking-lead:         0.196px;
-  --tracking-lead-airy:    0;
-  --tracking-tagline:      0.231px;
-  --tracking-body:         -0.374px;
-  --tracking-caption:      -0.224px;
-  --tracking-fine-print:   -0.12px;
-  --tracking-nav-link:     -0.12px;
+  --tracking-display-md:   -0.28px;
+  --tracking-lead:         0.24px;
+  --tracking-lead-airy:    0.1px;
+  --tracking-tagline:      0.28px;
+  --tracking-body:         -0.14px;
+  --tracking-caption:      -0.06px;
+  --tracking-fine-print:   0.05px;
+  --tracking-nav-link:     0.05px;
 
   /* ── Spacing ── */
   --sp-xxs:     4px;

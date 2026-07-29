@@ -37,11 +37,14 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Inter-specific tuning (per DESIGN-apple.md §Note on Font Substitutes) */
+/* Inter-specific tuning (per DESIGN-apple.md §Note on Font Substitutes)
+   Inter has a taller x-height than SF Pro, so line-height is nudged up
+   slightly rather than tightened, keeping paragraphs airy instead of
+   cramped; letter-spacing is left at --tracking-body (already opened
+   up above) instead of being tightened further. */
 @supports (font-family: Inter) {
   body {
-    letter-spacing: -0.01em;
-    line-height: 1.44;  /* tighten from 1.47 by 0.03 for Inter's taller x-height */
+    line-height: 1.5;
   }
 }
 

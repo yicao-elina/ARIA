@@ -162,6 +162,7 @@
       this.buttons = [];
       this.queries.forEach((qi, i) => {
         const btn = bar.append('button')
+          .attr('class', 'tunneling-example-btn')
           .style('padding', '6px 14px')
           .style('border', `2px solid ${i === 0 ? this.colors.primary : this.colors.border}`)
           .style('border-radius', '6px')
@@ -240,6 +241,7 @@
         .style('margin-bottom', '4px')
         .text('Shared Query');
       this.queryBanner.append('div')
+        .attr('class', 'tunneling-query-text')
         .style('font-size', '16px')
         .style('font-weight', 600)
         .style('color', this.colors.primary)
@@ -263,6 +265,7 @@
       panelEl.html('');
 
       const card = panelEl.append('div')
+        .attr('class', type === 'baseline' ? 'tunneling-panel--baseline' : 'tunneling-panel--naive-kg')
         .style('background', '#fff')
         .style('border', `1px solid ${this.colors.border}`)
         .style('border-radius', '10px')
@@ -310,6 +313,7 @@
             .style('transition', 'background 180ms ease');
         } else if (seg.type === 'red') {
           span
+            .attr('class', 'tunneling-segment--error')
             .style('background', this.colors.dangerBg)
             .style('padding', '1px 5px')
             .style('border-radius', '5px')
