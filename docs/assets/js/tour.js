@@ -4,14 +4,20 @@
  * v2 (2026-07-29, revised): "all-holes-at-once" tour.
  *   - Section enters with the mask and holes immediately visible:
  *     each clickable element in the section is revealed together
- *     with an SVG-mask cutout, a dashed-leader label chip
- *     (1, 2, 3...), and a soft breathing ring.
- *   - User clicks each hole (or hits "Do it for me" to automate the
- *     same sequence). Clicking fires the element's action
- *     (open-details / click / change) and the hole settles.
- *   - When all holes are clicked, the mask fades out, the section
- *     returns to fully clear for 3s, then the panel "Next" breathes
- *     to prompt the user to advance.
+ *     with an SVG-mask cutout, a small numbered/lettered chip, and
+ *     a dashed leader line connecting the chip to the target.
+ *     The mask "descends" with a slow (~800ms) fade-in so the
+ *     dimmed layer feels intentional, not instant.
+ *   - The explanatory callout text is NOT shown initially. It pops
+ *     in (with a dashed-line connector) only when the user clicks
+ *     the chip OR anywhere inside the highlighted cutout area.
+ *   - "Do it for me" reveals each callout in sequence (one at a
+ *     time, each connected to its hole by a dashed line) and then
+ *     fires the action.
+ *   - After all holes are clicked, the mask STAYS visible. The
+ *     user dismisses the mask by clicking anywhere on the dimmed
+ *     (non-cutout) area of the section; then the mask fades out
+ *     and the panel "Next" button becomes the next action.
  *
  * Self-contained page chrome. No dependencies. Self-initializes on
  * DOMContentLoaded (guarded for the case the script executes after
@@ -171,14 +177,20 @@
   // ════════════════════════════════════════════════════════════════
   const CONSTANTS = {
     // Per-section timing (ms)
-    CLEAR_BETWEEN_SECTIONS_MS: 3000, // fully clear after all holes clicked
-    MASK_FADE_IN_MS: 380,
-    MASK_FADE_OUT_MS: 400,
+    // After the user has clicked all the highlighted cutout holes and
+    // read every callout, the mask STAYS VISIBLE. The user dismisses
+    // the mask by clicking anywhere on the dimmed (non-cutout) area;
+    // then the mask fades out and the panel "Next" begins breathing.
+    // No automatic clear-beat timer.
+    MASK_FADE_IN_MS: 800,   // slow fade-in: shadow "descends" softly
+    MASK_FADE_OUT_MS: 500,
     CHIP_ENTRANCE_MS: 320,
     BREATH_PERIOD_MS: 2000,
     NEXT_BREATH_PERIOD_MS: 2400,
     // Auto-play pacing
     AUTO_PLAY_GAP_MS: 1000,
+    CALLOUT_REVEAL_MS: 380, // time for the callout to pop in before action fires
+    AUTO_PLAY_SETTLE_MS: 1400, // pause after auto-play completes, then auto-dismiss mask
     // Z-indices
     Z_CANVAS: 499,
     Z_MASK: 460,
@@ -344,6 +356,11 @@
     layer.setAttribute("height", "100%");
     layer.setAttribute("fill", "rgba(6, 10, 22, 0.45)");
     layer.setAttribute("mask", "url(#tour-mask-cutout)");
+    // The layer is purely visual; clicks on it pass through to the
+    // section below. The mask-dismiss click is caught by a section-
+    // level handler in SiteTour (added in _goto), so that we can
+    // distinguish "click on a cutout element" from "click on the
+    // dimmed area" reliably.
     root.appendChild(layer);
 
     function render() {
@@ -492,6 +509,10 @@
     callout.textContent = text || "";
     root.appendChild(callout);
     root.appendChild(chip);
+    // Callout starts hidden — only the chip + dashed leader line are
+    // visible. The callout appears when the user clicks the chip OR
+    // anywhere inside the highlighted (cutout) area, and then persists.
+    root.classList.add("is-callout-hidden");
     document.body.appendChild(root);
 
     // Dashed leader line in its own SVG so it can sit behind the chip.
@@ -571,13 +592,21 @@
       line.classList.add("is-settled");
     }
 
+    function revealCallout() {
+      root.classList.remove("is-callout-hidden");
+    }
+
+    function isCalloutRevealed() {
+      return !root.classList.contains("is-callout-hidden");
+    }
+
     function destroy() {
       root.remove();
       svg.remove();
     }
 
     place();
-    return { root, svg, line, place, settle, destroy };
+    return { root, svg, line, place, settle, revealCallout, isCalloutRevealed, destroy };
   }
 
   // ════════════════════════════════════════════════════════════════
@@ -744,6 +773,14 @@
     // and the post-clear beat is over).
     next() {
       if (!this._active) return;
+      // Allow Next from either "dismiss-wait" (mask visible) or
+      // "clearing" (mask dismissed). From "dismiss-wait" we dismiss
+      // the mask first, then advance on the next click.
+      if (this._mode === "dismiss-wait") {
+        this._dismissMask();
+        this._nudgePanel();
+        return;
+      }
       if (this._mode !== "clearing") {
         // Nudge: pulse the panel a bit so the user knows to wait.
         this._nudgePanel();
@@ -785,12 +822,30 @@
         if (i >= self._holes.length) {
           self._autoPlayCancel = null;
           self._settleAllHoles();
+          // After the auto-play sequence, give the user a brief
+          // pause to read the callouts, then auto-dismiss the mask
+          // so the user can click Next. (The manual-click path keeps
+          // the mask up until the user dismisses it themselves.)
+          self._addTimer(
+            window.setTimeout(
+              () => self._dismissMask(),
+              CONSTANTS.AUTO_PLAY_SETTLE_MS
+            )
+          );
           return;
         }
         const h = self._holes[i];
-        self._fireHole(h);
+        // Reveal the callout FIRST, then fire the action. The user
+        // sees the callout pop in (with its dashed leader), then the
+        // action's effect take hold. Pass the label so _fireHole
+        // knows not to re-reveal.
+        const label = self._revealCalloutForHoleIndex(i);
         i += 1;
-        window.setTimeout(step, CONSTANTS.AUTO_PLAY_GAP_MS);
+        window.setTimeout(() => {
+          if (cancelled || !self._active) return;
+          self._fireHole(h, label);
+          window.setTimeout(step, CONSTANTS.AUTO_PLAY_GAP_MS);
+        }, CONSTANTS.CALLOUT_REVEAL_MS);
       };
       window.setTimeout(step, 60);
     }
@@ -836,6 +891,11 @@
         this._panel.destroy();
         this._panel = null;
       }
+      if (this._sectionClickHandler && this._sectionEl) {
+        this._sectionEl.removeEventListener("click", this._sectionClickHandler, true);
+      }
+      this._sectionClickHandler = null;
+      this._sectionEl = null;
       this._labels.forEach((l) => l.destroy());
       this._labels = [];
       this._holes = [];
@@ -926,6 +986,33 @@
       this._mode = "revealing";
       this._refreshPanel();
 
+      // Section-level click handler in capture phase. After all
+      // holes are settled, a click on the dimmed (non-cutout) area
+      // dismisses the mask. Clicks on a cutout area are already
+      // handled by the per-hole capture handler in _revealAllHoles.
+      this._sectionEl = sectionEl;
+      this._sectionClickHandler = (e) => {
+        if (!this._active) return;
+        if (this._mode !== "dismiss-wait") return;
+        // If the click target is inside (or is) a hole element,
+        // the per-hole capture handler already dealt with it. We
+        // only need to dismiss on true "dimmed area" clicks.
+        if (e.target && e.target.closest && this._isHoleEl(e.target)) return;
+        // If the click is on a tour-rendered element (label, chip,
+        // panel, canvas), do nothing — those have their own handlers.
+        if (
+          e.target &&
+          (e.target.closest &&
+            (e.target.closest(".tour-hole-label") ||
+              e.target.closest(".tour-panel") ||
+              e.target.closest(".tour-canvas")))
+        ) {
+          return;
+        }
+        this._dismissMask();
+      };
+      sectionEl.addEventListener("click", this._sectionClickHandler, true);
+
       // Reveal holes and fade in the mask immediately. Use a single
       // rAF to let the browser paint the freshly-mounted canvas before
       // the fade-in transition begins.
@@ -934,12 +1021,16 @@
       });
     }
 
+    _isHoleEl(el) {
+      return this._holes.some((h) => h.el === el || (h.el.contains && h.el.contains(el)));
+    }
+
     _setHint(text) {
       if (this._canvas) this._canvas.setHint(text);
     }
 
     _setHintOnStop(stop, phase) {
-      // phase: 'clear' | 'revealing' | 'clearing' | 'ready'
+      // phase: 'clear' | 'revealing' | 'dismiss-wait' | 'clearing'
       if (phase === "clear") {
         this._setHint("");
       } else if (phase === "revealing") {
@@ -948,6 +1039,8 @@
         } else {
           this._setHint("");
         }
+      } else if (phase === "dismiss-wait") {
+        this._setHint("Click the dimmed area to continue");
       } else if (phase === "clearing") {
         this._setHint("");
       }
@@ -957,6 +1050,15 @@
       if (!this._active) return;
       this._mode = "revealing";
       this._mask.setHoles(this._holes);
+      // If this section has no holes (e.g. PSP / robustness) skip
+      // the mask fade-in — the section is just a "look at this" beat
+      // and the panel Next button is the only thing to click.
+      if (this._holes.length === 0) {
+        this._mode = "dismiss-wait";
+        this._setHintOnStop(this.stops[this._index], "dismiss-wait");
+        this._refreshPanel();
+        return;
+      }
       this._mask.fadeIn();
       this._setHintOnStop(this.stops[this._index], "revealing");
       // Build labels.
@@ -967,15 +1069,50 @@
         label.root.addEventListener("click", (e) => {
           e.preventDefault();
           e.stopPropagation();
-          this._fireHole(h);
+          this._fireHole(h, label);
         });
+        // Click ANYWHERE inside the highlighted (cutout) area also
+        // reveals the callout and fires the hole. Use capture so
+        // the event runs before any inner element's own click
+        // handler, and stop propagation so the inner element does
+        // not see the same click twice.
+        h.el.addEventListener(
+          "click",
+          this._holeClickHandler(h, label),
+          true
+        );
         this._labels.push(label);
       });
       this._refreshPanel();
       this._reposition();
     }
 
-    _fireHole(h) {
+    _holeClickHandler(h, label) {
+      return (e) => {
+        if (!this._active) return;
+        if (this._mode !== "revealing") return;
+        if (label && label.isCalloutRevealed && label.isCalloutRevealed()) {
+          // Callout already revealed — let the inner element handle
+          // the click normally (e.g. a button needs to actually fire
+          // its own handler). Don't double-fire _fireHole.
+          return;
+        }
+        e.preventDefault();
+        e.stopPropagation();
+        this._fireHole(h, label);
+      };
+    }
+
+    _fireHole(h, label) {
+      // If a specific label is passed, reveal its callout first
+      // (the click target is the chip OR somewhere inside the hole).
+      // If no label is passed (e.g. "Do it for me" sequence), the
+      // caller is responsible for revealing the callout beforehand.
+      if (label && !label.isCalloutRevealed()) {
+        label.revealCallout();
+        // Layout shifts when the callout expands (root grows).
+        window.requestAnimationFrame(() => this._reposition());
+      }
       // Fire the action. The element's own click / open / change
       // handlers will mutate the DOM (e.g. expand <details>); the
       // layout will shift, so we re-measure on the next frame.
@@ -989,7 +1126,6 @@
         utils.dispatchClick(h.el);
       }
       this._mask.settleHole(h.el);
-      const lab = this._labels.find((l) => l && l.root.dataset && l.root.dataset.labelKey === h.label);
       // Use a simpler lookup: match by text.
       this._labels.forEach((l) => {
         if (!l || l.root.classList.contains("is-settled")) return;
@@ -1007,33 +1143,47 @@
       }
     }
 
+    _revealCalloutForHoleIndex(i) {
+      const h = this._holes[i];
+      if (!h) return null;
+      const label = this._labels.find(
+        (l) =>
+          l.root.querySelector(".tour-hole-label__chip").textContent ===
+          h.label
+      );
+      if (label) {
+        label.revealCallout();
+        window.requestAnimationFrame(() => this._reposition());
+      }
+      return label;
+    }
+
     _allHolesSettled() {
       if (this._holes.length === 0) return false;
       return this._labels.every((l) => l.root.classList.contains("is-settled"));
     }
 
     _settleAllHoles() {
-      if (this._mode === "clearing" || this._mode === "idle") return;
+      if (
+        this._mode === "dismiss-wait" ||
+        this._mode === "clearing" ||
+        this._mode === "idle"
+      )
+        return;
+      // Mask STAYS visible. The user dismisses the mask by clicking
+      // anywhere on the dimmed (non-cutout) area of the section.
+      // Holes and callouts stay on screen so the user can keep
+      // reading them while they look at the section.
+      this._mode = "dismiss-wait";
+      this._setHintOnStop(this.stops[this._index], "dismiss-wait");
+      this._refreshPanel();
+    }
+
+    _dismissMask() {
+      if (this._mode !== "dismiss-wait") return;
       this._mode = "clearing";
       this._mask.fadeOut();
       this._setHintOnStop(this.stops[this._index], "clearing");
-      this._refreshPanel();
-
-      // After the clear beat, mark as "ready to advance" so the
-      // panel Next button starts breathing.
-      this._clearTimers();
-      this._addTimer(
-        window.setTimeout(
-          () => this._markReady(),
-          CONSTANTS.CLEAR_BETWEEN_SECTIONS_MS
-        )
-      );
-    }
-
-    _markReady() {
-      if (this._mode !== "clearing") return;
-      this._mode = "clearing"; // still clearing visually; the panel
-      // shows Next-breathing because canAdvance is true.
       this._refreshPanel();
     }
 
@@ -1042,10 +1192,18 @@
       const holesDone = this._labels.filter((l) =>
         l.root.classList.contains("is-settled")
       ).length;
+      // "Ready to advance" = mask has been dismissed (clearing mode)
+      // AND all holes are settled. Sections with no holes (e.g. PSP)
+      // advance as soon as the mode is "revealing" or later.
       const canAdvance =
-        this._mode === "clearing" && holesTotal === holesDone;
+        (this._mode === "clearing" || this._mode === "dismiss-wait") &&
+        (holesTotal === holesDone);
       let hint = "";
-      if (this._mode === "clearing" && holesTotal > 0) {
+      if (this._mode === "dismiss-wait" && holesTotal > 0) {
+        hint = "Click the dimmed area to continue";
+      } else if (this._mode === "dismiss-wait" && holesTotal === 0) {
+        hint = "Next to continue";
+      } else if (this._mode === "clearing" && holesTotal > 0) {
         hint = "Section complete — Next to continue";
       } else if (this._mode === "revealing" && holesTotal > 0) {
         hint = "Click the highlighted elements";
@@ -1239,8 +1397,10 @@
   max-width: min(420px, calc(100vw - 32px));
   animation: tour-chip-in ${CONSTANTS.CHIP_ENTRANCE_MS}ms ${CONSTANTS.SPRING} both;
 }
-/* The callout is the persistent text label — always visible. */
+/* Callout starts hidden — only the chip + dashed line are visible
+   until the user clicks the chip OR somewhere inside the hole. */
 .tour-hole-label__callout {
+  display: none;
   font-family: var(--font-display, inherit);
   font-size: 16px;
   font-weight: 500;
@@ -1256,6 +1416,12 @@
   /* The text is non-interactive so it never blocks section clicks. */
   pointer-events: none;
   user-select: none;
+}
+/* When the callout is revealed (user clicked, or Do-it-for-me fired),
+   it slides in from the chip. */
+.tour-hole-label:not(.is-callout-hidden) .tour-hole-label__callout {
+  display: block;
+  animation: tour-callout-in ${CONSTANTS.CHIP_ENTRANCE_MS}ms ${CONSTANTS.SPRING} both;
 }
 /* The chip keeps its own click target so clicking the number still
    fires the hole action (the click listener is on the parent root). */
@@ -1296,6 +1462,11 @@
   0%   { opacity: 0; transform: scale(0.6) translateY(-4px); }
   60%  { opacity: 1; transform: scale(1.08) translateY(0); }
   100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes tour-callout-in {
+  0%   { opacity: 0; transform: translateX(-6px) scale(0.94); }
+  60%  { opacity: 1; transform: translateX(0) scale(1.02); }
+  100% { opacity: 1; transform: translateX(0) scale(1); }
 }
 .tour-hole-label__svg {
   position: fixed;

@@ -153,90 +153,6 @@
   </div>
 </section>
 
-<!-- ======= SECTION 1.5: PAPER FIGURES (with clickable guidance hotspots) ======= -->
-<section class="tile tile--parchment" id="paper-figures">
-  <div class="tile__content" data-reveal-group="figures">
-    <h2 class="reveal">Paper Figures</h2>
-
-    <p class="reveal">
-      Reproduced from the KDD&nbsp;2026 paper. <strong>Click a figure</strong> to enlarge, or <strong>click a numbered hotspot</strong> to jump to the section that uses it.
-    </p>
-
-    <figure class="figure-block glass-card reveal" id="fig-paper-1">
-      <div class="figure-block__stage">
-        <img class="figure-block__image"
-             src="https://raw.githubusercontent.com/yicao-elina/ARIA/main/docs/figures/KDD-Fig1.svg"
-             data-full-src="https://raw.githubusercontent.com/yicao-elina/ARIA/main/docs/figures/KDD-Fig1.svg"
-             alt="KDD Fig 1 - ARIA's three-tier causal cascade. Evidence is activated only when causally complete (Tier 1), transferred from analogs with physical checks (Tier 2), or explicitly flagged as ungrounded (Tier 3)." />
-        <button class="fig-hotspot fig-hotspot--pulse" type="button"
-                data-target="#problem"
-                aria-label="See why adding knowledge can hurt"
-                style="top: 78%; left: 18%;">1</button>
-        <button class="fig-hotspot" type="button"
-                data-target="#psp"
-                aria-label="The Processing-Structure-Property hierarchy"
-                style="top: 30%; left: 50%;">2</button>
-        <button class="fig-hotspot" type="button"
-                data-target="#cascade"
-                aria-label="The three-tier adaptive cascade"
-                style="top: 70%; left: 82%;">3</button>
-      </div>
-      <figcaption class="figure-block__caption">
-        <strong>KDD Fig 1.</strong> ARIA's three-tier causal cascade.
-        Evidence is activated only when causally complete (Tier&nbsp;1), transferred
-        from analogs with physical checks (Tier&nbsp;2), or explicitly flagged as
-        ungrounded (Tier&nbsp;3). <a href="assets/figures/KDD-Fig1.pdf" target="_blank" rel="noopener">View PDF (Fig. 1)</a>
-      </figcaption>
-    </figure>
-
-    <figure class="figure-block glass-card reveal" id="fig-paper-3">
-      <div class="figure-block__stage">
-        <img class="figure-block__image"
-             src="https://raw.githubusercontent.com/yicao-elina/ARIA/main/docs/figures/KDD_Fig3-KG-workflow.svg"
-             data-full-src="https://raw.githubusercontent.com/yicao-elina/ARIA/main/docs/figures/KDD_Fig3-KG-workflow.svg"
-             alt="KDD Fig 3 - Knowledge graph construction pipeline: from literature to PSP relationships." />
-        <button class="fig-hotspot" type="button"
-                data-target="#kg-section"
-                aria-label="Try the interactive Knowledge Graph Explorer"
-                style="top: 35%; left: 25%;">4</button>
-        <button class="fig-hotspot" type="button"
-                data-target="#trace-audit"
-                aria-label="See a full auditable causal trace"
-                style="top: 65%; left: 75%;">5</button>
-      </div>
-      <figcaption class="figure-block__caption">
-        <strong>KDD Fig 3.</strong> Causal Knowledge Graph construction pipeline -
-        from literature to PSP relationships. <a href="#kg-section">Open the interactive explorer</a>
-        to inspect 28 curated MoS2/WS2 relationships.
-      </figcaption>
-    </figure>
-
-    <figure class="figure-block glass-card reveal" id="fig-paper-4">
-      <div class="figure-block__stage">
-        <img class="figure-block__image"
-             src="https://raw.githubusercontent.com/yicao-elina/ARIA/main/docs/figures/KDD_Fig4.svg"
-             data-full-src="https://raw.githubusercontent.com/yicao-elina/ARIA/main/docs/figures/KDD_Fig4.svg"
-             alt="KDD Fig 4 - Tier-specific performance. ARIA's selective evidence activation prevents contextual tunneling while naive KG amplifies it." />
-        <button class="fig-hotspot" type="button"
-                data-target="#results"
-                aria-label="See the results table"
-                style="top: 25%; left: 50%;">6</button>
-        <button class="fig-hotspot" type="button"
-                data-target="#robustness"
-                aria-label="See robustness under edge deletion"
-                style="top: 70%; left: 80%;">7</button>
-      </div>
-      <figcaption class="figure-block__caption">
-        <strong>KDD Fig 4.</strong> Tier-specific performance. ARIA's selective
-        evidence activation prevents contextual tunneling while naive KG amplifies it.
-        <a href="#results">Jump to the results</a> for the per-method breakdown
-        with confidence intervals and 99.2% LLM-judge preference.
-      </figcaption>
-    </figure>
-
-  </div>
-</section>
-
 <!-- ======= SECTION 2: PSP HIERARCHY ======= -->
 <section class="tile tile--light" id="psp">
   <div class="tile__content">
@@ -274,6 +190,9 @@
         </div>
       </details>
     </div>
+    <p class="paper-fig-link">
+      <a href="#fig-paper-1"><span class="paper-fig-link__num">Fig&nbsp;1</span> View the paper's three-tier cascade diagram →</a>
+    </p>
   </div>
 </section>
 
@@ -320,6 +239,9 @@
         ARIA's gating happens at the <strong>reasoning stage</strong>, not the retrieval stage. Existing RAG systems (Self-RAG, GIVE, GNN-RAG) decide <em>what</em> to retrieve. ARIA decides <em>whether to use</em> what was retrieved.
       </p>
     </div>
+    <p class="paper-fig-link">
+      <a href="#fig-paper-1"><span class="paper-fig-link__num">Fig&nbsp;1</span> See this in the paper's full causal cascade →</a>
+    </p>
   </div>
 </section>
 
@@ -361,6 +283,9 @@
         </p>
       </div>
     </details>
+    <p class="paper-fig-link">
+      <a href="#fig-paper-3"><span class="paper-fig-link__num">Fig&nbsp;3</span> See the paper's full KG construction pipeline →</a>
+    </p>
   </div>
 </section>
 
@@ -552,6 +477,9 @@
       <div id="mt-tier-donut"></div>
       <div id="main-table-root"></div>
     </div>
+    <p class="paper-fig-link">
+      <a href="#fig-paper-4"><span class="paper-fig-link__num">Fig&nbsp;4</span> See the paper's tier-specific performance breakdown →</a>
+    </p>
   </div>
 </section>
 
@@ -676,6 +604,90 @@
         </p>
       </div>
     </details>
+  </div>
+</section>
+
+<!-- ======= PAPER FIGURES (appendix-style reference index) ======= -->
+<section class="tile tile--parchment" id="paper-figures">
+  <div class="tile__content" data-reveal-group="figures">
+    <h2 class="reveal">Paper Figures</h2>
+
+    <p class="reveal">
+      Reproduced from the KDD&nbsp;2026 paper as a quick reference. <strong>Click a figure</strong> to enlarge, or <strong>click a numbered hotspot</strong> to jump back to the section that uses it.
+    </p>
+
+    <figure class="figure-block glass-card reveal" id="fig-paper-1">
+      <div class="figure-block__stage">
+        <img class="figure-block__image"
+             src="https://raw.githubusercontent.com/yicao-elina/ARIA/main/docs/figures/KDD-Fig1.svg"
+             data-full-src="https://raw.githubusercontent.com/yicao-elina/ARIA/main/docs/figures/KDD-Fig1.svg"
+             alt="KDD Fig 1 - ARIA's three-tier causal cascade. Evidence is activated only when causally complete (Tier 1), transferred from analogs with physical checks (Tier 2), or explicitly flagged as ungrounded (Tier 3)." />
+        <button class="fig-hotspot fig-hotspot--pulse" type="button"
+                data-target="#problem"
+                aria-label="See why adding knowledge can hurt"
+                style="top: 78%; left: 18%;">1</button>
+        <button class="fig-hotspot" type="button"
+                data-target="#psp"
+                aria-label="The Processing-Structure-Property hierarchy"
+                style="top: 30%; left: 50%;">2</button>
+        <button class="fig-hotspot" type="button"
+                data-target="#cascade"
+                aria-label="The three-tier adaptive cascade"
+                style="top: 70%; left: 82%;">3</button>
+      </div>
+      <figcaption class="figure-block__caption">
+        <strong>KDD Fig 1.</strong> ARIA's three-tier causal cascade.
+        Evidence is activated only when causally complete (Tier&nbsp;1), transferred
+        from analogs with physical checks (Tier&nbsp;2), or explicitly flagged as
+        ungrounded (Tier&nbsp;3). <a href="assets/figures/KDD-Fig1.pdf" target="_blank" rel="noopener">View PDF (Fig. 1)</a>
+      </figcaption>
+    </figure>
+
+    <figure class="figure-block glass-card reveal" id="fig-paper-3">
+      <div class="figure-block__stage">
+        <img class="figure-block__image"
+             src="https://raw.githubusercontent.com/yicao-elina/ARIA/main/docs/figures/KDD_Fig3-KG-workflow.svg"
+             data-full-src="https://raw.githubusercontent.com/yicao-elina/ARIA/main/docs/figures/KDD_Fig3-KG-workflow.svg"
+             alt="KDD Fig 3 - Knowledge graph construction pipeline: from literature to PSP relationships." />
+        <button class="fig-hotspot" type="button"
+                data-target="#kg-section"
+                aria-label="Try the interactive Knowledge Graph Explorer"
+                style="top: 35%; left: 25%;">4</button>
+        <button class="fig-hotspot" type="button"
+                data-target="#trace-audit"
+                aria-label="See a full auditable causal trace"
+                style="top: 65%; left: 75%;">5</button>
+      </div>
+      <figcaption class="figure-block__caption">
+        <strong>KDD Fig 3.</strong> Causal Knowledge Graph construction pipeline -
+        from literature to PSP relationships. <a href="#kg-section">Open the interactive explorer</a>
+        to inspect 28 curated MoS2/WS2 relationships.
+      </figcaption>
+    </figure>
+
+    <figure class="figure-block glass-card reveal" id="fig-paper-4">
+      <div class="figure-block__stage">
+        <img class="figure-block__image"
+             src="https://raw.githubusercontent.com/yicao-elina/ARIA/main/docs/figures/KDD_Fig4.svg"
+             data-full-src="https://raw.githubusercontent.com/yicao-elina/ARIA/main/docs/figures/KDD_Fig4.svg"
+             alt="KDD Fig 4 - Tier-specific performance. ARIA's selective evidence activation prevents contextual tunneling while naive KG amplifies it." />
+        <button class="fig-hotspot" type="button"
+                data-target="#results"
+                aria-label="See the results table"
+                style="top: 25%; left: 50%;">6</button>
+        <button class="fig-hotspot" type="button"
+                data-target="#robustness"
+                aria-label="See robustness under edge deletion"
+                style="top: 70%; left: 80%;">7</button>
+      </div>
+      <figcaption class="figure-block__caption">
+        <strong>KDD Fig 4.</strong> Tier-specific performance. ARIA's selective
+        evidence activation prevents contextual tunneling while naive KG amplifies it.
+        <a href="#results">Jump to the results</a> for the per-method breakdown
+        with confidence intervals and 99.2% LLM-judge preference.
+      </figcaption>
+    </figure>
+
   </div>
 </section>
 

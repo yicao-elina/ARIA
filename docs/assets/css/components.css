@@ -699,6 +699,50 @@
    REMOVED: Hard-coded stats. Data comes from interactive visualizations.
    See .results-toggle for the paper reference toggle. */
 
+/* Outbound link from a body section to the matching paper figure
+   (which lives at the bottom of the page, before References). Low
+   emphasis, single-line, with a small Fig-N badge. */
+.paper-fig-link {
+  margin-top: var(--sp-lg);
+  font-size: var(--text-caption, 15px);
+  text-align: right;
+}
+
+.paper-fig-link a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--apple-ink-muted-80, #333);
+  text-decoration: none;
+  padding: 6px 12px 6px 6px;
+  border-radius: var(--radius-pill, 9999px);
+  background: var(--apple-surface-pearl, #fafafc);
+  border: 1px solid var(--apple-hairline, #e0e0e0);
+  transition: color 200ms ease, border-color 200ms ease, background-color 200ms ease;
+}
+
+.paper-fig-link a:hover,
+.paper-fig-link a:focus-visible {
+  color: var(--apple-primary, #002D72);
+  border-color: var(--mint, #68ACE5);
+  background: var(--mint-soft, rgba(104, 172, 229, 0.10));
+  text-decoration: none;
+}
+
+.paper-fig-link__num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  padding: 3px 9px;
+  font-size: 12px;
+  font-weight: var(--weight-semibold, 600);
+  letter-spacing: 0.02em;
+  color: var(--apple-on-primary, #fff);
+  background: var(--apple-primary, #002D72);
+  border-radius: var(--radius-pill, 9999px);
+}
+
 .toggle-btn {
   padding: 5px 14px;
   border: 2px solid var(--apple-hairline);
