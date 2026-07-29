@@ -15,9 +15,9 @@ class TierRouter {
   // Outer step cadence (ms). Tuned to match the inner D3/CSS transition
   // durations used inside _drawMiniGraph / the .tr-step-panel reveal, so the
   // next step never starts animating before the previous one has settled.
-  static START_DELAY_MS = 350;
-  static STEP_DELAY_MS = 750;
-  static RESULT_DELAY_MS = 500;
+  static START_DELAY_MS = 420;
+  static STEP_DELAY_MS = 900;
+  static RESULT_DELAY_MS = 600;
 
   constructor(containerId) {
     this.container = document.getElementById(containerId);
@@ -196,6 +196,7 @@ class TierRouter {
   runQuery(index) {
     if (index < 0 || index >= this.queries.length) return;
     this._cancelTimers();
+    this._resetPanels();
     this.currentQuery = this.queries[index];
     this.currentStep = -1;
     this.isRunning = true;
@@ -211,6 +212,22 @@ class TierRouter {
     // transition durations (see STEP_DELAY_MS) so the outer scheduler never
     // advances to the next step before the current one has finished animating.
     this._scheduleQueryTimeline();
+  }
+
+  /**
+   * Synchronously clear every step panel and the result panel before a new
+   * run starts, so no visual trace from a previous run lingers while the
+   * new run animates in. Also hides the idle-state prompt, if present.
+   */
+  _resetPanels() {
+    const panels = this.container.querySelectorAll('.tr-step-panel, .tr-result-panel');
+    panels.forEach((panel) => {
+      panel.innerHTML = '';
+      panel.classList.remove('visible');
+    });
+
+    const idlePrompt = this.container.querySelector('.tr-idle-prompt');
+    if (idlePrompt) idlePrompt.remove();
   }
 
   /** Shared step timeline used by both example queries and custom queries. */
@@ -491,6 +508,16 @@ class TierRouter {
   flex-direction: column;
   gap: 14px;
   min-height: 280px;
+}
+
+.tr-idle-prompt {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--tr-text-secondary);
+  padding: 20px 22px;
+  background: var(--tr-bg-card);
+  border: 1px dashed var(--tr-border);
+  border-radius: 10px;
 }
 
 .tr-step-panel {
@@ -980,6 +1007,12 @@ class TierRouter {
     input.type = 'text';
     input.placeholder = 'Enter a materials science query…';
     input.setAttribute('aria-label', 'Materials science query input');
+    // Pre-fill with the Tier 1 example so a user who just presses Tab then
+    // Enter (or clicks Route Query) immediately sees a working demo, rather
+    // than facing an empty input backed only by a placeholder.
+    const defaultQuery = (this.queries[0] && this.queries[0].query)
+      || 'What is the carrier mobility of CVD-grown MoS₂ at 750°C?';
+    input.value = defaultQuery;
     row.appendChild(input);
 
     const btn = this._el('button', 'tr-run-btn');
@@ -1020,6 +1053,17 @@ class TierRouter {
 
   _buildStepContent() {
     const content = this._el('div', 'tr-step-content');
+
+    // Idle-state prompt: shown before any run has started, replacing what
+    // would otherwise be a blank set of step panels. Removed by
+    // _resetPanels() the moment a run starts.
+    if (!this.currentQuery) {
+      const idlePrompt = this._el('div', 'tr-idle-prompt');
+      idlePrompt.textContent =
+        'Click "Route Query" or try one of the example queries below to see ARIA route it through the three-tier cascade.';
+      content.appendChild(idlePrompt);
+    }
+
     // 4 placeholder panels
     for (let i = 1; i <= 4; i++) {
       const panel = this._el('div', 'tr-step-panel');
@@ -1053,6 +1097,8 @@ class TierRouter {
       case 3: this._renderStep3(panel); break;
       case 4: this._renderStep4(panel); break;
     }
+
+    this._scrollIntoViewIfNeeded(panel);
   }
 
   // -- Step 1: Entity Extraction ----------------------------------------------
@@ -1203,7 +1249,7 @@ class TierRouter {
       // Animate edge
       line
         .transition()
-        .duration(260)
+        .duration(300)
         .attr('stroke-opacity', 0.8);
 
       // Confidence label
@@ -1219,8 +1265,8 @@ class TierRouter {
           .attr('opacity', 0)
           .text(`${(e.confidence * 100).toFixed(0)}%`)
           .transition()
-          .delay(220)
-          .duration(180)
+          .delay(250)
+          .duration(200)
           .attr('opacity', 1);
       }
     });
@@ -1241,8 +1287,8 @@ class TierRouter {
         .attr('stroke-width', 2)
         .attr('class', 'tr-node-circle')
         .transition()
-        .delay(i * 90)
-        .duration(240)
+        .delay(i * 100)
+        .duration(270)
         .attr('r', 16);
 
       // Label
@@ -1254,8 +1300,8 @@ class TierRouter {
         .attr('opacity', 0)
         .text(n.label)
         .transition()
-        .delay(i * 90 + 140)
-        .duration(180)
+        .delay(i * 100 + 160)
+        .duration(200)
         .attr('opacity', 1);
     });
 
@@ -1270,8 +1316,8 @@ class TierRouter {
         .attr('opacity', 0)
         .text('Analogical transfer')
         .transition()
-        .delay(380)
-        .duration(180)
+        .delay(430)
+        .duration(200)
         .attr('opacity', 1);
     }
 
@@ -1450,6 +1496,8 @@ class TierRouter {
     panel.appendChild(this._buildComparison(q));
 
     panel.classList.add('visible');
+
+    this._scrollIntoViewIfNeeded(panel);
   }
 
   // -- Tier 1 Details: PSP Path -----------------------------------------------
@@ -1641,6 +1689,7 @@ class TierRouter {
 
   _runCustomQuery(queryText) {
     this._cancelTimers();
+    this._resetPanels();
     this.currentQuery = {
       id: 'custom',
       query: queryText,
@@ -1711,6 +1760,29 @@ class TierRouter {
   _cancelTimers() {
     this.animationTimers.forEach((id) => clearTimeout(id));
     this.animationTimers = [];
+  }
+
+  /**
+   * Scroll `el` into view only when it isn't already reasonably visible in
+   * the viewport (so we don't yank the scroll position on every step when
+   * the user is already looking at the widget). Respects
+   * prefers-reduced-motion by using an instant jump instead of smooth scroll.
+   */
+  _scrollIntoViewIfNeeded(el) {
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+    const margin = 24; // small buffer so panels right at the edge still scroll
+    const isFullyVisible = rect.top >= margin && rect.bottom <= viewportHeight - margin;
+    if (isFullyVisible) return;
+
+    const prefersReducedMotion = window.matchMedia
+      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    el.scrollIntoView({
+      behavior: prefersReducedMotion ? 'auto' : 'smooth',
+      block: 'center',
+    });
   }
 }
 

@@ -148,32 +148,41 @@
   outline: none;
 }
 
-.detail-toggle__body {
+/* .detail-toggle__body is animated via JS (detail-toggle.js), which
+   drives max-height explicitly and toggles the .is-open class — this
+   lets the SAME spring transition play on open AND on close (a plain
+   CSS @keyframes animation only ever plays forward, so close would
+   have snapped shut with no bounce). We override the native
+   details-content display:none so the element stays in the DOM/flow
+   and is animatable both ways. */
+.detail-toggle > .detail-toggle__body {
+  display: block !important;
   overflow: hidden;
   transform-origin: top center;
-  padding-top: 14px;
-  animation: detail-toggle-in 520ms cubic-bezier(.22, 1, .36, 1);
+  max-height: 0;
+  padding-top: 0;
+  opacity: 0;
+  transform: translateY(-10px) scaleY(0.92);
+  transition:
+    max-height 520ms cubic-bezier(.34, 1.56, .64, 1),
+    padding-top 520ms cubic-bezier(.34, 1.56, .64, 1),
+    transform 520ms cubic-bezier(.34, 1.56, .64, 1),
+    opacity 320ms ease;
 }
 
-/* Light, jelly-soft reveal — a gentle overshoot on scale + drift (not a
-   hard bounce): settles just past 100% then eases back, so it feels
-   springy without being stiff or theatrical. */
-@keyframes detail-toggle-in {
-  0%   { opacity: 0;   transform: translateY(-10px) scaleY(0.92); }
-  55%  { opacity: 1;   transform: translateY(1px)   scaleY(1.015); }
-  80%  { transform: translateY(-0.5px) scaleY(0.998); }
-  100% { opacity: 1;   transform: translateY(0)      scaleY(1); }
+.detail-toggle > .detail-toggle__body.is-open {
+  padding-top: 14px;
+  opacity: 1;
+  transform: translateY(0) scaleY(1);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .term-tip::after,
   .term-tip::before,
-  .detail-toggle > summary::before {
+  .detail-toggle > summary::before,
+  .detail-toggle > .detail-toggle__body {
     transition: none;
-  }
-  .detail-toggle__body {
-    animation: none;
   }
 }
 
-body.no-motion .detail-toggle__body { animation: none; }
+body.no-motion .detail-toggle > .detail-toggle__body { transition: none; }
