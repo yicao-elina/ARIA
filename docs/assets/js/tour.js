@@ -156,9 +156,16 @@
       title: "Robustness & Ablation",
       body: "Drag the slider below to simulate progressively deleting knowledge-graph edges and watch how ARIA absorbs the damage compared to a naive KG baseline.",
       actionPoint: {
-        selector: "#robustness-slider",
+        // NOTE: the wrapping <div id="robustness-slider"> (from
+        // index.html) and the <input id="robustness-slider"> it
+        // renders (from robustness-slider.js) share the same id — a
+        // pre-existing duplicate-id quirk in the widget markup. A
+        // bare "#robustness-slider" selector resolves to the DIV
+        // (first in document order), which has no `.value` to drag.
+        // Target the actual range input explicitly.
+        selector: "#robustness-slider input[type=\"range\"]",
         label: "Drag this to delete graph edges and watch ARIA adapt versus a naive KG baseline.",
-        action: { kind: "click" },
+        action: { kind: "drag-range" },
       },
     },
     {
@@ -203,6 +210,7 @@
     CALLOUT_REVEAL_MS: 380, // time for the callout to pop in before action fires
     AUTOPLAY_SCROLL_SETTLE_MS: 420, // pause for the scroll-to-center to land
     AUTO_PLAY_SETTLE_MS: 1400, // pause after auto-play completes, then auto-dismiss mask
+    RANGE_DRAG_MS: 1800, // "Do it for me" duration to smoothly drag a <input type=range> from min to max
     // Z-indices
     Z_CANVAS: 499,
     Z_MASK: 460,
@@ -263,6 +271,53 @@
       el.dispatchEvent(
         new Event("change", { bubbles: true, cancelable: true })
       );
+    },
+    // Smoothly animate a <input type="range"> from its current value
+    // to its max, dispatching a native "input" event every frame so
+    // any listener (e.g. a d3 `.on('input', ...)` handler) redraws
+    // exactly as if the user were dragging the thumb by hand. Ends
+    // with a "change" event, same as releasing the thumb. Respects
+    // prefers-reduced-motion by jumping straight to the end value.
+    animateRange(el, durationMs) {
+      return new Promise((resolve) => {
+        if (!el || typeof el.value === "undefined") {
+          resolve();
+          return;
+        }
+        const min = parseFloat(el.min) || 0;
+        const max = parseFloat(el.max);
+        const to = isNaN(max) ? 100 : max;
+        const from = min;
+        // durationMs === 0 means "jump immediately" (e.g. Skip/Next
+        // fast-forwarding to the finished state) — same snap as
+        // prefers-reduced-motion, just requested explicitly rather
+        // than via a media query.
+        if (utils.reducedMotion() || durationMs === 0) {
+          el.value = to;
+          el.dispatchEvent(new Event("input", { bubbles: true }));
+          el.dispatchEvent(new Event("change", { bubbles: true, cancelable: true }));
+          resolve();
+          return;
+        }
+        const start = performance.now();
+        const duration = durationMs || 1800;
+        function easeInOutCubic(t) {
+          return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        }
+        function frame(now) {
+          const t = Math.min(1, (now - start) / duration);
+          const eased = easeInOutCubic(t);
+          el.value = from + (to - from) * eased;
+          el.dispatchEvent(new Event("input", { bubbles: true }));
+          if (t < 1) {
+            window.requestAnimationFrame(frame);
+          } else {
+            el.dispatchEvent(new Event("change", { bubbles: true, cancelable: true }));
+            resolve();
+          }
+        }
+        window.requestAnimationFrame(frame);
+      });
     },
     wait(ms) {
       return new Promise((resolve) => window.setTimeout(resolve, ms));
@@ -677,25 +732,53 @@
         x2 = tx;
         y2 = ty;
       } else {
-        // Right of the target.
-        left = r.right + gap;
-        left = Math.min(
-          Math.max(left, margin),
-          window.innerWidth - tRect.width - margin
-        );
-        top = r.top + r.height / 2 - tRect.height / 2;
-        top = Math.min(
-          Math.max(top, TOP_SAFE),
-          window.innerHeight - tRect.height - margin
-        );
-        const calloutL = left;
-        const calloutCy = top + tRect.height / 2;
-        const tx = r.right;
-        const ty = r.top + r.height / 2;
-        x1 = calloutL;
-        y1 = calloutCy;
-        x2 = tx;
-        y2 = ty;
+        // Right of the target by default — UNLESS the target itself
+        // is docked near the right edge (e.g. the floating nav rail)
+        // and there simply isn't room to its right; in that case
+        // place the callout to the LEFT of the target instead of
+        // letting it clamp into an overflowing/overlapping spot.
+        const roomRight = window.innerWidth - r.right - gap - margin;
+        const roomLeft = r.left - gap - margin;
+        const wantLeft = roomRight < tRect.width && roomLeft >= tRect.width;
+        if (wantLeft) {
+          left = r.left - gap - tRect.width;
+          left = Math.min(
+            Math.max(left, margin),
+            window.innerWidth - tRect.width - margin
+          );
+          top = r.top + r.height / 2 - tRect.height / 2;
+          top = Math.min(
+            Math.max(top, TOP_SAFE),
+            window.innerHeight - tRect.height - margin
+          );
+          const calloutR = left + tRect.width;
+          const calloutCy = top + tRect.height / 2;
+          const tx = r.left;
+          const ty = r.top + r.height / 2;
+          x1 = calloutR;
+          y1 = calloutCy;
+          x2 = tx;
+          y2 = ty;
+        } else {
+          left = r.right + gap;
+          left = Math.min(
+            Math.max(left, margin),
+            window.innerWidth - tRect.width - margin
+          );
+          top = r.top + r.height / 2 - tRect.height / 2;
+          top = Math.min(
+            Math.max(top, TOP_SAFE),
+            window.innerHeight - tRect.height - margin
+          );
+          const calloutL = left;
+          const calloutCy = top + tRect.height / 2;
+          const tx = r.right;
+          const ty = r.top + r.height / 2;
+          x1 = calloutL;
+          y1 = calloutCy;
+          x2 = tx;
+          y2 = ty;
+        }
       }
       root.style.left = left + "px";
       root.style.top = top + "px";
@@ -892,6 +975,7 @@
       this._onKeydown = this._onKeydown.bind(this);
       this._onViewportChange = this._reposition.bind(this);
       this._rafScheduled = false;
+      this._gotoGen = 0;
       this._injectStyles();
     }
 
@@ -921,6 +1005,22 @@
         next();
         return;
       }
+      // The mask is viewport-fixed (see createMask() above), so it
+      // works just as well for this fixed-position rail as it does
+      // for an in-section hole — reuse the real mask/hole machinery
+      // (same dim + cutout + glow) instead of a bare tooltip.
+      const introMask = createMask();
+      introMask.setHoles([
+        {
+          el: navEl,
+          label: "★",
+          text:
+            "This rail stays put while you explore — jump straight to any section, or open the repo on GitHub. Click anywhere to continue.",
+          action: null,
+        },
+      ]);
+      window.requestAnimationFrame(() => introMask.fadeIn());
+
       const label = createHoleLabel(
         navEl,
         "★",
@@ -928,13 +1028,31 @@
       );
       label.revealCallout();
       label.settle();
+      introMask.settleHole(navEl);
+      // place() was measured while the callout was still hidden
+      // (chip-only width) — re-measure now that it has expanded to
+      // its full text width, or it renders anchored to the wrong
+      // spot and can overflow off-screen.
+      window.requestAnimationFrame(() => label.place());
+
       let done = false;
+      const reposition = () => {
+        if (done) return;
+        introMask.render();
+        introMask.updateHoleRects();
+        label.place();
+      };
+      window.addEventListener("resize", reposition);
+
       const finish = () => {
         if (done) return;
         done = true;
         document.removeEventListener("click", onClick, true);
         document.removeEventListener("keydown", onKey, true);
+        window.removeEventListener("resize", reposition);
         label.destroy();
+        introMask.fadeOut();
+        window.setTimeout(() => introMask.destroy(), CONSTANTS.MASK_FADE_OUT_MS);
         next();
       };
       const onClick = () => finish();
@@ -1086,7 +1204,7 @@
             h.label
         );
         if (label && label.root.classList.contains("is-settled")) return;
-        this._fireHole(h, label);
+        this._fireHole(h, label, { immediate: true });
       });
       // Catch-all safety net: force anything still not settled
       // (e.g. a hole with no action and no matching label) into its
@@ -1135,8 +1253,8 @@
         this._panel.destroy();
         this._panel = null;
       }
-      if (this._sectionClickHandler && this._sectionEl) {
-        this._sectionEl.removeEventListener("click", this._sectionClickHandler, true);
+      if (this._sectionClickHandler) {
+        document.removeEventListener("click", this._sectionClickHandler, true);
       }
       this._sectionClickHandler = null;
       this._sectionEl = null;
@@ -1182,110 +1300,150 @@
 
       const reduced = utils.reducedMotion();
 
-      // Collect holes BEFORE scrolling so we can check afterward
-      // whether the default section-centered scroll left any of them
-      // off-screen.
-      const holes = [];
-      const fps = stop.focusPoints || [];
-      fps.forEach((p) => {
-        const el = utils.getEl(p.selector);
-        if (el) {
-          holes.push({
-            el,
-            label: "",
-            text: p.label || "",
-            action: p.action || null,
-          });
-        }
-      });
-      if (stop.actionPoint) {
-        const el = utils.getEl(stop.actionPoint.selector);
-        if (el) {
-          holes.push({
-            el,
-            label: "",
-            text: stop.actionPoint.label || "",
-            action: stop.actionPoint.action || null,
-          });
-        }
-      }
-      // Number holes 1, 2, 3...
-      holes.forEach((h, i) => {
-        h.label = String(i + 1);
-      });
-      this._holes = holes;
-      const useLetters = stop.labels === "letters";
-      if (useLetters) {
-        this._holes.forEach((h, i) => {
-          h.label = String.fromCharCode("a".charCodeAt(0) + i);
+      // Some section widgets (KG explorer, tier router, PSP cascade,
+      // robustness slider, etc.) mount their interactive DOM lazily
+      // via IntersectionObserver (see main.js `lazyInit`), which
+      // fires asynchronously. If the tour reaches a stop before that
+      // has resolved, a selector like the actual <input type=range>
+      // may not exist yet. Poll briefly for any missing focus/action
+      // point elements before building the step's UI, rather than
+      // silently treating a stop with real holes as hole-less. This
+      // adds latency only in that (rare) race — the common case where
+      // everything is already mounted resolves on the very first try.
+      const gotoGen = ++this._gotoGen;
+      const collectHoles = () => {
+        const collected = [];
+        const fps = stop.focusPoints || [];
+        fps.forEach((p) => {
+          const el = utils.getEl(p.selector);
+          if (el) {
+            collected.push({
+              el,
+              label: "",
+              text: p.label || "",
+              action: p.action || null,
+            });
+          }
         });
+        if (stop.actionPoint) {
+          const el = utils.getEl(stop.actionPoint.selector);
+          if (el) {
+            collected.push({
+              el,
+              label: "",
+              text: stop.actionPoint.label || "",
+              action: stop.actionPoint.action || null,
+            });
+          }
+        }
+        return collected;
+      };
+      const expectedHoleCount =
+        (stop.focusPoints || []).length + (stop.actionPoint ? 1 : 0);
+
+      const finishGoto = (holes) => {
+        if (gotoGen !== this._gotoGen || !this._active) return;
+        // Number holes 1, 2, 3...
+        holes.forEach((h, i) => {
+          h.label = String(i + 1);
+        });
+        this._holes = holes;
+        const useLetters = stop.labels === "letters";
+        if (useLetters) {
+          this._holes.forEach((h, i) => {
+            h.label = String.fromCharCode("a".charCodeAt(0) + i);
+          });
+        }
+
+        // Default: center the section as a whole, same as before. Only
+        // correct the scroll afterward if that leaves one of this
+        // stop's hole targets off-screen or behind the sticky header —
+        // e.g. a very tall section like Results, where a hole near the
+        // top and one much lower can't both be "centered" at once.
+        sectionEl.scrollIntoView({
+          behavior: reduced ? "auto" : "smooth",
+          block: "center",
+        });
+        if (holes.length > 0) {
+          this._scheduleHoleVisibilityCorrection(
+            holes.map((h) => h.el),
+            reduced
+          );
+        }
+
+        // Build the canvas frame, mask, and panel up front so the
+        // "clear" beat already has its chrome in place.
+        this._canvas = createCanvasFrame(sectionEl, {
+          stepNumber: this._index + 1,
+          totalSteps: this.stops.length,
+          sectionTitle: stop.title,
+          onEnd: () => this.end(),
+        });
+        this._mask = createMask();
+        // Mask starts visible (will fade in via the is-fading-in
+        // transition applied in _revealAllHoles()).
+
+        this._panel = createPanel(this._panelState(stop));
+        this._mode = "revealing";
+        this._refreshPanel();
+
+        // Document-level click handler in capture phase (the mask is
+        // now a global viewport overlay, not scoped to this section —
+        // so the "click the dimmed area to dismiss" affordance has to
+        // work anywhere on the page, not just inside sectionEl). After
+        // all holes are settled, a click on the dimmed (non-cutout)
+        // area dismisses the mask. Clicks on a cutout area are already
+        // handled by the per-hole capture handler in _revealAllHoles.
+        this._sectionEl = sectionEl;
+        this._sectionClickHandler = (e) => {
+          if (!this._active) return;
+          if (this._mode !== "dismiss-wait") return;
+          // If the click target is inside (or is) a hole element,
+          // the per-hole capture handler already dealt with it. We
+          // only need to dismiss on true "dimmed area" clicks.
+          if (e.target && e.target.closest && this._isHoleEl(e.target)) return;
+          // If the click is on a tour-rendered element (label, chip,
+          // panel, canvas), do nothing — those have their own handlers.
+          if (
+            e.target &&
+            (e.target.closest &&
+              (e.target.closest(".tour-hole-label") ||
+                e.target.closest(".tour-panel") ||
+                e.target.closest(".tour-canvas")))
+          ) {
+            return;
+          }
+          this._dismissMask();
+        };
+        document.addEventListener("click", this._sectionClickHandler, true);
+
+        // Reveal holes and fade in the mask immediately. Use a single
+        // rAF to let the browser paint the freshly-mounted canvas
+        // before the fade-in transition begins.
+        window.requestAnimationFrame(() => {
+          this._revealAllHoles();
+        });
+      };
+
+      const firstPass = collectHoles();
+      if (firstPass.length >= expectedHoleCount) {
+        finishGoto(firstPass);
+        return;
       }
-
-      // Default: center the section as a whole, same as before. Only
-      // correct the scroll afterward if that leaves one of this
-      // stop's hole targets off-screen or behind the sticky header —
-      // e.g. a very tall section like Results, where a hole near the
-      // top and one much lower can't both be "centered" at once.
-      sectionEl.scrollIntoView({
-        behavior: reduced ? "auto" : "smooth",
-        block: "center",
-      });
-      if (holes.length > 0) {
-        this._scheduleHoleVisibilityCorrection(
-          holes.map((h) => h.el),
-          reduced
-        );
-      }
-
-      // Build the canvas frame, mask, and panel up front so the
-      // "clear" beat already has its chrome in place.
-      this._canvas = createCanvasFrame(sectionEl, {
-        stepNumber: this._index + 1,
-        totalSteps: this.stops.length,
-        sectionTitle: stop.title,
-        onEnd: () => this.end(),
-      });
-      this._mask = createMask();
-      // Mask starts visible (will fade in via the is-fading-in
-      // transition applied in _revealAllHoles()).
-
-      this._panel = createPanel(this._panelState(stop));
-      this._mode = "revealing";
-      this._refreshPanel();
-
-      // Section-level click handler in capture phase. After all
-      // holes are settled, a click on the dimmed (non-cutout) area
-      // dismisses the mask. Clicks on a cutout area are already
-      // handled by the per-hole capture handler in _revealAllHoles.
-      this._sectionEl = sectionEl;
-      this._sectionClickHandler = (e) => {
-        if (!this._active) return;
-        if (this._mode !== "dismiss-wait") return;
-        // If the click target is inside (or is) a hole element,
-        // the per-hole capture handler already dealt with it. We
-        // only need to dismiss on true "dimmed area" clicks.
-        if (e.target && e.target.closest && this._isHoleEl(e.target)) return;
-        // If the click is on a tour-rendered element (label, chip,
-        // panel, canvas), do nothing — those have their own handlers.
-        if (
-          e.target &&
-          (e.target.closest &&
-            (e.target.closest(".tour-hole-label") ||
-              e.target.closest(".tour-panel") ||
-              e.target.closest(".tour-canvas")))
-        ) {
+      const RETRY_MS = 120;
+      const MAX_RETRIES = 12; // ~1.4s ceiling
+      let attempt = 0;
+      const retry = () => {
+        if (gotoGen !== this._gotoGen || !this._active) return;
+        attempt += 1;
+        const found = collectHoles();
+        if (found.length >= expectedHoleCount || attempt >= MAX_RETRIES) {
+          finishGoto(found);
           return;
         }
-        this._dismissMask();
+        window.setTimeout(retry, RETRY_MS);
       };
-      sectionEl.addEventListener("click", this._sectionClickHandler, true);
-
-      // Reveal holes and fade in the mask immediately. Use a single
-      // rAF to let the browser paint the freshly-mounted canvas before
-      // the fade-in transition begins.
-      window.requestAnimationFrame(() => {
-        this._revealAllHoles();
-      });
+      window.setTimeout(retry, RETRY_MS);
     }
 
     // After the default section-centered scroll, check whether it
@@ -1487,6 +1645,8 @@
           if (h.action.kind === "click") utils.dispatchClick(h.el);
           else if (h.action.kind === "open-details") utils.openDetails(h.el);
           else if (h.action.kind === "change") utils.dispatchChange(h.el);
+          else if (h.action.kind === "drag-range")
+            utils.animateRange(h.el, opts.immediate ? 0 : CONSTANTS.RANGE_DRAG_MS);
         } else {
           // No action: still "settle" the hole so the user gets
           // feedback that they did the right thing.
@@ -1932,9 +2092,12 @@
   to   { opacity: 1; transform: scale(1); }
 }
 
-/* ── Tour mask (SVG cutouts) ── */
+/* ── Tour mask (SVG cutouts) ──
+   Fixed to the viewport (not the section) so the dark shadow is a
+   single global dimming layer that fades in/out all at once,
+   regardless of which section is the active tour step. */
 .tour-mask-svg {
-  position: absolute;
+  position: fixed;
   inset: 0;
   z-index: ${CONSTANTS.Z_MASK};
   pointer-events: none;
