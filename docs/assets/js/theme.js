@@ -38,10 +38,10 @@
       var cs = getComputedStyle(root);
 
       return {
-        // Apple core colors
-        primary:        cs.getPropertyValue('--apple-primary').trim()         || '#0066cc',
-        primaryFocus:   cs.getPropertyValue('--apple-primary-focus').trim()  || '#0071e3',
-        primaryOnDark:  cs.getPropertyValue('--apple-primary-on-dark').trim()|| '#2997ff',
+        // Apple/Morandi-JHU core colors
+        primary:        cs.getPropertyValue('--apple-primary').trim()         || '#002D72',
+        primaryFocus:   cs.getPropertyValue('--apple-primary-focus').trim()  || '#1a3d8f',
+        primaryOnDark:  cs.getPropertyValue('--apple-primary-on-dark').trim()|| '#68ACE5',
         ink:            cs.getPropertyValue('--apple-ink').trim()             || '#1d1d1f',
         inkMuted80:     cs.getPropertyValue('--apple-ink-muted-80').trim()  || '#333333',
         inkMuted48:     cs.getPropertyValue('--apple-ink-muted-48').trim()  || '#7a7a7a',
@@ -54,21 +54,21 @@
         hairline:       cs.getPropertyValue('--apple-hairline').trim()      || '#e0e0e0',
         dividerSoft:    cs.getPropertyValue('--apple-divider-soft').trim()  || '#f0f0f0',
 
-        // Tier colors
-        tier1:   cs.getPropertyValue('--tier-1').trim()   || '#0066cc',
-        tier1Bg: cs.getPropertyValue('--tier-1-bg').trim()|| 'rgba(0, 102, 204, 0.08)',
-        tier2:   cs.getPropertyValue('--tier-2').trim()   || '#c9930a',
-        tier2Bg: cs.getPropertyValue('--tier-2-bg').trim()|| 'rgba(201, 147, 10, 0.10)',
-        tier3:   cs.getPropertyValue('--tier-3').trim()   || '#86868b',
-        tier3Bg: cs.getPropertyValue('--tier-3-bg').trim()|| 'rgba(134, 134, 139, 0.08)',
+        // Tier colors (Morandi-JHU)
+        tier1:   cs.getPropertyValue('--tier-1').trim()   || '#002D72',
+        tier1Bg: cs.getPropertyValue('--tier-1-bg').trim()|| 'rgba(0, 45, 114, 0.06)',
+        tier2:   cs.getPropertyValue('--tier-2').trim()   || '#A99400',
+        tier2Bg: cs.getPropertyValue('--tier-2-bg').trim()|| 'rgba(169, 148, 0, 0.08)',
+        tier3:   cs.getPropertyValue('--tier-3').trim()   || '#6c7a92',
+        tier3Bg: cs.getPropertyValue('--tier-3-bg').trim()|| 'rgba(108, 122, 146, 0.06)',
 
-        // Semantic colors
-        success:      cs.getPropertyValue('--aria-success').trim()      || '#34c759',
-        successBg:    cs.getPropertyValue('--aria-success-bg').trim()  || 'rgba(52, 199, 89, 0.08)',
-        warning:      cs.getPropertyValue('--aria-warning').trim()     || '#ff9f0a',
-        warningBg:    cs.getPropertyValue('--aria-warning-bg').trim()  || 'rgba(255, 159, 10, 0.10)',
-        danger:       cs.getPropertyValue('--aria-danger').trim()      || '#ff3b30',
-        dangerBg:     cs.getPropertyValue('--aria-danger-bg').trim()  || 'rgba(255, 59, 48, 0.08)',
+        // Semantic colors (Morandi-JHU)
+        success:      cs.getPropertyValue('--aria-success').trim()      || '#2a8a6e',
+        successBg:    cs.getPropertyValue('--aria-success-bg').trim()  || 'rgba(42, 138, 110, 0.08)',
+        warning:      cs.getPropertyValue('--aria-warning').trim()     || '#A99400',
+        warningBg:    cs.getPropertyValue('--aria-warning-bg').trim()  || 'rgba(169, 148, 0, 0.10)',
+        danger:       cs.getPropertyValue('--aria-danger').trim()      || '#b8504a',
+        dangerBg:     cs.getPropertyValue('--aria-danger-bg').trim()  || 'rgba(184, 80, 74, 0.08)',
 
         // Light context aliases (everything is light)
         text:       cs.getPropertyValue('--apple-ink').trim()             || '#1d1d1f',
@@ -77,7 +77,7 @@
         cardBg:     cs.getPropertyValue('--apple-canvas').trim()         || '#ffffff',
         gridLine:   cs.getPropertyValue('--apple-hairline').trim()      || '#e0e0e0',
         border:     cs.getPropertyValue('--apple-divider-soft').trim()  || '#f0f0f0',
-        accent:     cs.getPropertyValue('--apple-primary').trim()       || '#0066cc',
+        accent:     cs.getPropertyValue('--apple-primary').trim()       || '#002D72',
       };
     },
 

@@ -115,7 +115,7 @@
     }
     html += '</td>';
     var col = data.columns.find(function (c) { return c.key === state.highlightKey; });
-    var color = getCSSVar(row.color_token) || '#0066cc';
+    var color = getCSSVar(row.color_token) || '#002D72';
     html += '<td class="mt-td mt-td--bar">' + miniBar(row[state.highlightKey], col.min, col.max, color) + '</td>';
     cols.forEach(function (c) {
       var v = row[c.key];

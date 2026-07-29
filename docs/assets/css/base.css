@@ -125,7 +125,7 @@ strong, b {
 }
 
 /* ── Links ──
-   Action Blue (#0066cc) for every interactive element. Period. */
+   JHU Heritage Blue (#002D72) for every interactive element. Period. */
 a {
   color: var(--apple-primary);
   text-decoration: none;
@@ -134,18 +134,18 @@ a {
 
 a:hover {
   text-decoration: underline;
-  color: var(--mint);
+  color: var(--spirit-blue, #68ACE5);
 }
 
 a:focus-visible {
-  outline: 2px solid var(--mint);
+  outline: 2px solid var(--spirit-blue, #68ACE5);
   outline-offset: 2px;
   border-radius: var(--radius-xs);
 }
 
-/* Global keyboard focus ring — overrides component-level outlines with mint */
+/* Global keyboard focus ring — Spirit Blue halo across the page */
 :focus-visible {
-  outline: 2px solid var(--mint);
+  outline: 2px solid var(--spirit-blue, #68ACE5);
   outline-offset: 2px;
 }
 
@@ -224,6 +224,6 @@ hr {
 
 /* ── Selection ── */
 ::selection {
-  background: rgba(0, 102, 204, 0.15);
+  background: rgba(0, 45, 114, 0.15);
   color: var(--apple-ink);
 }

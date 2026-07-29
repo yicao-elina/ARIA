@@ -17,6 +17,10 @@
   border-radius: var(--radius-md);
   padding: 24px;
   overflow: hidden;
+  /* Reserve a sensible box even before the image decodes (or if it never
+     does — see .figure-block__fallback below) so layout doesn't jump and
+     hotspots never land on top of raw alt text. */
+  min-height: 320px;
 }
 
 .figure-block__image {
@@ -26,6 +30,38 @@
   cursor: zoom-in;
   user-select: none;
   -webkit-user-drag: none;
+}
+
+/* Image failed to load (e.g. a cloud-sync placeholder that hasn't
+   hydrated). Hide the native broken-image icon + overflowing alt text;
+   figure-viewer.js injects .figure-block__fallback in its place. */
+.figure-block__image--broken {
+  display: none;
+}
+
+.figure-block__fallback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-sm);
+  min-height: 272px;
+  padding: var(--sp-xl);
+  background: var(--apple-parchment);
+  border-radius: var(--radius-sm);
+  color: var(--apple-ink-muted-48);
+  text-align: center;
+}
+
+.figure-block__fallback-icon {
+  font-size: 32px;
+  opacity: 0.5;
+}
+
+.figure-block__fallback-text {
+  font-size: var(--text-caption);
+  letter-spacing: var(--tracking-caption);
+  max-width: 420px;
 }
 
 .figure-block__caption {
@@ -80,7 +116,7 @@
 .fig-hotspot:focus-visible {
   transform: translate(-50%, -50%) scale(1.15);
   background: var(--apple-primary-focus);
-  box-shadow: 0 4px 16px rgba(0, 102, 204, 0.35);
+  box-shadow: 0 4px 16px rgba(0, 45, 114, 0.35);
   outline: none;
 }
 
@@ -220,9 +256,9 @@
 
 /* Pulse on the section a hotspot links to */
 @keyframes fig-pulse-target {
-  0%   { box-shadow: 0 0 0 0   rgba(0, 102, 204, 0.45); }
-  50%  { box-shadow: 0 0 0 12px rgba(0, 102, 204, 0.18); }
-  100% { box-shadow: 0 0 0 0   rgba(0, 102, 204, 0); }
+  0%   { box-shadow: 0 0 0 0   rgba(0, 45, 114, 0.45); }
+  50%  { box-shadow: 0 0 0 12px rgba(0, 45, 114, 0.18); }
+  100% { box-shadow: 0 0 0 0   rgba(0, 45, 114, 0); }
 }
 
 .fig-pulse-target {

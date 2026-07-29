@@ -26,7 +26,11 @@ class TierRouter {
 
     // Color palette from Apple design theme
     this.colors = ARIA.theme.getColors(this.container);
-    // Dark tile overrides (tier-router lives in a dark tile)
+    // Light-tile overrides (tier-router lives in a parchment/light tile).
+    // NOTE: this widget was originally styled for a "dark tile" context but
+    // is now embedded inside a light .tile--parchment section, so its
+    // background/card/border colors must use the LIGHT palette — otherwise
+    // dark text renders on a dark background and disappears.
     const c = this.colors;
     this.colors = Object.assign({}, c, {
       tier1:       c.tier1,
@@ -38,14 +42,14 @@ class TierRouter {
       successGreen: c.success,
       warningAmber: c.warning,
       insufficientGrey: c.tier3,
-      bgDark:      c.surfaceTile1,
-      bgCard:      c.surfaceTile2,
-      bgCardHover: c.surfaceTile3,
-      border:      c.border,
-      textPrimary: c.text,
-      textSecondary: c.textMuted,
-      textMuted:   c.textMuted,
-      accentBlue:  c.accent,
+      bgDark:      c.parchment,         // light section background
+      bgCard:      c.canvas,            // white card on parchment
+      bgCardHover: c.surfacePearl,      // hover wash on white card
+      border:      c.hairline,          // light hairline border
+      textPrimary: c.ink,               // near-black on light bg
+      textSecondary: c.inkMuted80,      // muted near-black on light bg
+      textMuted:   c.inkMuted48,        // fine-print gray on light bg
+      accentBlue:  c.accent,            // action blue (light-context)
     });
 
     this.stepDefs = [
@@ -796,7 +800,7 @@ class TierRouter {
 }
 
 .tr-constraint-icon.fail {
-  color: #ff3b30;
+  color: #b8504a;
   font-weight: 700;
 }
 
@@ -837,7 +841,7 @@ class TierRouter {
 
 .tr-comparison-card.overconfident {
   border-top: 3px solid var(--tr-accent);
-  border-top-color: #ff3b30;
+  border-top-color: #b8504a;
 }
 
 .tr-comparison-card.calibrated {
@@ -853,7 +857,7 @@ class TierRouter {
 }
 
 .tr-comparison-card.overconfident .tr-comparison-label {
-  color: #ff3b30;
+  color: #b8504a;
 }
 
 .tr-comparison-card.calibrated .tr-comparison-label {
@@ -1555,7 +1559,7 @@ class TierRouter {
 
     const flag = this._el('div');
     flag.style.cssText =
-      'display:flex;align-items:center;gap:8px;font-size:14px;color:#ff3b30;margin-bottom:8px;';
+      'display:flex;align-items:center;gap:8px;font-size:14px;color:#b8504a;margin-bottom:8px;';
     flag.innerHTML = '<span style="font-size:18px">⚠</span> <strong>High Uncertainty</strong> — No causal evidence available';
     section.appendChild(flag);
 
