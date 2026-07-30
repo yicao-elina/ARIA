@@ -209,8 +209,12 @@
     },
     {
       // Tour handoff step. Highlights the BibTeX block + the GitHub
-      // link so the user can READ them (no auto-jump); advancing
-      // once reaches the closing "Tour complete" screen below.
+      // link so the user can READ them; the user must explicitly
+      // click the link themselves (the tour does NOT auto-navigate
+      // or open a new tab). Both are focusPoints only — neither has
+      // an action, so _holeClickHandler prevents default and the
+      // tour never dispatches a click on the anchor. Advancing once
+      // reaches the closing "Tour complete" screen below.
       id: "appendix",
       title: "Where to go next",
       body: "Code, KG JSON, and benchmark data live on GitHub. If ARIA helps your work, a citation is the best way to support future development — the BibTeX entry below is one click away.",
@@ -219,11 +223,11 @@
           selector: '#bibtex-content',
           label: "The BibTeX entry below — use the Copy button on the block to grab it for your paper.",
         },
+        {
+          selector: '#appendix a[href*="github.com/yicao-elina/aria"]',
+          label: "Code, data, and benchmark JSONs live on GitHub — click the link whenever you want; the tour won't open it for you.",
+        },
       ],
-      actionPoint: {
-        selector: '#appendix a[href*="github.com/yicao-elina/aria"]',
-        label: "Code, data, and benchmark JSONs live on GitHub — star or fork to follow the work.",
-      },
     },
     {
       // Pure completion screen. No mask, no holes, no auto-link —
@@ -1687,12 +1691,27 @@
       return (e) => {
         if (!this._active) return;
         if (this._mode !== "revealing") return;
+        // Anchor hole: the tour uses an <a href> target only as a
+        // read-only "look at this" annotation (e.g. the GitHub link
+        // in the closing handoff). The user reads the callout, then
+        // chooses whether to navigate — the tour itself must NEVER
+        // auto-follow or auto-open the link just because the user
+        // clicked inside the highlighted cutout. PreventDefault on
+        // EVERY click on an anchor hole so a stray hit in the mask
+        // can't fire a real navigation.
+        const isAnchorHole =
+          h.el && h.el.matches && h.el.matches("a[href]");
+        if (isAnchorHole) {
+          e.preventDefault();
+        }
         if (label && label.isCalloutRevealed && label.isCalloutRevealed()) {
-          // Callout already revealed — let the inner element handle
-          // the click natively (e.g. a <details> summary needs the
-          // browser's default toggle to actually open the body).
-          // Don't double-fire _fireHole.
-          return;
+          // Callout already revealed — for non-anchor holes, let the
+          // inner element handle the click natively (e.g. a <details>
+          // summary needs the browser's default toggle to actually
+          // open the body). For anchor holes there's nothing native
+          // we want (we already prevented the navigation), so fall
+          // through to _fireHole which just settles the hole.
+          if (!isAnchorHole) return;
         }
         if (h.action && h.action.kind === "open-details") {
           const details = h.el.closest("details");
