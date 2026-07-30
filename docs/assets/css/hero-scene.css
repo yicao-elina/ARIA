@@ -105,3 +105,33 @@
 .hero-scene__card:focus-within {
   transform: translateX(calc(var(--scene-progress) * 6vw)) translateY(-4px);
 }
+
+/* ---------- Reduced motion / explicit kill-switch ----------
+   Mirrors the body.no-motion convention already used in glass.css.
+   Both cases show the fully settled end-state statically, with no
+   pinned scroll track (hero-scene.js also short-circuits to
+   --scene-progress: 1 for prefers-reduced-motion — see Task 2). */
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-scene {
+    height: auto;
+  }
+  .hero-scene__sticky {
+    position: static;
+    height: auto;
+  }
+  .hero-scene__logo-half {
+    display: none;
+  }
+}
+
+body.no-motion .hero-scene {
+  height: auto;
+}
+body.no-motion .hero-scene__sticky {
+  position: static;
+  height: auto;
+}
+body.no-motion .hero-scene__logo-half {
+  display: none;
+}
