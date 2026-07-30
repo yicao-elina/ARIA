@@ -208,26 +208,30 @@
       },
     },
     {
-      // Closing handoff: tour has walked through every concept, now
-      // point the user to where the work lives and how to cite it.
-      // Targeting the appendix means we don't need a new <section>;
-      // its References heading + GitHub link + BibTeX block are all
-      // already in the right place for this purpose.
+      // Closing handoff. Pure completion screen — no mask, no
+      // auto-jump to GitHub, no interactive highlights. The panel
+      // body is the only thing the user sees: a short "you finished
+      // the tour" + the two long-term options (code/data on GitHub,
+      // citation via BibTeX). Clicking Finish (or End) here dismisses
+      // the tour without forcing a navigation.
       id: "appendix",
-      title: "Where to go next",
-      body: "Code, KG JSON, and benchmark data live on GitHub. If ARIA helps your work, a citation is the best way to support future development — the BibTeX entry below is one click away.",
-      // The BibTeX block has a Copy button (top-right); cut it out
-      // so the user notices it during the closing panel.
-      focusPoints: [
-        {
-          selector: '#bibtex-content',
-          label: "The BibTeX entry below — use the Copy button on the block to grab it for your paper.",
-        },
-      ],
-      actionPoint: {
-        selector: '#appendix a[href*="github.com/yicao-elina/aria"]',
-        label: "Code, data, and benchmark JSONs live on GitHub — star or fork to follow the work.",
-      },
+      title: "Tour complete",
+      // Panel-only prose (not the section `body`). Painted onto the
+      // bottom-right panel itself so the user gets a clear "you
+      // finished" beat without being forced to navigate anywhere
+      // (no auto-link to GitHub, no auto-link to BibTeX).
+      panelMessage:
+        "Nice work — you've seen the whole causal-aware pipeline, from the problem ARIA solves, through the PSP reasoning backbone and auditable trace, to the benchmark results.\n\n" +
+        "Two things for later:\n" +
+        "• Code, KG JSON, and benchmark data → the GitHub link in this section's References paragraph.\n" +
+        "• Citing the paper → the BibTeX block further down (the Copy button grabs it in one click).",
+      noScroll: true,
+      noCanvas: true,
+      // Marker for _panelState: swap the primary button text from
+      // "Next ▸" (which on the last stop ends the tour anyway) to
+      // "Finish ✓" so the action visibly matches a completion screen
+      // rather than a "forward to nowhere" affordance.
+      isFinale: true,
     },
   ];
 
@@ -942,6 +946,15 @@
     title.className = "tour-panel__title";
     root.appendChild(title);
 
+    // Optional body copy (e.g. the closing congratulatory handoff).
+    // Most stops already convey their message via title + the cutout
+    // label callouts; only stops that explicitly need the panel itself
+    // to carry prose (today: the closing tour-complete handoff) set
+    // this. Hidden when empty so it doesn't waste vertical space.
+    const body = document.createElement("div");
+    body.className = "tour-panel__body";
+    root.appendChild(body);
+
     const hint = document.createElement("div");
     hint.className = "tour-panel__hint";
     root.appendChild(hint);
@@ -971,6 +984,21 @@
       progLabel.textContent = "Guided Tour";
       progress.appendChild(progLabel);
       title.textContent = state.sectionTitle;
+      // Optional panel-only prose (currently only the closing
+      // handoff uses it). The STOPS `body` field is the section
+      // description that already goes to the tile content; if we
+      // re-painted it here it would be redundant on every step.
+      // `panelMessage` is a separate, optional, panel-only prose
+      // channel reserved for stops whose message IS the panel —
+      // typically the closing congratulatory handoff.
+      if (state.panelMessage) {
+        // Preserve intentional line breaks from the STOPS data.
+        body.textContent = state.panelMessage;
+        body.classList.add("is-visible");
+      } else {
+        body.textContent = "";
+        body.classList.remove("is-visible");
+      }
       if (state.hint) {
         hint.textContent = state.hint;
         hint.classList.add("is-visible");
@@ -1007,6 +1035,16 @@
         primary.classList.add("tour-btn--breathing");
         primary.addEventListener("click", function () {
           state.onNext && state.onNext();
+        });
+      } else if (state.isFinale) {
+        // Closing tour-stop. No mask/holes/hint — just a Finish
+        // button that ends the tour. The body copy on the panel
+        // carries the message ("you finished, here's where to
+        // grab code and how to cite").
+        primary.textContent = "Finish ✓";
+        primary.classList.remove("tour-btn--breathing");
+        primary.addEventListener("click", function () {
+          state.onEnd && state.onEnd();
         });
       } else if (state.holesTotal > 0) {
         primary.textContent = "Do it for me ▶";
@@ -1998,6 +2036,13 @@
         stepNumber: this._index,
         totalSteps: this.stops.length - 1,
         sectionTitle: stop.title,
+        // Panel-only prose. Distinct from `stop.body` (the section
+        // description), so most stops pass "" here and the closing
+        // handoff can paint congratulatory copy on the panel itself.
+        panelMessage: stop.panelMessage || "",
+        // Closing handoff: swap "Next ▸" for "Finish ✓" so the action
+        // visibly matches what it does (end the tour, not advance).
+        isFinale: !!stop.isFinale,
         holesTotal,
         holesDone,
         canAdvance,
@@ -2387,6 +2432,28 @@
 .tour-panel__hint.is-visible {
   opacity: 0.85;
   max-height: 40px;
+}
+/* Optional panel-only prose for stops whose message IS the panel
+   (currently the closing tour-complete handoff). Hidden when empty
+   so most stops keep their compact title + hint layout. The visible
+   state uses white-space:pre-wrap so the STOPS data can use real
+   "\n\n" between paragraphs and "•" for bullets. */
+.tour-panel__body {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--apple-text-secondary, inherit);
+  margin-top: 4px;
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  white-space: pre-wrap;
+  transition: opacity 0.3s ${CONSTANTS.SMOOTH},
+              max-height 0.3s ${CONSTANTS.SMOOTH};
+}
+.tour-panel__body.is-visible {
+  opacity: 0.92;
+  max-height: 320px;
+  overflow-y: auto;
 }
 .tour-panel__controls {
   display: flex;
