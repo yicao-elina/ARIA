@@ -207,6 +207,28 @@
         action: { kind: "open-details" },
       },
     },
+    {
+      // Closing handoff: tour has walked through every concept, now
+      // point the user to where the work lives and how to cite it.
+      // Targeting the appendix means we don't need a new <section>;
+      // its References heading + GitHub link + BibTeX block are all
+      // already in the right place for this purpose.
+      id: "appendix",
+      title: "Where to go next",
+      body: "Code, KG JSON, and benchmark data live on GitHub. If ARIA helps your work, a citation is the best way to support future development — the BibTeX entry below is one click away.",
+      // The BibTeX block has a Copy button (top-right); cut it out
+      // so the user notices it during the closing panel.
+      focusPoints: [
+        {
+          selector: '#bibtex-content',
+          label: "The BibTeX entry below — use the Copy button on the block to grab it for your paper.",
+        },
+      ],
+      actionPoint: {
+        selector: '#appendix a[href*="github.com/yicao-elina/aria"]',
+        label: "Code, data, and benchmark JSONs live on GitHub — star or fork to follow the work.",
+      },
+    },
   ];
 
   // ════════════════════════════════════════════════════════════════

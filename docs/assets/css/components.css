@@ -952,6 +952,9 @@
 }
 
 /* ── BibTeX Block ── */
+.bibtex-wrap {
+  position: relative;
+}
 #bibtex-content {
   background: var(--apple-parchment);
   padding: 17px;
@@ -961,6 +964,75 @@
   white-space: pre;
   font-family: "SF Mono", "Fira Code", Consolas, monospace;
   line-height: 1.5;
+  /* Leave room at the top-right so the floating copy button never
+     covers the first line of BibTeX content on small screens. */
+  padding-top: 44px;
+}
+.bibtex-copy-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: 9999px;
+  border: 1px solid rgba(0, 45, 114, 0.18);
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(10px) saturate(180%);
+  -webkit-backdrop-filter: blur(10px) saturate(180%);
+  color: var(--apple-primary, #002D72);
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  box-shadow: 0 2px 8px -3px rgba(4, 8, 18, 0.2),
+              inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transition: background 0.15s ease,
+              transform 0.15s ease,
+              box-shadow 0.2s ease,
+              color 0.2s ease,
+              border-color 0.2s ease;
+}
+.bibtex-copy-btn:hover {
+  background: rgba(104, 172, 229, 0.18);
+  transform: translateY(-1px);
+  border-color: rgba(0, 45, 114, 0.3);
+}
+.bibtex-copy-btn:active {
+  transform: translateY(0);
+}
+.bibtex-copy-btn:focus-visible {
+  outline: 2px solid var(--apple-primary-focus, #1a3d8f);
+  outline-offset: 2px;
+}
+.bibtex-copy-btn svg {
+  flex: 0 0 auto;
+}
+.bibtex-copy-btn.copied,
+.bibtex-copy-btn.is-copied {
+  background: rgba(52, 199, 89, 0.18);
+  border-color: rgba(52, 199, 89, 0.45);
+  color: #1f7a3a;
+}
+@media (prefers-color-scheme: dark) {
+  .bibtex-copy-btn {
+    background: rgba(20, 26, 40, 0.7);
+    border-color: rgba(255, 255, 255, 0.18);
+    color: var(--apple-primary-on-dark, #68ACE5);
+  }
+  .bibtex-copy-btn:hover {
+    background: rgba(104, 172, 229, 0.22);
+    border-color: rgba(104, 172, 229, 0.45);
+  }
+  .bibtex-copy-btn.copied,
+  .bibtex-copy-btn.is-copied {
+    background: rgba(52, 199, 89, 0.22);
+    border-color: rgba(52, 199, 89, 0.5);
+    color: #6ee7a3;
+  }
 }
 /* ── Tier 1/3 badge tokens (Apple-tier color binding) ── */
 .tier-badge--tier1 { background: var(--tier-1); }
