@@ -295,6 +295,97 @@
   transform: scale(0.95);
 }
 
+/* Preview modal for .paper-fig-link "Fig N →" links: a small centered
+   card (thumbnail + caption) so clicking doesn't jump straight to the
+   bottom Paper Figures section. "View full figure" scrolls there. */
+.fig-preview-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9998;
+  padding: 5vh 5vw;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.fig-preview-modal.is-open {
+  display: flex;
+  opacity: 1;
+}
+
+.fig-preview-modal__card {
+  position: relative;
+  background: var(--apple-canvas);
+  border-radius: var(--radius-md);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+  padding: var(--sp-xl);
+  max-width: min(560px, 92vw);
+  max-height: 88vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-sm);
+}
+
+.fig-preview-modal__image {
+  display: block;
+  max-width: 100%;
+  max-height: 40vh;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--apple-divider-soft);
+  cursor: zoom-in;
+}
+
+.fig-preview-modal__caption {
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+  letter-spacing: var(--tracking-caption);
+  color: var(--apple-ink-muted-48);
+  text-align: center;
+}
+
+.fig-preview-modal__caption strong {
+  color: var(--apple-ink);
+  font-weight: var(--weight-semibold);
+}
+
+.fig-preview-modal__cta {
+  margin-top: var(--sp-xs);
+}
+
+.fig-preview-modal__close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--apple-parchment);
+  color: var(--apple-ink);
+  border: none;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.fig-preview-modal__close:hover {
+  background: var(--apple-divider-soft);
+  transform: scale(1.05);
+}
+
+.fig-preview-modal__close:active {
+  transform: scale(0.95);
+}
+
 /* Pulse on the section a hotspot links to */
 @keyframes fig-pulse-target {
   0%   { box-shadow: 0 0 0 0   rgba(0, 45, 114, 0.45); }
