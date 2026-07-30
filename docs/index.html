@@ -47,10 +47,10 @@
 <!-- ==================== FLOATING PILL HEADER ==================== -->
 <header class="app-header" id="nav-rail" role="banner">
   <a class="hp-avatar" href="#abstract" aria-label="Back to top">
-    <img src="assets/figures/ARIA-logo.svg" alt="ARIA" />
+    <img src="assets/figures/ARIA-A.svg" alt="ARIA" />
   </a>
   <a class="hp-icon" href="#problem" aria-label="The Problem" data-tilt>
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" aria-hidden="true"><path d="M9 17H7a5 5 0 0 1 0-10h2"/><path d="M15 7h2a5 5 0 0 1 0 10h-2"/><path d="M8 12h6M14 12l-2 2M14 12l-2-2"/></svg>
     <span class="hp-tooltip">The Problem</span>
   </a>
   <a class="hp-icon" href="#psp" aria-label="PSP Hierarchy" data-tilt>
@@ -85,51 +85,75 @@
 <!-- ======= HERO / ABSTRACT ======= -->
 <section class="tile tile--parchment tile--hero" id="abstract">
   <div class="mesh mesh--hero" aria-hidden="true"></div>
-  <div class="hero-scene" id="hero-scene">
-    <div class="hero-scene__sticky">
-      <div class="tile__content">
-        <h1 class="hero-title reveal">ARIA: A Causal-Aware Framework for Rescuing LLM Reasoning in Materials Discovery</h1>
-        <p class="hero-subtitle reveal">Gating knowledge on causal completeness to prevent <em>contextual tunneling</em> in LLMs</p>
-        <p class="hero-authors reveal">
-          <a class="term-tip term-tip--below" href="https://yicao-elina.github.io/yicao-elina/" target="_blank" rel="noopener" data-tip="Chemical and Biomolecular Engineering, Johns Hopkins University · ycao73@jh.edu">Yi Cao<sup class="byline-mark byline-mark--dagger">†</sup></a>,
-          <a class="term-tip term-tip--below" href="https://scholar.google.com/citations?user=RPw7AlUAAAAJ&amp;hl=zh-CN" target="_blank" rel="noopener" data-tip="Computer Science, Johns Hopkins University · lwang240@jh.edu">Liaoyaqi Wang<sup class="byline-mark byline-mark--dagger">†</sup></a>,
-          <a class="term-tip term-tip--below" href="http://www.jienengchen.com/" target="_blank" rel="noopener" data-tip="Computer Science, Johns Hopkins University · jchen293@jhu.edu">Jieneng Chen</a>,
-          <a class="term-tip term-tip--below" href="https://www.cs.jhu.edu/~vandurme/" target="_blank" rel="noopener" data-tip="Computer Science, Johns Hopkins University · vandurme@jhu.edu">Benjamin Van Durme<sup class="byline-mark byline-mark--star">*</sup></a>,
-          <a class="term-tip term-tip--below" href="https://www.cs.jhu.edu/~ayuille/" target="_blank" rel="noopener" data-tip="Computer Science, Johns Hopkins University · ayuille1@jhu.edu">Alan Yuille<sup class="byline-mark byline-mark--star">*</sup></a>,
-          <a class="term-tip term-tip--below" href="https://engineering.jhu.edu/chembe/faculty/paulette-clancy/" target="_blank" rel="noopener" data-tip="Chemical and Biomolecular Engineering, Johns Hopkins University · pclancy3@jhu.edu">Paulette Clancy<sup class="byline-mark byline-mark--star">*</sup></a>
-        </p>
-        <p class="hero-authors-legend reveal">
-          <span class="byline-legend-item"><span class="byline-mark byline-mark--star">*</span> Corresponding author</span>
-          <span class="byline-legend-sep" aria-hidden="true">·</span>
-          <span class="byline-legend-item"><span class="byline-mark byline-mark--dagger">†</span> Equal contribution</span>
-        </p>
-        <p class="hero-date reveal">KDD 2026 · AI for Sciences Track</p>
-        <div class="hero-cta reveal">
-          <a href="https://github.com/yicao-elina/aria" class="sub-nav__cta" target="_blank" rel="noopener">Code &amp; Data</a>
-          <a href="#problem" class="toggle-btn">Explore ↓</a>
-          <button type="button" id="tour-start-btn" class="toggle-btn tour-cta">Take a Tour</button>
+
+  <!-- Logo scene: a fixed viewport overlay, so it can NEVER affect any
+       text position — it is not part of the document flow at all while
+       resting. On load it sits at subtitle/byline height (computed by
+       hero-scene.js from the actual rendered position of that text, so
+       it self-adjusts to however the title wraps), translucent, split
+       apart at the true left/right screen edges, like wings. As the
+       page scrolls, the halves converge and sharpen (eased — slow at
+       first, faster once roughly half-scrolled — see hero-scene.js),
+       while this overlay itself stays glued to that same screen
+       position (the text scrolls past beneath/around it, since it's
+       fixed). Once scrolling carries the blank #hero-scene-slot (below,
+       right before .hero-lead) up to that same screen position, JS
+       hands this element off from position:fixed to position:absolute
+       pinned exactly there — it "lands" in the slot, fully merged and
+       100% sharp, and from that instant on scrolls normally with the
+       rest of the page, like any in-flow content. -->
+  <div class="hero-scene" id="hero-scene" aria-hidden="true">
+    <div class="hero-scene__logo-zone">
+      <div class="hero-scene__logo-half hero-scene__logo-half--left"></div>
+      <div class="hero-scene__logo-half hero-scene__logo-half--right"></div>
+    </div>
+  </div>
+
+  <div class="tile__content">
+    <h1 class="hero-title reveal">ARIA: A Causal-Aware Framework for Rescuing LLM Reasoning in Materials Discovery</h1>
+    <p class="hero-subtitle reveal">Gating knowledge on causal completeness to prevent <em>contextual tunneling</em> in LLMs</p>
+
+    <p class="hero-authors reveal">
+      <a class="term-tip term-tip--below" href="https://yicao-elina.github.io/yicao-elina/" target="_blank" rel="noopener" data-tip="Chemical and Biomolecular Engineering, Johns Hopkins University · ycao73@jh.edu">Yi Cao<sup class="byline-mark byline-mark--dagger">†</sup></a>,
+      <a class="term-tip term-tip--below" href="https://scholar.google.com/citations?user=RPw7AlUAAAAJ&amp;hl=zh-CN" target="_blank" rel="noopener" data-tip="Computer Science, Johns Hopkins University · lwang240@jh.edu">Liaoyaqi Wang<sup class="byline-mark byline-mark--dagger">†</sup></a>,
+      <a class="term-tip term-tip--below" href="http://www.jienengchen.com/" target="_blank" rel="noopener" data-tip="Computer Science, Johns Hopkins University · jchen293@jhu.edu">Jieneng Chen</a>,
+      <a class="term-tip term-tip--below" href="https://www.cs.jhu.edu/~vandurme/" target="_blank" rel="noopener" data-tip="Computer Science, Johns Hopkins University · vandurme@jhu.edu">Benjamin Van Durme<sup class="byline-mark byline-mark--star">*</sup></a>,
+      <a class="term-tip term-tip--below" href="https://www.cs.jhu.edu/~ayuille/" target="_blank" rel="noopener" data-tip="Computer Science, Johns Hopkins University · ayuille1@jhu.edu">Alan Yuille<sup class="byline-mark byline-mark--star">*</sup></a>,
+      <a class="term-tip term-tip--below" href="https://engineering.jhu.edu/chembe/faculty/paulette-clancy/" target="_blank" rel="noopener" data-tip="Chemical and Biomolecular Engineering, Johns Hopkins University · pclancy3@jhu.edu">Paulette Clancy<sup class="byline-mark byline-mark--star">*</sup></a>
+    </p>
+    <p class="hero-authors-legend reveal">
+      <span class="byline-legend-item"><span class="byline-mark byline-mark--star">*</span> Corresponding author</span>
+      <span class="byline-legend-sep" aria-hidden="true">·</span>
+      <span class="byline-legend-item"><span class="byline-mark byline-mark--dagger">†</span> Equal contribution</span>
+    </p>
+    <p class="hero-date reveal">KDD 2026 · AI for Sciences Track</p>
+
+    <div class="hero-cta reveal">
+      <a href="https://github.com/yicao-elina/aria" class="sub-nav__cta" target="_blank" rel="noopener">Code &amp; Data</a>
+      <a href="#problem" class="toggle-btn">Explore ↓</a>
+      <button type="button" id="tour-start-btn" class="toggle-btn tour-cta">Take a Tour</button>
+    </div>
+
+    <!-- Blank landing slot for #hero-scene above — real reserved flow
+         space (pushes .hero-lead down to clear it), empty/invisible at
+         rest. -->
+    <div class="hero-scene-slot" id="hero-scene-slot" aria-hidden="true"></div>
+
+    <div class="hero-lead">
+      <p class="reveal">
+        Naively augmenting LLMs with knowledge graph evidence can <em>degrade</em> performance—over-anchoring on correct-but-incomplete evidence. <strong>ARIA</strong> fixes this with a three-tier cascade that gates evidence on <em>causal completeness</em>.
+      </p>
+      <details class="detail-toggle glass-card glass-card--compact glass-card--no-float reveal hero-scene__card">
+        <summary>What you'll explore in this article</summary>
+        <div class="detail-toggle__body">
+          <ul>
+            <li>Why adding knowledge can hurt, and the failure mode we call <em>contextual tunneling</em></li>
+            <li>The Processing–Structure–Property (PSP) hierarchy and what makes a causal chain <em>complete</em></li>
+            <li>How ARIA's three-tier cascade decides <em>when</em> to use retrieved evidence</li>
+            <li>An auditable causal trace you can inspect end-to-end</li>
+          </ul>
         </div>
-        <div class="hero-scene__logo-zone" aria-hidden="true">
-          <div class="hero-scene__logo-half hero-scene__logo-half--left"></div>
-          <div class="hero-scene__logo-half hero-scene__logo-half--right"></div>
-        </div>
-        <div class="hero-lead">
-          <p class="reveal">
-            Naively augmenting LLMs with knowledge graph evidence can <em>degrade</em> performance—over-anchoring on correct-but-incomplete evidence. <strong>ARIA</strong> fixes this with a three-tier cascade that gates evidence on <em>causal completeness</em>.
-          </p>
-          <details class="detail-toggle glass-card glass-card--compact glass-card--no-float reveal hero-scene__card">
-            <summary>What you'll explore in this article</summary>
-            <div class="detail-toggle__body">
-              <ul>
-                <li>Why adding knowledge can hurt, and the failure mode we call <em>contextual tunneling</em></li>
-                <li>The Processing–Structure–Property (PSP) hierarchy and what makes a causal chain <em>complete</em></li>
-                <li>How ARIA's three-tier cascade decides <em>when</em> to use retrieved evidence</li>
-                <li>An auditable causal trace you can inspect end-to-end</li>
-              </ul>
-            </div>
-          </details>
-        </div>
-      </div>
+      </details>
     </div>
   </div>
 </section>
