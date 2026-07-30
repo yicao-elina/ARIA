@@ -319,46 +319,74 @@
   // ---------------------------------------------------------------------------
 
   function initCopyBibtex() {
-    var copyBtn = qs('#copy-bibtex');
-    if (!copyBtn) return;
+    var bibtexEl = qs('#bibtex-content');
+    if (!bibtexEl) return;
 
-    copyBtn.addEventListener('click', function (e) {
-      e.preventDefault();
-      var bibtexEl = qs('#bibtex-content');
-      if (!bibtexEl) return;
+    // Wire every button that asks to copy the BibTeX block. The
+    // legacy `Copy BibTeX` text link in the appendix paragraph and
+    // the floating inline `Copy` button in the top-right of the
+    // <pre> both go through the same clipboard path — they only
+    // differ in how they show feedback (icon button reveals a
+    // "Copied!" green state; link swaps text briefly).
+    var copyButtons = qsa('[data-copy-bibtex], #copy-bibtex, #copy-bibtex-inline');
+    if (!copyButtons.length) return;
 
+    function flashSuccess(btn) {
+      if (!btn) return;
+      // Both buttons get a "copied" hook so CSS can flip the icon
+      // button to its green pill. The legacy text link is what the
+      // original swap-text path was written for.
+      var isIconBtn = btn.id === 'copy-bibtex-inline' || btn.querySelector('.bibtex-copy-btn__label');
+      var labelEl = btn.querySelector('.bibtex-copy-btn__label');
+      if (isIconBtn && labelEl) {
+        var prevText = labelEl.textContent;
+        btn.classList.add('copied', 'is-copied');
+        labelEl.textContent = 'Copied!';
+        setTimeout(function () {
+          btn.classList.remove('copied', 'is-copied');
+          labelEl.textContent = prevText;
+        }, 1800);
+      } else {
+        var prev = btn.textContent;
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(function () {
+          btn.textContent = prev;
+          btn.classList.remove('copied');
+        }, 2000);
+      }
+    }
+
+    function copyText() {
       var text = bibtexEl.textContent.trim();
-      navigator.clipboard
-        .writeText(text)
-        .then(function () {
-          var original = copyBtn.textContent;
-          copyBtn.textContent = 'Copied!';
-          copyBtn.classList.add('copied');
-          setTimeout(function () {
-            copyBtn.textContent = original;
-            copyBtn.classList.remove('copied');
-          }, 2000);
-        })
-        .catch(function () {
-          // Fallback for older browsers
-          var textarea = document.createElement('textarea');
-          textarea.value = text;
-          textarea.style.position = 'fixed';
-          textarea.style.opacity = '0';
-          document.body.appendChild(textarea);
-          textarea.select();
-          try {
-            document.execCommand('copy');
-            var original = copyBtn.textContent;
-            copyBtn.textContent = 'Copied!';
-            setTimeout(function () {
-              copyBtn.textContent = original;
-            }, 2000);
-          } catch (err) {
-            console.error('[ARIA] Clipboard copy failed', err);
-          }
-          document.body.removeChild(textarea);
-        });
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        return navigator.clipboard.writeText(text);
+      }
+      // Fallback for browsers without async clipboard API.
+      return new Promise(function (resolve, reject) {
+        var textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+          document.execCommand('copy');
+          resolve();
+        } catch (err) {
+          reject(err);
+        }
+        document.body.removeChild(textarea);
+      });
+    }
+
+    copyButtons.forEach(function (copyBtn) {
+      copyBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        copyText()
+          .then(function () { flashSuccess(copyBtn); })
+          .catch(function (err) { console.error('[ARIA] Clipboard copy failed', err); });
+      });
     });
   }
 

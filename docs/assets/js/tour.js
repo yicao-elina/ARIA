@@ -207,6 +207,69 @@
         action: { kind: "open-details" },
       },
     },
+    {
+      // Tour handoff step. Highlights the BibTeX block + the GitHub
+      // link so the user can READ them; the user must explicitly
+      // click the link themselves (the tour does NOT auto-navigate
+      // or open a new tab). Both are focusPoints only — neither has
+      // an action, so _holeClickHandler prevents default and the
+      // tour never dispatches a click on the anchor. Advancing once
+      // reaches the closing "Tour complete" screen below.
+      id: "appendix",
+      title: "Where to go next",
+      body: "Code, KG JSON, and benchmark data live on GitHub. If ARIA helps your work, a citation is the best way to support future development — the BibTeX entry below is one click away.",
+      focusPoints: [
+        {
+          selector: '#bibtex-content',
+          label: "The BibTeX entry below — use the Copy button on the block to grab it for your paper.",
+        },
+        {
+          selector: '#appendix a[href*="github.com/yicao-elina/aria"]',
+          label: "Code, data, and benchmark JSONs live on GitHub — click the link whenever you want!",
+        },
+      ],
+    },
+    {
+      // Pure completion screen. No mask, no holes, no auto-link —
+      // a one-line takeaway on the panel itself, clickable links to
+      // the repo and OpenReview right below it, and a Finish button.
+      // Reached automatically after the user clicks Next past the
+      // handoff step above.
+      id: "appendix",
+      title: "Tour complete",
+      // Key takeaway. Kept to a single sentence so the user reads
+      // and moves on rather than skimming a wall of recap text.
+      panelMessage:
+        "ARIA rescues LLM reasoning by gating evidence on causal completeness — retrieve broadly, reason carefully.",
+      // Clickable links rendered below the takeaway. The renderer
+      // builds pill-styled <a target="_blank"> elements so the user
+      // can jump straight to where the work lives from the panel —
+      // no need to scroll the page to find the references.
+      finaleLinks: [
+        {
+          href: "https://github.com/yicao-elina/aria",
+          label: "Code & data on GitHub",
+          iconMarkup:
+            '<svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13" aria-hidden="true"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.1.79-.25.79-.55v-2.07c-3.2.7-3.88-1.37-3.88-1.37-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.78 1.2 1.78 1.2 1.03 1.78 2.72 1.27 3.38.97.1-.75.41-1.27.74-1.56-2.55-.29-5.24-1.28-5.24-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.47.11-3.06 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.8 0c2.21-1.49 3.18-1.18 3.18-1.18.63 1.59.23 2.77.11 3.06.74.81 1.19 1.84 1.19 3.1 0 4.43-2.69 5.4-5.25 5.69.42.37.8 1.1.8 2.22v3.29c0 .31.21.66.79.55C20.21 21.39 23.5 17.08 23.5 12 23.5 5.65 18.35.5 12 .5Z"/></svg>',
+        },
+        {
+          href: "https://openreview.net/forum?id=7LFRS69byw",
+          label: "Paper on OpenReview",
+          iconMarkup:
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13" aria-hidden="true"><path d="M14 3h7v7"/><path d="M21 3l-9 9"/><path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"/></svg>',
+        },
+      ],
+      // Both stops share the same `id: "appendix"` so the closing
+      // one re-uses the section DOM already scrolled into view; no
+      // need to scroll again or paint a fresh canvas / mask.
+      noScroll: true,
+      noCanvas: true,
+      // Marker for _panelState: swap the primary button text from
+      // "Next ▸" to "Finish ✓" so the action visibly matches a
+      // completion screen rather than a "forward to nowhere"
+      // affordance.
+      isFinale: true,
+    },
   ];
 
   // ════════════════════════════════════════════════════════════════
@@ -920,6 +983,23 @@
     title.className = "tour-panel__title";
     root.appendChild(title);
 
+    // Optional body copy (e.g. the closing congratulatory handoff).
+    // Most stops already convey their message via title + the cutout
+    // label callouts; only stops that explicitly need the panel itself
+    // to carry prose (today: the closing tour-complete handoff) set
+    // this. Hidden when empty so it doesn't waste vertical space.
+    const body = document.createElement("div");
+    body.className = "tour-panel__body";
+    root.appendChild(body);
+
+    // Optional clickable links rendered below the body and above the
+    // hint. Used by the closing handoff so the user can jump straight
+    // to the repo / OpenReview from the panel without needing to
+    // re-find the references in the appendix.
+    const finaleLinks = document.createElement("div");
+    finaleLinks.className = "tour-panel__finale-links";
+    root.appendChild(finaleLinks);
+
     const hint = document.createElement("div");
     hint.className = "tour-panel__hint";
     root.appendChild(hint);
@@ -949,6 +1029,52 @@
       progLabel.textContent = "Guided Tour";
       progress.appendChild(progLabel);
       title.textContent = state.sectionTitle;
+      // Optional panel-only prose (currently only the closing
+      // handoff uses it). The STOPS `body` field is the section
+      // description that already goes to the tile content; if we
+      // re-painted it here it would be redundant on every step.
+      // `panelMessage` is a separate, optional, panel-only prose
+      // channel reserved for stops whose message IS the panel —
+      // typically the closing congratulatory handoff.
+      if (state.panelMessage) {
+        // Preserve intentional line breaks from the STOPS data.
+        body.textContent = state.panelMessage;
+        body.classList.add("is-visible");
+      } else {
+        body.textContent = "";
+        body.classList.remove("is-visible");
+      }
+      // Render the optional clickable links. Each becomes a pill-styled
+      // <a target="_blank"> so the user can open the repo / OpenReview
+      // straight from the panel. They never appear on intermediate
+      // stops — only `isFinale` ones pass them in `state.finaleLinks`.
+      finaleLinks.innerHTML = "";
+      if (state.finaleLinks && state.finaleLinks.length) {
+        state.finaleLinks.forEach((link) => {
+          const a = document.createElement("a");
+          a.className = "tour-finale-link";
+          a.href = link.href;
+          // Open in a new tab — same convention as every other
+          // outbound link on the site. rel values guard against
+          // window.opener access and referrer leaks.
+          a.target = link.target || "_blank";
+          a.rel = "noopener noreferrer";
+          if (link.iconMarkup) {
+            const iconWrap = document.createElement("span");
+            iconWrap.className = "tour-finale-link__icon";
+            iconWrap.innerHTML = link.iconMarkup;
+            a.appendChild(iconWrap);
+          }
+          const label = document.createElement("span");
+          label.className = "tour-finale-link__label";
+          label.textContent = link.label;
+          a.appendChild(label);
+          finaleLinks.appendChild(a);
+        });
+        finaleLinks.classList.add("is-visible");
+      } else {
+        finaleLinks.classList.remove("is-visible");
+      }
       if (state.hint) {
         hint.textContent = state.hint;
         hint.classList.add("is-visible");
@@ -985,6 +1111,16 @@
         primary.classList.add("tour-btn--breathing");
         primary.addEventListener("click", function () {
           state.onNext && state.onNext();
+        });
+      } else if (state.isFinale) {
+        // Closing tour-stop. No mask/holes/hint — just a Finish
+        // button that ends the tour. The body copy on the panel
+        // carries the message ("you finished, here's where to
+        // grab code and how to cite").
+        primary.textContent = "Finish ✓";
+        primary.classList.remove("tour-btn--breathing");
+        primary.addEventListener("click", function () {
+          state.onEnd && state.onEnd();
         });
       } else if (state.holesTotal > 0) {
         primary.textContent = "Do it for me ▶";
@@ -1065,6 +1201,13 @@
 
     end() {
       if (!this._active) return;
+      // Capture the active renderers up front — the exit animation
+      // needs to reference them, but _destroyRenderers() blows them
+      // all away. Store handles for each phase, then null them out
+      // in the same order _destroyRenderers() would.
+      const canvas = this._canvas;
+      const mask = this._mask;
+      const panel = this._panel;
       this._cancelAutoPlay();
       this._clearTimers();
       const cur = this.stops[this._index];
@@ -1073,11 +1216,38 @@
           cur.onLeave(document.getElementById(cur.id));
         } catch (e) {}
       }
-      this._destroyRenderers();
-      document.removeEventListener("keydown", this._onKeydown);
-      window.removeEventListener("scroll", this._onViewportChange);
-      window.removeEventListener("resize", this._onViewportChange);
       this._active = false;
+      // Graceful exit. The mask fades out (already does so for
+      // skipAutoPlay), the panel and hole labels fade-and-slide
+      // together, and the canvas dissolves. respects
+      // prefers-reduced-motion by skipping the transition and
+      // tearing everything down in the same frame the user pressed
+      // Finish on — same code path for the End Tour pill at the top
+      // of the canvas frame and for an auto-end triggered by
+      // next() at the very last stop, so users always see a
+      // consistent close beat.
+      const reduced = utils.reducedMotion();
+      // Mark everything as exiting. We add a single class to the
+      // panel; mask + canvas already have fade-out classes from
+      // their own renderers. Hole labels get the same treatment.
+      if (panel && panel.root) panel.root.classList.add("is-exiting");
+      this._labels.forEach((l) => l.root.classList.add("is-exiting"));
+      const EXIT_MS = reduced ? 0 : 360;
+      const finalize = () => {
+        document.removeEventListener("keydown", this._onKeydown);
+        window.removeEventListener("scroll", this._onViewportChange);
+        window.removeEventListener("resize", this._onViewportChange);
+        this._destroyRenderers();
+      };
+      if (EXIT_MS === 0) {
+        finalize();
+      } else {
+        // window.setTimeout rather than relying on a transition
+        // event: element-level transitionend events can be flaky
+        // when a node is being removed, and the delay is short
+        // enough that one beat of wall-clock drift is invisible.
+        window.setTimeout(finalize, EXIT_MS);
+      }
     }
 
     // Panel "Next" handler. Always works in one click: whatever is
@@ -1609,12 +1779,27 @@
       return (e) => {
         if (!this._active) return;
         if (this._mode !== "revealing") return;
+        // Anchor hole: the tour uses an <a href> target only as a
+        // read-only "look at this" annotation (e.g. the GitHub link
+        // in the closing handoff). The user reads the callout, then
+        // chooses whether to navigate — the tour itself must NEVER
+        // auto-follow or auto-open the link just because the user
+        // clicked inside the highlighted cutout. PreventDefault on
+        // EVERY click on an anchor hole so a stray hit in the mask
+        // can't fire a real navigation.
+        const isAnchorHole =
+          h.el && h.el.matches && h.el.matches("a[href]");
+        if (isAnchorHole) {
+          e.preventDefault();
+        }
         if (label && label.isCalloutRevealed && label.isCalloutRevealed()) {
-          // Callout already revealed — let the inner element handle
-          // the click natively (e.g. a <details> summary needs the
-          // browser's default toggle to actually open the body).
-          // Don't double-fire _fireHole.
-          return;
+          // Callout already revealed — for non-anchor holes, let the
+          // inner element handle the click natively (e.g. a <details>
+          // summary needs the browser's default toggle to actually
+          // open the body). For anchor holes there's nothing native
+          // we want (we already prevented the navigation), so fall
+          // through to _fireHole which just settles the hole.
+          if (!isAnchorHole) return;
         }
         if (h.action && h.action.kind === "open-details") {
           const details = h.el.closest("details");
@@ -1640,6 +1825,8 @@
 
     _fireHole(h, label, opts) {
       opts = opts || {};
+      const isAnchorHole =
+        h.el && h.el.matches && h.el.matches("a[href]");
       // If a specific label is passed, reveal its callout first
       // (the click target is the chip OR somewhere inside the hole).
       // If no label is passed (e.g. "Do it for me" sequence), the
@@ -1660,9 +1847,19 @@
           else if (h.action.kind === "change") utils.dispatchChange(h.el);
           else if (h.action.kind === "drag-range")
             utils.animateRange(h.el, opts.immediate ? 0 : CONSTANTS.RANGE_DRAG_MS);
+        } else if (isAnchorHole) {
+          // No-op on anchor holes (e.g. the GitHub link in the closing
+          // handoff). The hole is a read-only annotation: the user
+          // reads its callout, then chooses whether to open the link
+          // themselves. Re-dispatching a click here — even though the
+          // chip click / "Do it for me" path is the only one that
+          // normally hits it without `skipAction` — would call
+          // `el.click()` on the anchor, which the browser treats as a
+          // real user click and acts on (target=_blank opens GitHub).
+          // Settle the hole visually, but do NOT touch the anchor.
         } else {
-          // No action: still "settle" the hole so the user gets
-          // feedback that they did the right thing.
+          // No action, non-anchor: still "settle" the hole so the user
+          // gets feedback that they did the right thing.
           utils.dispatchClick(h.el);
         }
       }
@@ -1976,6 +2173,16 @@
         stepNumber: this._index,
         totalSteps: this.stops.length - 1,
         sectionTitle: stop.title,
+        // Panel-only prose. Distinct from `stop.body` (the section
+        // description), so most stops pass "" here and the closing
+        // handoff can paint congratulatory copy on the panel itself.
+        panelMessage: stop.panelMessage || "",
+        // Clickable link pills, rendered between the body and the
+        // hint. Currently only the closing handoff sets this.
+        finaleLinks: Array.isArray(stop.finaleLinks) ? stop.finaleLinks : [],
+        // Closing handoff: swap "Next ▸" for "Finish ✓" so the action
+        // visibly matches what it does (end the tour, not advance).
+        isFinale: !!stop.isFinale,
         holesTotal,
         holesDone,
         canAdvance,
@@ -2366,6 +2573,125 @@
   opacity: 0.85;
   max-height: 40px;
 }
+/* ── Tour finish-out animation ──
+   Pressing Finish (or End) here marks the panel + every hole label
+   with is-exiting; the finalize() in end() waits one beat (~360ms)
+   before tearing down DOM nodes, so the panel can scale down + drop,
+   the labels can sink, and the mask/canvas can finish their existing
+   fades simultaneously. Looks like the tour is "wrapping up" rather
+   than vanishing mid-sentence. */
+.tour-panel.is-exiting {
+  animation: tour-panel-out 0.36s ${CONSTANTS.SMOOTH} both;
+  pointer-events: none;
+}
+@keyframes tour-panel-out {
+  0%   { opacity: 1; transform: translateY(0)     scale(1);    }
+  60%  { opacity: 0.6; transform: translateY(8px)  scale(0.98); }
+  100% { opacity: 0; transform: translateY(28px) scale(0.94); }
+}
+.tour-hole-label.is-exiting {
+  animation: tour-label-out 0.32s ${CONSTANTS.SMOOTH} both;
+  pointer-events: none;
+}
+@keyframes tour-label-out {
+  0%   { opacity: 1; transform: translateY(0)   scale(1);    }
+  100% { opacity: 0; transform: translateY(10px) scale(0.94); }
+}
+.tour-hole-label.is-exiting .tour-hole-label__line {
+  animation: tour-label-line-out 0.32s ${CONSTANTS.SMOOTH} both;
+}
+@keyframes tour-label-line-out {
+  0%   { opacity: 0.85; }
+  100% { opacity: 0; }
+}
+/* Optional panel-only prose for stops whose message IS the panel
+   (currently the closing tour-complete handoff). Hidden when empty
+   so most stops keep their compact title + hint layout. The visible
+   state uses white-space:pre-wrap so the STOPS data can use real
+   "\n\n" between paragraphs and "•" for bullets. */
+.tour-panel__body {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--apple-text-secondary, inherit);
+  margin-top: 4px;
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  white-space: pre-wrap;
+  transition: opacity 0.3s ${CONSTANTS.SMOOTH},
+              max-height 0.3s ${CONSTANTS.SMOOTH};
+}
+.tour-panel__body.is-visible {
+  opacity: 0.92;
+  max-height: 320px;
+  overflow-y: auto;
+}
+/* Optional clickable link pills rendered between the body copy and
+   the hint. Used by the closing handoff to surface the GitHub repo
+   + OpenReview thread directly on the tour panel — the user can
+   jump to either with one click without first leaving the tour and
+   hunting for the references in the appendix below. */
+.tour-panel__finale-links {
+  display: none;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: opacity 0.3s ${CONSTANTS.SMOOTH},
+              max-height 0.3s ${CONSTANTS.SMOOTH};
+}
+.tour-panel__finale-links.is-visible {
+  display: flex;
+  opacity: 1;
+  max-height: 140px;
+}
+.tour-finale-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 45, 114, 0.18);
+  background: rgba(104, 172, 229, 0.10);
+  color: var(--apple-primary, #002D72);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.005em;
+  text-decoration: none;
+  transition: background 0.15s ease,
+              transform 0.15s ease,
+              border-color 0.2s ease;
+}
+.tour-finale-link:hover {
+  background: rgba(104, 172, 229, 0.22);
+  transform: translateY(-1px);
+  border-color: rgba(0, 45, 114, 0.3);
+  text-decoration: none;
+}
+.tour-finale-link:focus-visible {
+  outline: 2px solid var(--apple-primary-focus, #1a3d8f);
+  outline-offset: 2px;
+}
+.tour-finale-link__icon {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+@media (prefers-color-scheme: dark) {
+  .tour-finale-link {
+    background: rgba(104, 172, 229, 0.15);
+    border-color: rgba(255, 255, 255, 0.18);
+    color: var(--apple-primary-on-dark, #E8EEF7);
+  }
+  .tour-finale-link:hover {
+    background: rgba(104, 172, 229, 0.28);
+    border-color: rgba(104, 172, 229, 0.45);
+  }
+}
 .tour-panel__controls {
   display: flex;
   align-items: center;
@@ -2437,7 +2763,9 @@
   .tour-hole-label,
   .tour-btn--primary,
   .tour-btn--breathing,
-  .tour-cta {
+  .tour-cta,
+  .tour-panel.is-exiting,
+  .tour-hole-label.is-exiting {
     animation: none !important;
     transition: none !important;
   }

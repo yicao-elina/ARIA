@@ -749,7 +749,12 @@
     </p>
 
     <h3>BibTeX</h3>
-    <pre id="bibtex-content">@inproceedings{
+    <div class="bibtex-wrap">
+      <button type="button" id="copy-bibtex-inline" class="bibtex-copy-btn" aria-label="Copy BibTeX to clipboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        <span class="bibtex-copy-btn__label">Copy</span>
+      </button>
+      <pre id="bibtex-content">@inproceedings{
 cao2026aria,
 title={{ARIA}: A Causal-Aware Framework for Rescuing {LLM} Reasoning in Materials Discovery},
 author={Yi Cao and Liaoyaqi Wang and Jieneng Chen and Benjamin Van Durme and Alan Yuille and Paulette Clancy},
@@ -757,6 +762,7 @@ booktitle={32nd SIGKDD Conference on Knowledge Discovery and Data Mining - AI fo
 year={2026},
 url={https://openreview.net/forum?id=7LFRS69byw}
 }</pre>
+    </div>
 
     <h3>Early Demo &amp; Hackathon Origins</h3>
     <p>
