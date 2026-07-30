@@ -57,6 +57,11 @@
   background-position: 0% 50%;
   -webkit-mask-image: linear-gradient(to right, transparent 0%, black 12%, black 44%, transparent 60%);
   mask-image: linear-gradient(to right, transparent 0%, black 12%, black 44%, transparent 60%);
+  transform: translate(calc(var(--scene-progress) * 32vw), -50%);
+  opacity: clamp(0, calc(0.16 * (1 - var(--scene-progress) * 1.4)), 0.16);
+  filter: blur(0.5px) saturate(90%);
+  transition: transform 400ms cubic-bezier(.16, 1, .3, 1), opacity 400ms ease;
+  will-change: transform, opacity;
 }
 
 .hero-scene__logo-half--right {
@@ -64,6 +69,11 @@
   background-position: 100% 50%;
   -webkit-mask-image: linear-gradient(to left, transparent 0%, black 12%, black 44%, transparent 60%);
   mask-image: linear-gradient(to left, transparent 0%, black 12%, black 44%, transparent 60%);
+  transform: translate(calc(var(--scene-progress) * -32vw), -50%);
+  opacity: clamp(0, calc(0.16 * (1 - var(--scene-progress) * 1.4)), 0.16);
+  filter: blur(0.5px) saturate(90%);
+  transition: transform 400ms cubic-bezier(.16, 1, .3, 1), opacity 400ms ease;
+  will-change: transform, opacity;
 }
 
 /* ---------- Settled mark (ARIA-A.svg) ---------- */
@@ -74,6 +84,8 @@
   top: 50%;
   width: 96px;
   pointer-events: none;
-  opacity: 0;
-  transform: translateY(-50%);
+  opacity: var(--scene-progress);
+  transform: translateY(-50%) scale(calc(0.7 + var(--scene-progress) * 0.3));
+  transition: transform 400ms cubic-bezier(.16, 1, .3, 1), opacity 400ms ease;
+  will-change: transform, opacity;
 }
