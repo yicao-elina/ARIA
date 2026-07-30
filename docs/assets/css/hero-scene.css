@@ -1,42 +1,37 @@
 /* ==========================================================================
    hero-scene.css
    Scroll-driven hero logo scene: two large, feathered halves of
-   ARIA-logo.svg sit as watermarks flanking the hero text, bleeding
-   toward the true left/right edges of the hero section. As the user
-   scrolls through the 220vh track, they translate toward each other and
-   simultaneously sharpen (blur → 0) and grow more opaque (faint →
-   solid) — a single continuous interpolation, never fading to
-   invisible — until they form the complete logo, settled left-of-
-   center. All motion is driven by the single --scene-progress custom
-   property (0 at rest, 1 fully settled), set by assets/js/hero-scene.js.
+   ARIA-logo.svg sit inside a reserved "logo zone" placed directly above
+   the hero-lead paragraph ("Naively augmenting...") — an ordinary
+   in-flow, centered block, sized to exactly fit the merged logo, so it
+   can never overlap any text regardless of scroll position. As the
+   user scrolls through the 220vh track, the two halves translate
+   toward the zone's own center and simultaneously sharpen (blur → 0)
+   and grow more opaque (faint → solid) — a single continuous
+   interpolation, never fading to invisible — until they form the
+   complete logo, centered in the zone (and therefore centered on the
+   page, since the zone itself is centered the same way the rest of the
+   hero content is). All motion is driven by the single --scene-
+   progress custom property (0 at rest, 1 fully settled), set by
+   assets/js/hero-scene.js.
 
-   Layout note: .hero-scene needs an explicit `width: 100%` because its
-   parent, .tile--hero, is `display:flex; align-items:center` (see
-   sections.css) — align-items:center sizes flex children to their own
-   content unless a width is set, so without this, .hero-scene would
-   shrink to the width of its own content (the narrow text column)
-   instead of the section's true width, and every left/right offset
-   below would be measured from that wrong, narrow box. .tile--hero
-   itself is a plain (non-flex) block that already reliably spans the
-   true viewport width (see its own `position: relative` in
-   sections.css, used for the same reason), so `width: 100%` here is
-   all that's needed — no viewport-breakout hack required.
+   History (see git log for full detail): earlier iterations tried
+   positioning the halves against the viewport directly (flanking the
+   title, bleeding to the true screen edges). Two different techniques
+   for that both produced bugs that were only visible in an actual
+   browser (an off-center layout shift, then an overlap with the
+   hero-lead paragraph/card and an off-center merge point) — this
+   in-flow reserved-zone approach avoids that whole class of bug by
+   construction: nothing is positioned against the viewport, only
+   against this small, explicitly-sized zone.
    ========================================================================== */
 
 .hero-scene {
   position: relative;
-  width: 100%;
   height: 220vh;
   --scene-progress: 0;
-  /* half-width is large (watermark-scale) but still leaves a roomy gap
-     at rest for the text column: 2 * (inset + half-width) = 58vw used,
-     leaving a ~42vw gap at rest. merge-x is chosen >= half-width so the
-     merged logo's left edge never clips past the section's left edge. */
-  --logo-half-width: min(27vw, 380px);  /* width of each half's box — large, watermark-scale */
-  --logo-rest-inset: 2vw;               /* gap from the hero section's edge at rest */
-  --logo-merge-x: 35vw;                 /* final seam X position (left-of-center) at progress 1 */
-  --logo-rest-opacity: 0.22;            /* opacity at progress 0 — stays visible, never fades to 0 */
-  --logo-rest-blur: 6px;                /* blur at progress 0 — sharpens to 0 at progress 1 */
+  --logo-rest-opacity: 0.22;    /* opacity at progress 0 — stays visible, never fades to 0 */
+  --logo-rest-blur: 6px;        /* blur at progress 0 — sharpens to 0 at progress 1 */
 }
 
 .hero-scene__sticky {
@@ -47,7 +42,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow-x: clip;
 }
 
 @media (max-height: 860px) {
@@ -56,11 +50,32 @@
   }
 }
 
+/* ---------- Logo zone ----------
+   An ordinary in-flow block, centered the same way the rest of the
+   hero content is (.tile__content's own centering) — width and height
+   are sized so the fully-merged logo (420px wide, ~198px tall) fits
+   with a comfortable margin on every side; nothing here is positioned
+   against the viewport, only against this box. */
+
+.hero-scene__logo-zone {
+  --zone-width: min(90vw, 640px);
+  --logo-half-width: min(29vw, 210px);
+  position: relative;
+  width: var(--zone-width);
+  height: 220px;
+  margin: 0 auto 24px;
+  overflow: hidden;
+}
+
 /* ---------- Split logo halves ----------
    Each half shows one side of the same ARIA-logo.svg: the element is
-   half the logo's natural width, background-size is 200% of the
-   element's own width (= the logo's full natural width), and
-   background-position picks which side is visible. */
+   --logo-half-width wide, background-size is 200% of the element's own
+   width (= the logo's full natural width relative to a half-width
+   box), and background-position picks which side is visible. At rest
+   the two halves sit at the zone's own left/right edges; as progress
+   advances they translate toward the zone's center by exactly enough
+   to close the gap, so they meet with no overlap and no leftover
+   space, forming the complete logo centered in the zone. */
 
 .hero-scene__logo-half {
   position: absolute;
@@ -69,7 +84,9 @@
   /* Half-image aspect ratio, NOT the full logo's ratio: this box shows
      only half the logo (via background-size: 200% below), so its own
      aspect ratio must be half of the full image's 296.25:139.5 ratio —
-     i.e. 148.125:139.5 — or the rendered image stretches ~2x. */
+     i.e. 148.125:139.5 — or the rendered image stretches ~2x. At the
+     210px cap this renders ~198px tall, which is why the zone is 220px
+     tall (comfortable margin, no vertical clipping). */
   aspect-ratio: 148.125 / 139.5;
   background-image: url("../figures/ARIA-logo.svg");
   background-size: 200% 100%;
@@ -84,7 +101,7 @@
 }
 
 .hero-scene__logo-half--left {
-  left: var(--logo-rest-inset);
+  left: 0;
   background-position: 0% 50%;
   /* The seam-side (right-hand) fade stops are driven by --scene-progress:
      at rest they sit at 44%/60% of this box (a soft feather into the
@@ -93,30 +110,27 @@
      edges meet cleanly with no blank band at the join. */
   -webkit-mask-image: linear-gradient(to right, transparent 0%, black 12%, black calc(44% + var(--scene-progress) * 56%), transparent calc(60% + var(--scene-progress) * 40%));
   mask-image: linear-gradient(to right, transparent 0%, black 12%, black calc(44% + var(--scene-progress) * 56%), transparent calc(60% + var(--scene-progress) * 40%));
-  /* At rest, this box's right (seam) edge sits at
-     (rest-inset + half-width). At progress 1 we want that edge at
-     logo-merge-x, so translateX must cover the difference. */
-  transform: translateY(-50%) translateX(calc(var(--scene-progress) * (var(--logo-merge-x) - var(--logo-rest-inset) - var(--logo-half-width))));
+  /* At rest, this box's right (seam) edge sits at --logo-half-width
+     (measured from the zone's left edge, since left:0). At progress 1
+     we want that edge at the zone's own center (0.5 * zone-width), so
+     translateX must cover the difference — this always lands exactly
+     at the zone's center regardless of the specific knob values,
+     because both halves use the same zone-center target. */
+  transform: translateY(-50%) translateX(calc(var(--scene-progress) * (var(--zone-width) * 0.5 - var(--logo-half-width))));
 }
 
 .hero-scene__logo-half--right {
-  right: var(--logo-rest-inset);
+  right: 0;
   background-position: 100% 50%;
   /* Mirrors --left's progress-driven seam fade (see its comment) — the
      seam-side stops here are toward the box's own left edge. */
   -webkit-mask-image: linear-gradient(to left, transparent 0%, black 12%, black calc(44% + var(--scene-progress) * 56%), transparent calc(60% + var(--scene-progress) * 40%));
   mask-image: linear-gradient(to left, transparent 0%, black 12%, black calc(44% + var(--scene-progress) * 56%), transparent calc(60% + var(--scene-progress) * 40%));
-  /* At rest, this box's left (seam) edge sits at
-     (100vw - rest-inset - half-width) — using 100vw here (not 100%),
-     since % inside translateX() would resolve against this element's
-     OWN box width, not the section's width; vw is an absolute unit so
-     it isn't subject to that self-relative quirk. At progress 1 we
-     want that edge at logo-merge-x too, so both halves' seams meet at
-     the same point. This assumes .hero-scene (width:100%, see above)
-     spans very close to the true viewport width, which holds here
-     since .tile--hero has only small fixed padding, not a percentage
-     inset. */
-  transform: translateY(-50%) translateX(calc(var(--scene-progress) * (var(--logo-merge-x) - 100vw + var(--logo-rest-inset) + var(--logo-half-width))));
+  /* Mirrors --left: at rest this box's left (seam) edge sits at
+     (zone-width - logo-half-width), measured from the zone's left edge
+     (since right:0). At progress 1 we want it at the zone's center
+     too, so it moves the same distance in the opposite direction. */
+  transform: translateY(-50%) translateX(calc(var(--scene-progress) * (var(--zone-width) * 0.5 - var(--logo-half-width)) * -1));
 }
 
 /* ---------- Explore card settle position ----------
@@ -149,9 +163,12 @@
 
 /* ---------- Reduced motion / explicit kill-switch ----------
    Mirrors the body.no-motion convention already used in glass.css.
-   Both cases show the fully settled end-state statically, with no
-   pinned scroll track (hero-scene.js also short-circuits to
-   --scene-progress: 1 for prefers-reduced-motion). */
+   hero-scene.js sets --scene-progress: 1 for prefers-reduced-motion,
+   which alone already renders the fully-converged, fully-opaque,
+   fully-sharp logo (the zone's fixed height means nothing needs to
+   collapse or be hidden) — this block only removes the transition so
+   that settle is instant, and drops the scroll-pinned track since
+   there's nothing left to scroll-drive. */
 
 @media (prefers-reduced-motion: reduce) {
   .hero-scene {
@@ -161,7 +178,6 @@
     position: static;
     min-height: 0;
     height: auto;
-    overflow: visible;
   }
   .hero-scene__logo-half {
     transition: none;
@@ -175,7 +191,6 @@ body.no-motion .hero-scene__sticky {
   position: static;
   min-height: 0;
   height: auto;
-  overflow: visible;
 }
 body.no-motion .hero-scene__logo-half {
   transition: none;
