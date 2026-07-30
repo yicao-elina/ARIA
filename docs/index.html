@@ -19,6 +19,7 @@
   <link rel="stylesheet" href="assets/css/glossary.css" />
   <link rel="stylesheet" href="assets/css/header-pill.css" />
   <link rel="stylesheet" href="assets/css/mesh.css" />
+  <link rel="stylesheet" href="assets/css/hero-scene.css" />
 
   <!-- KaTeX for math rendering -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
@@ -49,7 +50,7 @@
     <img src="assets/figures/ARIA-logo.svg" alt="ARIA" />
   </a>
   <a class="hp-icon" href="#problem" aria-label="The Problem" data-tilt>
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" aria-hidden="true"><path d="M9 17H7a5 5 0 0 1 0-10h2"/><path d="M15 7h2a5 5 0 0 1 0 10h-2"/><path d="M8 12h6M14 12l-2 2M14 12l-2-2"/></svg>
     <span class="hp-tooltip">The Problem</span>
   </a>
   <a class="hp-icon" href="#psp" aria-label="PSP Hierarchy" data-tilt>
@@ -84,21 +85,65 @@
 <!-- ======= HERO / ABSTRACT ======= -->
 <section class="tile tile--parchment tile--hero" id="abstract">
   <div class="mesh mesh--hero" aria-hidden="true"></div>
+
+  <!-- Logo scene: a fixed viewport overlay, so it can NEVER affect any
+       text position — it is not part of the document flow at all while
+       resting. On load it sits at subtitle/byline height (computed by
+       hero-scene.js from the actual rendered position of that text, so
+       it self-adjusts to however the title wraps), translucent, split
+       apart at the true left/right screen edges, like wings. As the
+       page scrolls, the halves converge and sharpen (eased — slow at
+       first, faster once roughly half-scrolled — see hero-scene.js),
+       while this overlay itself stays glued to that same screen
+       position (the text scrolls past beneath/around it, since it's
+       fixed). Once scrolling carries the blank #hero-scene-slot (below,
+       right before .hero-lead) up to that same screen position, JS
+       hands this element off from position:fixed to position:absolute
+       pinned exactly there — it "lands" in the slot, fully merged and
+       100% sharp, and from that instant on scrolls normally with the
+       rest of the page, like any in-flow content. -->
+  <div class="hero-scene" id="hero-scene" aria-hidden="true">
+    <div class="hero-scene__logo-zone">
+      <div class="hero-scene__logo-half hero-scene__logo-half--left"></div>
+      <div class="hero-scene__logo-half hero-scene__logo-half--right"></div>
+    </div>
+  </div>
+
   <div class="tile__content">
     <h1 class="hero-title reveal">ARIA: A Causal-Aware Framework for Rescuing LLM Reasoning in Materials Discovery</h1>
     <p class="hero-subtitle reveal">Gating knowledge on causal completeness to prevent <em>contextual tunneling</em> in LLMs</p>
-    <p class="hero-authors reveal">Yi Cao, Liaoyaqi Wang, Jieneng Chen, Benjamin Van Durme, Alan Yuille, Paulette Clancy</p>
+
+    <p class="hero-authors reveal">
+      <a class="term-tip term-tip--below" href="https://yicao-elina.github.io/yicao-elina/" target="_blank" rel="noopener" data-tip="Chemical and Biomolecular Engineering, Johns Hopkins University · ycao73@jh.edu">Yi Cao<sup class="byline-mark byline-mark--dagger">†</sup></a>,
+      <a class="term-tip term-tip--below" href="https://scholar.google.com/citations?user=RPw7AlUAAAAJ&amp;hl=zh-CN" target="_blank" rel="noopener" data-tip="Computer Science, Johns Hopkins University · lwang240@jh.edu">Liaoyaqi Wang<sup class="byline-mark byline-mark--dagger">†</sup></a>,
+      <a class="term-tip term-tip--below" href="http://www.jienengchen.com/" target="_blank" rel="noopener" data-tip="Computer Science, Johns Hopkins University · jchen293@jhu.edu">Jieneng Chen</a>,
+      <a class="term-tip term-tip--below" href="https://www.cs.jhu.edu/~vandurme/" target="_blank" rel="noopener" data-tip="Computer Science, Johns Hopkins University · vandurme@jhu.edu">Benjamin Van Durme<sup class="byline-mark byline-mark--star">*</sup></a>,
+      <a class="term-tip term-tip--below" href="https://www.cs.jhu.edu/~ayuille/" target="_blank" rel="noopener" data-tip="Computer Science, Johns Hopkins University · ayuille1@jhu.edu">Alan Yuille<sup class="byline-mark byline-mark--star">*</sup></a>,
+      <a class="term-tip term-tip--below" href="https://engineering.jhu.edu/chembe/faculty/paulette-clancy/" target="_blank" rel="noopener" data-tip="Chemical and Biomolecular Engineering, Johns Hopkins University · pclancy3@jhu.edu">Paulette Clancy<sup class="byline-mark byline-mark--star">*</sup></a>
+    </p>
+    <p class="hero-authors-legend reveal">
+      <span class="byline-legend-item"><span class="byline-mark byline-mark--star">*</span> Corresponding author</span>
+      <span class="byline-legend-sep" aria-hidden="true">·</span>
+      <span class="byline-legend-item"><span class="byline-mark byline-mark--dagger">†</span> Equal contribution</span>
+    </p>
     <p class="hero-date reveal">KDD 2026 · AI for Sciences Track</p>
+
     <div class="hero-cta reveal">
       <a href="https://github.com/yicao-elina/aria" class="sub-nav__cta" target="_blank" rel="noopener">Code &amp; Data</a>
       <a href="#problem" class="toggle-btn">Explore ↓</a>
       <button type="button" id="tour-start-btn" class="toggle-btn tour-cta">Take a Tour</button>
     </div>
+
+    <!-- Blank landing slot for #hero-scene above — real reserved flow
+         space (pushes .hero-lead down to clear it), empty/invisible at
+         rest. -->
+    <div class="hero-scene-slot" id="hero-scene-slot" aria-hidden="true"></div>
+
     <div class="hero-lead">
       <p class="reveal">
         Naively augmenting LLMs with knowledge graph evidence can <em>degrade</em> performance—over-anchoring on correct-but-incomplete evidence. <strong>ARIA</strong> fixes this with a three-tier cascade that gates evidence on <em>causal completeness</em>.
       </p>
-      <details class="detail-toggle glass-card glass-card--compact reveal">
+      <details class="detail-toggle glass-card glass-card--compact glass-card--no-float reveal hero-scene__card">
         <summary>What you'll explore in this article</summary>
         <div class="detail-toggle__body">
           <ul>
@@ -317,16 +362,16 @@
                 <div class="trace-content">CVD temperature 750°C</div>
                 <div class="trace-confidence">confidence: 0.90</div>
               </div>
-              <div class="trace-arrow">→ enables →</div>
+              <div class="trace-arrow">enables →</div>
               <div class="trace-node trace-structure">
                 <div class="trace-label">Structure</div>
                 <div class="trace-content">crystallinity</div>
                 <div class="trace-confidence">confidence: 0.90</div>
               </div>
-              <div class="trace-arrow">→ produces →</div>
+              <div class="trace-arrow">produces →</div>
               <div class="trace-node trace-property">
                 <div class="trace-label">Property</div>
-                <div class="trace-content">carrier mobility >40 cm²/Vs</div>
+                <div class="trace-content">mobility >40 cm²/Vs</div>
                 <div class="trace-confidence">confidence: 0.92</div>
               </div>
             </div>
@@ -473,8 +518,10 @@
       <div id="mt-controls-host"></div>
       <div id="mt-table-host"></div>
       <div id="mt-column-charts"></div>
-      <div id="mt-stat-tests"></div>
-      <div id="mt-tier-donut"></div>
+      <div class="mt-bottom-row">
+        <div id="mt-stat-tests"></div>
+        <div id="mt-tier-donut"></div>
+      </div>
       <div id="main-table-root"></div>
     </div>
     <p class="paper-fig-link">
@@ -714,6 +761,18 @@ year={2026},
 url={https://openreview.net/forum?id=7LFRS69byw}
 }</pre>
 
+    <h3>Early Demo &amp; Hackathon Origins</h3>
+    <p>
+      Before the KDD submission, an early concept version of this work was prototyped at an LLM hackathon. These are kept here as historical context — they predate this paper and don't reflect its methodology or results.
+    </p>
+    <p>
+      <a href="https://www.linkedin.com/posts/yi-cao-1368ab292_introducing-aria-autonomous-reasoning-activity-7372352361094193152-U6Jx?utm_source=share&amp;utm_medium=member_desktop&amp;rcm=ACoAAEb3tPoBgmt_8xQYwQpEY2DbQllFRcSwlU4" target="_blank" rel="noopener">Early concept promo animation (LinkedIn)</a>
+      &nbsp;·&nbsp;
+      <a href="https://www.linkedin.com/posts/yi-cao-1368ab292_github-yicao-elinallm4chem-explainable-synthesis-activity-7372331154709905408-1Hyq?utm_source=share&amp;utm_medium=member_desktop&amp;rcm=ACoAAEb3tPoBgmt_8xQYwQpEY2DbQllFRcSwlU4" target="_blank" rel="noopener">Hackathon project post (LinkedIn)</a>
+      &nbsp;·&nbsp;
+      <a href="https://arxiv.org/abs/2605.03205" target="_blank" rel="noopener">Hackathon compilation (arXiv)</a>
+    </p>
+
     <h3>Acknowledgments</h3>
     <p>
       This interactive article was built with Apple-inspired design principles and D3.js visualizations.
@@ -723,7 +782,30 @@ url={https://openreview.net/forum?id=7LFRS69byw}
 
 <!-- ==================== FOOTER ==================== -->
 <footer class="site-footer">
-  <div class="tile__content">
+  <div class="tile__content footer-grid">
+    <div class="footer-brand">
+      <img src="assets/figures/ARIA-logo.svg" alt="ARIA" class="footer-logo" />
+      <p class="footer-tagline">Causal-aware evidence gating for materials discovery.</p>
+    </div>
+    <div class="footer-links">
+      <div class="footer-col">
+        <h3>Paper</h3>
+        <a href="https://arxiv.org/abs/2606.22375" target="_blank" rel="noopener">arXiv</a>
+        <a href="https://openreview.net/forum?id=7LFRS69byw" target="_blank" rel="noopener">OpenReview</a>
+        <a href="#appendix">BibTeX</a>
+      </div>
+      <div class="footer-col">
+        <h3>Code</h3>
+        <a href="https://github.com/yicao-elina/aria" target="_blank" rel="noopener">GitHub</a>
+      </div>
+      <div class="footer-col">
+        <h3>Conference</h3>
+        <a href="https://kdd2026.kdd.org/" target="_blank" rel="noopener">KDD 2026</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-divider"></div>
+  <div class="tile__content footer-bottom">
     ARIA: A Causal-Aware Framework for Rescuing LLM Reasoning in Materials Discovery · KDD 2026 · AI for Sciences Track
   </div>
 </footer>
@@ -743,7 +825,13 @@ url={https://openreview.net/forum?id=7LFRS69byw}
 <script src="assets/js/header-tooltip.js" defer></script>
 <script src="assets/js/reveal.js" defer></script>
 <script src="assets/js/figure-viewer.js" defer></script>
+<script src="assets/js/paper-fig-preview.js" defer></script>
 <script src="assets/js/detail-toggle.js" defer></script>
+<!-- hero-scene.js calls summary.click() to auto-open the hero card
+     (see hero-scene.js) — it must load after detail-toggle.js, which
+     owns that click's actual open/close animation, or the click could
+     fire before detail-toggle.js's listener is registered. -->
+<script src="assets/js/hero-scene.js" defer></script>
 <script src="assets/js/term-tooltip.js" defer></script>
 <script src="assets/js/tour.js" defer></script>
 

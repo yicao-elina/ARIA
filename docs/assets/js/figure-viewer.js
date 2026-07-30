@@ -140,5 +140,10 @@
   }
 
   window.ARIA = window.ARIA || {};
-  window.ARIA.figureViewer = { init: init, openLightbox: openLightbox, closeLightbox: closeLightbox };
+  window.ARIA.figureViewer = {
+    init: init,
+    openLightbox: openLightbox,
+    closeLightbox: closeLightbox,
+    jumpToTarget: jumpToTarget
+  };
 })();

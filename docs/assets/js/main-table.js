@@ -292,9 +292,7 @@
       });
       var o = '<div class="mt-tier-donut__one">';
       o += '<h4>' + title + '</h4>';
-      o += '<svg width="160" height="160" viewBox="0 0 160 160" role="img" aria-label="' + title + ' tier distribution">' + ring +
-        '<text x="80" y="76" text-anchor="middle" font-family="var(--font-body)" font-size="22" font-weight="600" fill="var(--apple-ink)">' + (dist.tier1 * 100).toFixed(0) + '%</text>' +
-        '<text x="80" y="96" text-anchor="middle" font-family="var(--font-body)" font-size="11" fill="var(--apple-ink-muted-48)">Tier 1</text></svg>';
+      o += '<svg width="160" height="160" viewBox="0 0 160 160" role="img" aria-label="' + title + ' tier distribution">' + ring + '</svg>';
       o += '<ul class="mt-tier-donut__legend">';
       segs.forEach(function (s) {
         o += '<li><span class="mt-tier-donut__swatch" style="background:' + s.color + '"></span>' + s.key + ' · ' + (s.pct * 100).toFixed(0) + '%</li>';

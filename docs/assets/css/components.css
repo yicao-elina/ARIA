@@ -299,17 +299,18 @@
 .tier-trace {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   margin: 17px 0;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: center;
 }
 
 .trace-node {
   border-radius: var(--radius-sm);
-  padding: 12px 17px;
+  padding: 10px 12px;
   text-align: center;
-  min-width: 140px;
+  flex: 1 1 0;
+  min-width: 0;
   font-size: var(--text-caption);
   line-height: var(--leading-caption);
   cursor: default;
@@ -342,9 +343,11 @@
 }
 
 .trace-arrow {
+  flex: 0 0 auto;
   color: var(--apple-ink-muted-48);
   font-weight: var(--weight-semibold);
   font-size: var(--text-caption);
+  white-space: nowrap;
 }
 
 .trace-mechanism {
