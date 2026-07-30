@@ -89,7 +89,6 @@
     <div class="hero-scene__sticky">
       <div class="hero-scene__logo-half hero-scene__logo-half--left" aria-hidden="true"></div>
       <div class="hero-scene__logo-half hero-scene__logo-half--right" aria-hidden="true"></div>
-      <img class="hero-scene__mark" src="assets/figures/ARIA-A.svg" alt="" aria-hidden="true" />
       <div class="tile__content">
         <h1 class="hero-title reveal">ARIA: A Causal-Aware Framework for Rescuing LLM Reasoning in Materials Discovery</h1>
         <p class="hero-subtitle reveal">Gating knowledge on causal completeness to prevent <em>contextual tunneling</em> in LLMs</p>
@@ -116,7 +115,7 @@
           <p class="reveal">
             Naively augmenting LLMs with knowledge graph evidence can <em>degrade</em> performance—over-anchoring on correct-but-incomplete evidence. <strong>ARIA</strong> fixes this with a three-tier cascade that gates evidence on <em>causal completeness</em>.
           </p>
-          <details class="detail-toggle glass-card glass-card--compact reveal hero-scene__card">
+          <details class="detail-toggle glass-card glass-card--compact glass-card--no-float reveal hero-scene__card">
             <summary>What you'll explore in this article</summary>
             <div class="detail-toggle__body">
               <ul>
@@ -337,16 +336,16 @@
                 <div class="trace-content">CVD temperature 750°C</div>
                 <div class="trace-confidence">confidence: 0.90</div>
               </div>
-              <div class="trace-arrow">→ enables →</div>
+              <div class="trace-arrow">enables →</div>
               <div class="trace-node trace-structure">
                 <div class="trace-label">Structure</div>
                 <div class="trace-content">crystallinity</div>
                 <div class="trace-confidence">confidence: 0.90</div>
               </div>
-              <div class="trace-arrow">→ produces →</div>
+              <div class="trace-arrow">produces →</div>
               <div class="trace-node trace-property">
                 <div class="trace-label">Property</div>
-                <div class="trace-content">carrier mobility >40 cm²/Vs</div>
+                <div class="trace-content">mobility >40 cm²/Vs</div>
                 <div class="trace-confidence">confidence: 0.92</div>
               </div>
             </div>

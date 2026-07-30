@@ -1,28 +1,52 @@
 /* ==========================================================================
    hero-scene.css
-   Scroll-driven hero logo scene: two feathered logo halves converge into
-   the ARIA-A mark as the user scrolls past the hero, while the "What
-   you'll explore" card slides right and expands. All motion is driven by
-   the single --scene-progress custom property (0 at rest, 1 fully
-   settled), set by assets/js/hero-scene.js. Without that script (or with
-   prefers-reduced-motion), --scene-progress stays at its default (0),
-   which is a valid, harmless static rest state — never broken.
+   Scroll-driven hero logo scene: two feathered halves of ARIA-logo.svg
+   start pinned near the true left/right viewport edges, wide apart. As
+   the user scrolls through the 220vh track, they translate toward each
+   other and simultaneously sharpen (blur → 0) and grow more opaque
+   (faint → solid) — a single continuous interpolation, never fading to
+   invisible. The two halves' rest positions and target translate
+   distances are deliberately asymmetric, so full convergence (progress
+   1) lands the merged, whole logo image left-of-center rather than
+   dead-center — no separate "settled mark" element/asset is used.
+   Meanwhile the "What you'll explore" card slides right and auto-
+   expands. All motion is driven by the single --scene-progress custom
+   property (0 at rest, 1 fully settled), set by assets/js/hero-scene.js.
+   Without that script (or with prefers-reduced-motion), --scene-progress
+   stays at its default (0), which is a valid, harmless static rest
+   state — never broken.
    ========================================================================== */
 
 .hero-scene {
   position: relative;
   height: 220vh;
   --scene-progress: 0;
+
+  /* Tunable knobs — adjust these to retune the effect without touching
+     the interpolation math below. All in vw so they scale with the
+     viewport; verify visually and adjust, since this was authored
+     without a live browser in this environment. */
+  --logo-half-width: 46vw;      /* width of each half's box */
+  --logo-rest-inset: 1vw;       /* gap from the true viewport edge at rest */
+  --logo-merge-x: 22vw;         /* final seam X position (left-of-center) at progress 1 */
+  --logo-rest-opacity: 0.22;    /* opacity at progress 0 — stays visible, never fades to 0 */
+  --logo-rest-blur: 6px;        /* blur at progress 0 — sharpens to 0 at progress 1 */
 }
 
 .hero-scene__sticky {
   position: sticky;
   top: 0;
-  height: 100vh;
+  /* min-height (not a fixed height) + visible vertical overflow so tall
+     hero content (long title wrap, expanded card) is never clipped on
+     short viewports — only horizontal overflow is hidden, to contain
+     the logo halves bleeding off the left/right edges. */
+  min-height: 100vh;
+  height: auto;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: visible;
 }
 
 /* ---------- Split logo halves ----------
@@ -34,7 +58,7 @@
 .hero-scene__logo-half {
   position: absolute;
   top: 50%;
-  width: 46vw;
+  width: var(--logo-half-width);
   max-width: 560px;
   /* Half-image aspect ratio, NOT the full logo's ratio: this box shows
      only half the logo (via background-size: 200% below), so its own
@@ -45,56 +69,44 @@
   background-size: 200% 100%;
   background-repeat: no-repeat;
   pointer-events: none;
-  /* top: 50% alone only aligns this element's top edge to the container
-     midline (absolutely-positioned elements ignore the flex centering
-     on .hero-scene__sticky) — translateY(-50%) is required to actually
-     center it. */
-  transform: translateY(-50%);
+  /* Sharpens and solidifies continuously as progress advances — never
+     drops to 0 opacity, just gets clearer, per the design intent. */
+  opacity: calc(var(--logo-rest-opacity) + var(--scene-progress) * (1 - var(--logo-rest-opacity)));
+  filter: blur(calc(var(--logo-rest-blur) * (1 - var(--scene-progress))));
+  transition: transform 400ms cubic-bezier(.16, 1, .3, 1), filter 400ms ease, opacity 400ms ease;
+  will-change: transform, filter, opacity;
 }
 
 .hero-scene__logo-half--left {
-  left: -8%;
+  left: var(--logo-rest-inset);
   background-position: 0% 50%;
   -webkit-mask-image: linear-gradient(to right, transparent 0%, black 12%, black 44%, transparent 60%);
   mask-image: linear-gradient(to right, transparent 0%, black 12%, black 44%, transparent 60%);
-  transform: translate(calc(var(--scene-progress) * 32vw), -50%);
-  opacity: clamp(0, calc(0.16 * (1 - var(--scene-progress) * 1.4)), 0.16);
-  filter: blur(0.5px) saturate(90%);
-  transition: transform 400ms cubic-bezier(.16, 1, .3, 1), opacity 400ms ease;
-  will-change: transform, opacity;
+  /* At rest, this box's right (seam) edge sits at
+     (rest-inset + half-width). At progress 1 we want that edge at
+     logo-merge-x, so translateX must cover the difference. */
+  transform: translateY(-50%) translateX(calc(var(--scene-progress) * (var(--logo-merge-x) - var(--logo-rest-inset) - var(--logo-half-width))));
 }
 
 .hero-scene__logo-half--right {
-  right: -8%;
+  right: var(--logo-rest-inset);
   background-position: 100% 50%;
   -webkit-mask-image: linear-gradient(to left, transparent 0%, black 12%, black 44%, transparent 60%);
   mask-image: linear-gradient(to left, transparent 0%, black 12%, black 44%, transparent 60%);
-  transform: translate(calc(var(--scene-progress) * -32vw), -50%);
-  opacity: clamp(0, calc(0.16 * (1 - var(--scene-progress) * 1.4)), 0.16);
-  filter: blur(0.5px) saturate(90%);
-  transition: transform 400ms cubic-bezier(.16, 1, .3, 1), opacity 400ms ease;
-  will-change: transform, opacity;
-}
-
-/* ---------- Settled mark (ARIA-A.svg) ---------- */
-
-.hero-scene__mark {
-  position: absolute;
-  left: 8%;
-  top: 50%;
-  width: 96px;
-  pointer-events: none;
-  opacity: var(--scene-progress);
-  transform: translateY(-50%) scale(calc(0.7 + var(--scene-progress) * 0.3));
-  transition: transform 400ms cubic-bezier(.16, 1, .3, 1), opacity 400ms ease;
-  will-change: transform, opacity;
+  /* At rest, this box's left (seam) edge sits at
+     (100vw - rest-inset - half-width). At progress 1 we want that edge
+     at logo-merge-x too, so both halves' seams meet at the same point. */
+  transform: translateY(-50%) translateX(calc(var(--scene-progress) * (var(--logo-merge-x) - 100vw + var(--logo-rest-inset) + var(--logo-half-width))));
 }
 
 /* ---------- Explore card settle position ----------
    The open/close *state* is toggled by hero-scene.js once scroll
-   progress passes 0.6 (see updateProgress()); this only adds the
-   positional slide so the card visibly moves right as it settles,
-   rather than just popping open in place. */
+   progress passes 0.6 (via a real summary.click(), not the details.open
+   attribute — see hero-scene.js); this only adds the positional slide
+   so the card visibly moves right as it settles. The card also carries
+   .glass-card--no-float in the HTML (see glass.css) so the idle-float
+   keyframe animation doesn't override this transform — CSS animations
+   always win the cascade over a plain transform declaration. */
 
 .hero-scene__card {
   transition: transform 400ms cubic-bezier(.16, 1, .3, 1);
@@ -110,7 +122,7 @@
    Mirrors the body.no-motion convention already used in glass.css.
    Both cases show the fully settled end-state statically, with no
    pinned scroll track (hero-scene.js also short-circuits to
-   --scene-progress: 1 for prefers-reduced-motion — see Task 2). */
+   --scene-progress: 1 for prefers-reduced-motion). */
 
 @media (prefers-reduced-motion: reduce) {
   .hero-scene {
@@ -118,6 +130,7 @@
   }
   .hero-scene__sticky {
     position: static;
+    min-height: 0;
     height: auto;
   }
   .hero-scene__logo-half {
@@ -130,6 +143,7 @@ body.no-motion .hero-scene {
 }
 body.no-motion .hero-scene__sticky {
   position: static;
+  min-height: 0;
   height: auto;
 }
 body.no-motion .hero-scene__logo-half {
