@@ -643,10 +643,10 @@ class TierRouter {
 }
 
 .tr-completeness-bar-fill.green {
-  background: linear-gradient(90deg, var(--tr-property), var(--tr-success));
+  background: linear-gradient(90deg, var(--tr-tier1), color-mix(in srgb, var(--tr-tier1) 70%, var(--tr-text-secondary)));
 }
 .tr-completeness-bar-fill.amber {
-  background: linear-gradient(90deg, var(--tr-structure), var(--tr-warning));
+  background: linear-gradient(90deg, var(--tr-tier1), color-mix(in srgb, var(--tr-tier1) 70%, var(--tr-text-secondary)));
 }
 .tr-completeness-bar-fill.grey {
   background: linear-gradient(90deg, var(--tr-tier3), var(--tr-text-muted));
@@ -668,6 +668,13 @@ class TierRouter {
   font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.03em;
+}
+
+.tr-tier-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--tr-text-primary);
+  letter-spacing: -0.01em;
 }
 
 .tr-tier-badge.t1 {
@@ -775,7 +782,7 @@ class TierRouter {
   align-items: center;
   justify-content: flex-start;
   gap: 0;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
 }
 
 /* Row 2: 2 evidence captions, side by side under the chain.
@@ -803,25 +810,18 @@ class TierRouter {
   border-radius: 999px;
   font-size: 13px;
   font-weight: 600;
-  white-space: nowrap;
   text-align: center;
-}
-
-.tr-psp-node.processing {
-  background: rgba(var(--tr-tier1-rgb, 0, 102, 204), 0.2);
-  border: 1px solid var(--tr-processing);
+  background: color-mix(in srgb, var(--tr-tier1) 6%, var(--tr-bg-card));
+  border: 1px solid color-mix(in srgb, var(--tr-tier1) 22%, var(--tr-border));
   color: var(--tr-text-primary);
+  max-width: 100%;
 }
 
-.tr-psp-node.structure {
-  background: rgba(var(--tr-structure-rgb, 201, 147, 10), 0.2);
-  border: 1px solid var(--tr-structure);
-  color: var(--tr-text-primary);
-}
-
+.tr-psp-node.processing,
+.tr-psp-node.structure,
 .tr-psp-node.property {
-  background: rgba(var(--tr-property-rgb, 52, 199, 89), 0.2);
-  border: 1px solid var(--tr-property);
+  background: color-mix(in srgb, var(--tr-tier1) 6%, var(--tr-bg-card));
+  border-color: color-mix(in srgb, var(--tr-tier1) 22%, var(--tr-border));
   color: var(--tr-text-primary);
 }
 
@@ -862,29 +862,72 @@ class TierRouter {
 .tr-constraint-item {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
+  gap: 10px;
   font-size: 13px;
   color: var(--tr-text-secondary);
+  padding: 8px 12px;
+  background: color-mix(in srgb, var(--tr-tier1) 4%, var(--tr-bg-card));
+  border: 1px solid color-mix(in srgb, var(--tr-tier1) 14%, var(--tr-border));
+  border-radius: 8px;
+  line-height: 1.5;
+}
+
+.tr-constraint-icon {
+  flex: 0 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 700;
+  margin-top: 2px;
 }
 
 .tr-constraint-icon.pass {
-  color: var(--tr-success);
-  font-weight: 700;
+  color: var(--tr-tier1);
+  background: color-mix(in srgb, var(--tr-tier1) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tr-tier1) 35%, transparent);
 }
 
 .tr-constraint-icon.fail {
   color: #b8504a;
-  font-weight: 700;
+  background: rgba(184, 80, 74, 0.1);
+  border: 1px solid rgba(184, 80, 74, 0.3);
 }
 
 .tr-disclaimer {
-  font-size: 12px;
-  color: var(--tr-tier2);
-  background: rgba(255, 193, 7, 0.08);
-  border: 1px solid rgba(255, 193, 7, 0.25);
-  border-radius: 6px;
-  padding: 8px 12px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--tr-text-secondary);
+  background: color-mix(in srgb, var(--tr-tier1) 4%, var(--tr-bg-card));
+  border: 1px solid color-mix(in srgb, var(--tr-tier1) 14%, var(--tr-border));
+  border-radius: 8px;
+  padding: 10px 14px;
   margin-top: 10px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.tr-disclaimer::before {
+  content: 'i';
+  flex: 0 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 700;
+  font-style: italic;
+  color: var(--tr-tier1);
+  background: color-mix(in srgb, var(--tr-tier1) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tr-tier1) 35%, transparent);
+  font-family: Georgia, serif;
+  margin-top: 1px;
 }
 
 .tr-speculative-notice {
@@ -906,47 +949,52 @@ class TierRouter {
 
 .tr-comparison-card {
   flex: 1;
-  background: var(--tr-bg-dark);
-  border-radius: 8px;
-  padding: 12px;
-  border: 1px solid var(--tr-border);
+  background: color-mix(in srgb, var(--tr-tier1) 3%, var(--tr-bg-card));
+  border-radius: 10px;
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, var(--tr-tier1) 12%, var(--tr-border));
 }
 
-.tr-comparison-card.overconfident {
-  border-top: 3px solid var(--tr-accent);
-  border-top-color: #b8504a;
-}
-
+.tr-comparison-card.overconfident,
 .tr-comparison-card.calibrated {
-  border-top: 3px solid var(--tr-success);
+  border-top: 1px solid color-mix(in srgb, var(--tr-tier1) 12%, var(--tr-border));
 }
 
 .tr-comparison-label {
   font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--tr-text-muted);
+  margin-bottom: 4px;
+}
+
+.tr-comparison-tag {
+  display: inline-block;
+  font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin-bottom: 6px;
-}
-
-.tr-comparison-card.overconfident .tr-comparison-label {
-  color: #b8504a;
-}
-
-.tr-comparison-card.calibrated .tr-comparison-label {
-  color: var(--tr-success);
+  letter-spacing: 0.05em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tr-tier1) 12%, transparent);
+  color: var(--tr-tier1);
+  border: 1px solid color-mix(in srgb, var(--tr-tier1) 30%, transparent);
+  margin-bottom: 8px;
 }
 
 .tr-comparison-conf {
   font-size: 22px;
-  font-weight: 800;
+  font-weight: 700;
+  color: var(--tr-text-primary);
+  letter-spacing: -0.01em;
 }
 
 .tr-comparison-issue {
-  font-size: 11px;
-  color: var(--tr-text-muted);
-  line-height: 1.5;
-  margin-top: 4px;
+  font-size: 11.5px;
+  color: var(--tr-text-secondary);
+  line-height: 1.55;
+  margin-top: 6px;
 }
 
 /* ---- Animations ---- */
@@ -1444,8 +1492,12 @@ class TierRouter {
 
     // Tier badge
     const badge = this._el('span', `tr-tier-badge ${tierClass}`);
-    badge.innerHTML = `Tier ${q.tier}: ${q.tier_name}`;
+    badge.innerHTML = `Tier ${q.tier}`;
     row.appendChild(badge);
+
+    const tierTitle = this._el('div', 'tr-tier-title');
+    tierTitle.textContent = q.tier_name;
+    row.appendChild(tierTitle);
 
     // Confidence score
     const confWrap = this._el('div');
@@ -1494,12 +1546,12 @@ class TierRouter {
     const confWrap = this._el('div');
     confWrap.style.cssText = 'display:flex;flex-direction:column;';
     const confScore = this._el('span', 'tr-confidence-score');
-    confScore.style.color = tierColors[q.tier];
+    confScore.style.color = 'var(--tr-text-primary)';
     confScore.style.fontSize = '20px';
     confScore.textContent = `${(q.confidence * 100).toFixed(0)}%`;
     confWrap.appendChild(confScore);
     const confLabel = this._el('span', 'tr-confidence-label');
-    confLabel.style.color = tierColors[q.tier];
+    confLabel.style.color = 'var(--tr-text-muted)';
     confLabel.textContent = q.confidence_label;
     confWrap.appendChild(confLabel);
     header.appendChild(confWrap);
@@ -1734,10 +1786,12 @@ class TierRouter {
     // Naive KG card
     const naive = this._el('div', 'tr-comparison-card overconfident');
     const naiveLabel = this._el('div', 'tr-comparison-label');
-    naiveLabel.textContent = 'Naive KG (Overconfident)';
+    naiveLabel.textContent = 'Naive KG';
     naive.appendChild(naiveLabel);
+    const naiveTag = this._el('span', 'tr-comparison-tag');
+    naiveTag.textContent = 'Overconfident';
+    naive.appendChild(naiveTag);
     const naiveConf = this._el('div', 'tr-comparison-conf');
-    naiveConf.style.color = this.colors.danger;
     naiveConf.textContent = `${(q.naive_kg_result.confidence * 100).toFixed(0)}%`;
     naive.appendChild(naiveConf);
     const naiveIssue = this._el('div', 'tr-comparison-issue');
@@ -1748,10 +1802,12 @@ class TierRouter {
     // ARIA card
     const aria = this._el('div', 'tr-comparison-card calibrated');
     const ariaLabel = this._el('div', 'tr-comparison-label');
-    ariaLabel.textContent = 'ARIA (Calibrated)';
+    ariaLabel.textContent = 'ARIA';
     aria.appendChild(ariaLabel);
+    const ariaTag = this._el('span', 'tr-comparison-tag');
+    ariaTag.textContent = 'Calibrated';
+    aria.appendChild(ariaTag);
     const ariaConf = this._el('div', 'tr-comparison-conf');
-    ariaConf.style.color = this.colors.successGreen;
     ariaConf.textContent = `${(q.confidence * 100).toFixed(0)}%`;
     aria.appendChild(ariaConf);
     const ariaIssue = this._el('div', 'tr-comparison-issue');
