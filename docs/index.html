@@ -177,7 +177,7 @@
     <figure id="fig-tunneling">
       <div id="tunneling-demo" class="interactive-figure"></div>
       <figcaption>
-        <strong>Figure 1:</strong> Same query, two systems. The naive KG+LLM pipeline over-anchors on partial evidence (<span style="color:var(--aria-danger)">red</span>) and produces overconfident but mechanistically incomplete answers.
+        <strong>Demo 1:</strong> Same query, two systems. The naive KG+LLM pipeline over-anchors on partial evidence (<span style="color:var(--aria-danger)">red</span>) and produces overconfident but mechanistically incomplete answers.
       </figcaption>
     </figure>
 
@@ -210,7 +210,7 @@
     <figure id="fig-psp">
       <div id="psp-cascade" class="interactive-figure"></div>
       <figcaption>
-        <strong>Figure 2:</strong> The PSP hierarchy. Click any node to see its connections. Complete P→S→P chains are <span style="color:var(--tier-1)">blue</span>; P→P shortcuts that cause contextual tunneling are <span style="color:var(--aria-danger)">dashed red</span>.
+        <strong>Demo 2:</strong> The PSP hierarchy. Click any node to see its connections. Complete P→S→P chains are <span style="color:var(--tier-1)">blue</span>; P→P shortcuts that cause contextual tunneling are <span style="color:var(--aria-danger)">dashed red</span>.
       </figcaption>
     </figure>
 
@@ -235,9 +235,6 @@
         </div>
       </details>
     </div>
-    <p class="paper-fig-link">
-      <a href="#fig-paper-1"><span class="paper-fig-link__num">Fig&nbsp;1</span> View the paper's three-tier cascade diagram →</a>
-    </p>
   </div>
 </section>
 
@@ -274,7 +271,7 @@
     <figure id="fig-tier-router">
       <div id="tier-router" class="interactive-figure"></div>
       <figcaption>
-        <strong>Figure 3:</strong> Type a materials query and watch ARIA route it. PSP completeness determines the tier.
+        <strong>Demo 3:</strong> Type a materials query and watch ARIA route it. PSP completeness determines the tier.
       </figcaption>
     </figure>
 
@@ -302,7 +299,7 @@
     <figure id="fig-kg">
       <div id="kg-explorer" class="interactive-figure kg-viz"></div>
       <figcaption>
-        <strong>Figure 4:</strong> Hover nodes for connections. Click to highlight PSP paths. <span style="color:var(--tier-1)">Blue</span> = Processing · <span style="color:var(--tier-2)">Gold</span> = Structure · <span style="color:var(--aria-success)">Green</span> = Property. <span style="color:var(--aria-danger)">Dashed red</span> = P→P shortcuts.
+        <strong>Demo 4:</strong> Hover nodes for connections. Click to highlight PSP paths. <span style="color:var(--tier-1)">Blue</span> = Processing · <span style="color:var(--tier-2)">Gold</span> = Structure · <span style="color:var(--aria-success)">Green</span> = Property. <span style="color:var(--aria-danger)">Dashed red</span> = P→P shortcuts.
       </figcaption>
     </figure>
 
@@ -497,7 +494,7 @@
     <figure id="fig-results">
       <div id="results-chart" class="interactive-figure"></div>
       <figcaption>
-        <strong>Figure 5:</strong> Performance across methods. The chart is interactive — explore the data directly.
+        <strong>Demo 5:</strong> Performance across methods. The chart is interactive — explore the data directly.
       </figcaption>
     </figure>
 
@@ -544,7 +541,7 @@
     <figure id="fig-robustness">
       <div id="robustness-slider" class="interactive-figure"></div>
       <figcaption>
-        <strong>Figure 6:</strong> ARIA holds up through <span class="term-tip" tabindex="0" data-tip="Tier 2 absorption: when a direct P→S→P path is missing (e.g., after edge deletion), ARIA falls back to reasoning by analogy from the most similar intact pathway instead of failing outright.">Tier 2 absorption</span>; Naive KG collapses.
+        <strong>Demo 6:</strong> ARIA holds up through <span class="term-tip" tabindex="0" data-tip="Tier 2 absorption: when a direct P→S→P path is missing (e.g., after edge deletion), ARIA falls back to reasoning by analogy from the most similar intact pathway instead of failing outright.">Tier 2 absorption</span>; Naive KG collapses.
       </figcaption>
     </figure>
   </div>

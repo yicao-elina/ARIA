@@ -106,8 +106,8 @@ class TierRouter {
             edge1_confidence: 0.90,
             edge2_confidence: 0.92,
             path_confidence: 0.90,
-            evidence1: 'CVD growth at 750°C on SiO₂ substrate yields large-grain MoS₂ with improved crystallinity.',
-            evidence2: 'Improved crystallinity reduces charged impurity scattering, leading to carrier mobility exceeding 40 cm²/Vs.',
+            evidence1: 'CVD at 750°C on SiO₂ → large-grain MoS₂ with higher crystallinity.',
+            evidence2: 'Higher crystallinity → less charged-impurity scattering → μ > 40 cm²/Vs.',
           },
         ],
         naive_kg_result: {
@@ -763,18 +763,48 @@ class TierRouter {
 /* PSP path */
 .tr-psp-path {
   display: flex;
-  align-items: center;
-  gap: 0;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 8px;
   margin-bottom: 6px;
+  max-width: 720px;
+}
+
+/* Row 1: 3 nodes + 2 arrows (the actual chain) */
+.tr-psp-chain {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0;
+  flex-wrap: nowrap;
+}
+
+/* Row 2: 2 evidence captions, side by side under the chain.
+   Equal-width 2-col layout — the two captions sit side by side,
+   not under the edges pixel-perfectly, but the chain above is
+   narrow enough that they read as belonging to the right arrows. */
+.tr-psp-evidence-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.tr-psp-evidence {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--tr-text-secondary);
+  text-align: center;
+  padding: 0 4px;
+  max-width: 320px;
+  justify-self: center;
 }
 
 .tr-psp-node {
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 12px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-size: 13px;
   font-weight: 600;
   white-space: nowrap;
+  text-align: center;
 }
 
 .tr-psp-node.processing {
@@ -799,26 +829,24 @@ class TierRouter {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin: 0 4px;
-  min-width: 50px;
+  justify-content: center;
+  margin: 0 8px;
+  min-width: 80px;
+  gap: 2px;
 }
 
 .tr-psp-arrow {
-  font-size: 14px;
-  color: var(--tr-text-muted);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--tr-text-secondary);
+  line-height: 1;
 }
 
 .tr-psp-edge-conf {
-  font-size: 10px;
-  color: var(--tr-text-muted);
-}
-
-.tr-psp-evidence {
   font-size: 11px;
-  color: var(--tr-text-muted);
-  margin-top: 2px;
-  line-height: 1.4;
-  max-width: 400px;
+  font-weight: 600;
+  color: var(--tr-text-secondary);
+  letter-spacing: 0.02em;
 }
 
 /* Constraints */
@@ -1513,50 +1541,69 @@ class TierRouter {
 
     const pathEl = this._el('div', 'tr-psp-path');
 
-    // Source node (Processing)
-    pathEl.appendChild(this._buildPSPNode(path.source, 'processing'));
+    // Row 1: the chain — 3 nodes + 2 arrows (each arrow carries its confidence)
+    const chain = this._el('div', 'tr-psp-chain');
 
-    // Edge 1
-    pathEl.appendChild(this._buildPSPEdge(path.edge1_confidence, path.evidence1));
-    pathEl.appendChild(this._buildPSPEdgeArrow());
+    // Source (Processing)
+    chain.appendChild(this._buildPSPNode(path.source, 'processing'));
 
-    // Intermediate node (Structure)
-    pathEl.appendChild(this._buildPSPNode(path.intermediate, 'structure'));
+    // Edge 1 — just arrow + confidence, evidence moved to row 2
+    const edge1 = this._el('div', 'tr-psp-edge');
+    const conf1 = this._el('div', 'tr-psp-edge-conf');
+    conf1.textContent = this._fmtConf(path.edge1_confidence);
+    edge1.appendChild(conf1);
+    const arrow1 = this._el('span', 'tr-psp-arrow');
+    arrow1.textContent = '→';
+    edge1.appendChild(arrow1);
+    chain.appendChild(edge1);
+
+    // Intermediate (Structure)
+    chain.appendChild(this._buildPSPNode(path.intermediate, 'structure'));
 
     // Edge 2
-    pathEl.appendChild(this._buildPSPEdge(path.edge2_confidence, path.evidence2));
-    pathEl.appendChild(this._buildPSPEdgeArrow());
+    const edge2 = this._el('div', 'tr-psp-edge');
+    const conf2 = this._el('div', 'tr-psp-edge-conf');
+    conf2.textContent = this._fmtConf(path.edge2_confidence);
+    edge2.appendChild(conf2);
+    const arrow2 = this._el('span', 'tr-psp-arrow');
+    arrow2.textContent = '→';
+    edge2.appendChild(arrow2);
+    chain.appendChild(edge2);
 
-    // Target node (Property)
-    pathEl.appendChild(this._buildPSPNode(path.target, 'property'));
+    // Target (Property)
+    chain.appendChild(this._buildPSPNode(path.target, 'property'));
+
+    pathEl.appendChild(chain);
+
+    // Row 2: evidence captions in a 2-col grid under the chain
+    if (path.evidence1 || path.evidence2) {
+      const evRow = this._el('div', 'tr-psp-evidence-row');
+      if (path.evidence1) {
+        const ev1 = this._el('div', 'tr-psp-evidence');
+        ev1.textContent = path.evidence1;
+        evRow.appendChild(ev1);
+      }
+      if (path.evidence2) {
+        const ev2 = this._el('div', 'tr-psp-evidence');
+        ev2.textContent = path.evidence2;
+        evRow.appendChild(ev2);
+      }
+      pathEl.appendChild(evRow);
+    }
 
     section.appendChild(pathEl);
     return section;
+  }
+
+  _fmtConf(c) {
+    if (c === null || c === undefined) return '';
+    return `${Math.round(c * 100)}%`;
   }
 
   _buildPSPNode(label, type) {
     const node = this._el('span', `tr-psp-node ${type}`);
     node.textContent = label;
     return node;
-  }
-
-  _buildPSPEdge(confidence, evidence) {
-    const edge = this._el('div', 'tr-psp-edge');
-    const conf = this._el('div', 'tr-psp-edge-conf');
-    conf.textContent = confidence ? `${(confidence * 100).toFixed(0)}%` : '';
-    edge.appendChild(conf);
-    if (evidence) {
-      const ev = this._el('div', 'tr-psp-evidence');
-      ev.textContent = evidence;
-      edge.appendChild(ev);
-    }
-    return edge;
-  }
-
-  _buildPSPEdgeArrow() {
-    const arrow = this._el('span', 'tr-psp-arrow');
-    arrow.textContent = '→';
-    return arrow;
   }
 
   // -- Tier 2 Details: Analogical Transfer ------------------------------------
@@ -1599,13 +1646,50 @@ class TierRouter {
       pathSection.appendChild(pathTitle);
 
       const pathEl = this._el('div', 'tr-psp-path');
-      pathEl.appendChild(this._buildPSPNode(path.source, 'processing'));
-      pathEl.appendChild(this._buildPSPEdge(path.edge1_confidence, path.evidence1));
-      pathEl.appendChild(this._buildPSPEdgeArrow());
-      pathEl.appendChild(this._buildPSPNode(path.intermediate, 'structure'));
-      pathEl.appendChild(this._buildPSPEdge(path.edge2_confidence, path.evidence2));
-      pathEl.appendChild(this._buildPSPEdgeArrow());
-      pathEl.appendChild(this._buildPSPNode(path.target, 'property'));
+
+      // Row 1: the chain
+      const chain = this._el('div', 'tr-psp-chain');
+      chain.appendChild(this._buildPSPNode(path.source, 'processing'));
+
+      const e1 = this._el('div', 'tr-psp-edge');
+      const c1 = this._el('div', 'tr-psp-edge-conf');
+      c1.textContent = this._fmtConf(path.edge1_confidence);
+      e1.appendChild(c1);
+      const a1 = this._el('span', 'tr-psp-arrow');
+      a1.textContent = '→';
+      e1.appendChild(a1);
+      chain.appendChild(e1);
+
+      chain.appendChild(this._buildPSPNode(path.intermediate, 'structure'));
+
+      const e2 = this._el('div', 'tr-psp-edge');
+      const c2 = this._el('div', 'tr-psp-edge-conf');
+      c2.textContent = this._fmtConf(path.edge2_confidence);
+      e2.appendChild(c2);
+      const a2 = this._el('span', 'tr-psp-arrow');
+      a2.textContent = '→';
+      e2.appendChild(a2);
+      chain.appendChild(e2);
+
+      chain.appendChild(this._buildPSPNode(path.target, 'property'));
+
+      pathEl.appendChild(chain);
+
+      // Row 2: evidence captions
+      if (path.evidence1 || path.evidence2) {
+        const evRow = this._el('div', 'tr-psp-evidence-row');
+        if (path.evidence1) {
+          const ev1 = this._el('div', 'tr-psp-evidence');
+          ev1.textContent = path.evidence1;
+          evRow.appendChild(ev1);
+        }
+        if (path.evidence2) {
+          const ev2 = this._el('div', 'tr-psp-evidence');
+          ev2.textContent = path.evidence2;
+          evRow.appendChild(ev2);
+        }
+        pathEl.appendChild(evRow);
+      }
 
       pathSection.appendChild(pathEl);
       section.appendChild(pathSection);
