@@ -1,0 +1,69 @@
+/* ==========================================================================
+   hero-scene.css
+   Scroll-driven hero logo scene: two feathered logo halves converge into
+   the ARIA-A mark as the user scrolls past the hero, while the "What
+   you'll explore" card slides right and expands. All motion is driven by
+   the single --scene-progress custom property (0 at rest, 1 fully
+   settled), set by assets/js/hero-scene.js. Without that script (or with
+   prefers-reduced-motion), --scene-progress stays at its default (0),
+   which is a valid, harmless static rest state — never broken.
+   ========================================================================== */
+
+.hero-scene {
+  position: relative;
+  height: 220vh;
+  --scene-progress: 0;
+}
+
+.hero-scene__sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* ---------- Split logo halves ----------
+   Each half shows one side of the same ARIA-logo.svg: the element is
+   half the logo's natural width, background-size is 200% of the
+   element's own width (= the logo's full natural width), and
+   background-position picks which side is visible. */
+
+.hero-scene__logo-half {
+  position: absolute;
+  top: 50%;
+  width: 46vw;
+  max-width: 560px;
+  aspect-ratio: 296 / 139.5; /* ARIA-logo.svg viewBox: 296.25 x 139.5 */
+  background-image: url("../figures/ARIA-logo.svg");
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+
+.hero-scene__logo-half--left {
+  left: -8%;
+  background-position: 0% 50%;
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 12%, black 44%, transparent 60%);
+  mask-image: linear-gradient(to right, transparent 0%, black 12%, black 44%, transparent 60%);
+}
+
+.hero-scene__logo-half--right {
+  right: -8%;
+  background-position: 100% 50%;
+  -webkit-mask-image: linear-gradient(to left, transparent 0%, black 12%, black 44%, transparent 60%);
+  mask-image: linear-gradient(to left, transparent 0%, black 12%, black 44%, transparent 60%);
+}
+
+/* ---------- Settled mark (ARIA-A.svg) ---------- */
+
+.hero-scene__mark {
+  position: absolute;
+  left: 8%;
+  top: 50%;
+  width: 96px;
+  pointer-events: none;
+  opacity: 0;
+}

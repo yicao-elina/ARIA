@@ -19,6 +19,7 @@
   <link rel="stylesheet" href="assets/css/glossary.css" />
   <link rel="stylesheet" href="assets/css/header-pill.css" />
   <link rel="stylesheet" href="assets/css/mesh.css" />
+  <link rel="stylesheet" href="assets/css/hero-scene.css" />
 
   <!-- KaTeX for math rendering -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
@@ -84,43 +85,50 @@
 <!-- ======= HERO / ABSTRACT ======= -->
 <section class="tile tile--parchment tile--hero" id="abstract">
   <div class="mesh mesh--hero" aria-hidden="true"></div>
-  <div class="tile__content">
-    <h1 class="hero-title reveal">ARIA: A Causal-Aware Framework for Rescuing LLM Reasoning in Materials Discovery</h1>
-    <p class="hero-subtitle reveal">Gating knowledge on causal completeness to prevent <em>contextual tunneling</em> in LLMs</p>
-    <p class="hero-authors reveal">
-      <a class="term-tip term-tip--below" href="https://yicao-elina.github.io/yicao-elina/" target="_blank" rel="noopener" data-tip="Chemical and Biomolecular Engineering, Johns Hopkins University · ycao73@jh.edu">Yi Cao<sup class="byline-mark byline-mark--dagger">†</sup></a>,
-      <a class="term-tip term-tip--below" href="https://scholar.google.com/citations?user=RPw7AlUAAAAJ&amp;hl=zh-CN" target="_blank" rel="noopener" data-tip="Computer Science, Johns Hopkins University · lwang240@jh.edu">Liaoyaqi Wang<sup class="byline-mark byline-mark--dagger">†</sup></a>,
-      <a class="term-tip term-tip--below" href="http://www.jienengchen.com/" target="_blank" rel="noopener" data-tip="Computer Science, Johns Hopkins University · jchen293@jhu.edu">Jieneng Chen</a>,
-      <a class="term-tip term-tip--below" href="https://www.cs.jhu.edu/~vandurme/" target="_blank" rel="noopener" data-tip="Computer Science, Johns Hopkins University · vandurme@jhu.edu">Benjamin Van Durme<sup class="byline-mark byline-mark--star">*</sup></a>,
-      <a class="term-tip term-tip--below" href="https://www.cs.jhu.edu/~ayuille/" target="_blank" rel="noopener" data-tip="Computer Science, Johns Hopkins University · ayuille1@jhu.edu">Alan Yuille<sup class="byline-mark byline-mark--star">*</sup></a>,
-      <a class="term-tip term-tip--below" href="https://engineering.jhu.edu/chembe/faculty/paulette-clancy/" target="_blank" rel="noopener" data-tip="Chemical and Biomolecular Engineering, Johns Hopkins University · pclancy3@jhu.edu">Paulette Clancy<sup class="byline-mark byline-mark--star">*</sup></a>
-    </p>
-    <p class="hero-authors-legend reveal">
-      <span class="byline-legend-item"><span class="byline-mark byline-mark--star">*</span> Corresponding author</span>
-      <span class="byline-legend-sep" aria-hidden="true">·</span>
-      <span class="byline-legend-item"><span class="byline-mark byline-mark--dagger">†</span> Equal contribution</span>
-    </p>
-    <p class="hero-date reveal">KDD 2026 · AI for Sciences Track</p>
-    <div class="hero-cta reveal">
-      <a href="https://github.com/yicao-elina/aria" class="sub-nav__cta" target="_blank" rel="noopener">Code &amp; Data</a>
-      <a href="#problem" class="toggle-btn">Explore ↓</a>
-      <button type="button" id="tour-start-btn" class="toggle-btn tour-cta">Take a Tour</button>
-    </div>
-    <div class="hero-lead">
-      <p class="reveal">
-        Naively augmenting LLMs with knowledge graph evidence can <em>degrade</em> performance—over-anchoring on correct-but-incomplete evidence. <strong>ARIA</strong> fixes this with a three-tier cascade that gates evidence on <em>causal completeness</em>.
-      </p>
-      <details class="detail-toggle glass-card glass-card--compact reveal">
-        <summary>What you'll explore in this article</summary>
-        <div class="detail-toggle__body">
-          <ul>
-            <li>Why adding knowledge can hurt, and the failure mode we call <em>contextual tunneling</em></li>
-            <li>The Processing–Structure–Property (PSP) hierarchy and what makes a causal chain <em>complete</em></li>
-            <li>How ARIA's three-tier cascade decides <em>when</em> to use retrieved evidence</li>
-            <li>An auditable causal trace you can inspect end-to-end</li>
-          </ul>
+  <div class="hero-scene" id="hero-scene">
+    <div class="hero-scene__sticky">
+      <div class="hero-scene__logo-half hero-scene__logo-half--left" aria-hidden="true"></div>
+      <div class="hero-scene__logo-half hero-scene__logo-half--right" aria-hidden="true"></div>
+      <img class="hero-scene__mark" src="assets/figures/ARIA-A.svg" alt="" aria-hidden="true" />
+      <div class="tile__content">
+        <h1 class="hero-title reveal">ARIA: A Causal-Aware Framework for Rescuing LLM Reasoning in Materials Discovery</h1>
+        <p class="hero-subtitle reveal">Gating knowledge on causal completeness to prevent <em>contextual tunneling</em> in LLMs</p>
+        <p class="hero-authors reveal">
+          <a class="term-tip term-tip--below" href="https://yicao-elina.github.io/yicao-elina/" target="_blank" rel="noopener" data-tip="Chemical and Biomolecular Engineering, Johns Hopkins University · ycao73@jh.edu">Yi Cao<sup class="byline-mark byline-mark--dagger">†</sup></a>,
+          <a class="term-tip term-tip--below" href="https://scholar.google.com/citations?user=RPw7AlUAAAAJ&amp;hl=zh-CN" target="_blank" rel="noopener" data-tip="Computer Science, Johns Hopkins University · lwang240@jh.edu">Liaoyaqi Wang<sup class="byline-mark byline-mark--dagger">†</sup></a>,
+          <a class="term-tip term-tip--below" href="http://www.jienengchen.com/" target="_blank" rel="noopener" data-tip="Computer Science, Johns Hopkins University · jchen293@jhu.edu">Jieneng Chen</a>,
+          <a class="term-tip term-tip--below" href="https://www.cs.jhu.edu/~vandurme/" target="_blank" rel="noopener" data-tip="Computer Science, Johns Hopkins University · vandurme@jhu.edu">Benjamin Van Durme<sup class="byline-mark byline-mark--star">*</sup></a>,
+          <a class="term-tip term-tip--below" href="https://www.cs.jhu.edu/~ayuille/" target="_blank" rel="noopener" data-tip="Computer Science, Johns Hopkins University · ayuille1@jhu.edu">Alan Yuille<sup class="byline-mark byline-mark--star">*</sup></a>,
+          <a class="term-tip term-tip--below" href="https://engineering.jhu.edu/chembe/faculty/paulette-clancy/" target="_blank" rel="noopener" data-tip="Chemical and Biomolecular Engineering, Johns Hopkins University · pclancy3@jhu.edu">Paulette Clancy<sup class="byline-mark byline-mark--star">*</sup></a>
+        </p>
+        <p class="hero-authors-legend reveal">
+          <span class="byline-legend-item"><span class="byline-mark byline-mark--star">*</span> Corresponding author</span>
+          <span class="byline-legend-sep" aria-hidden="true">·</span>
+          <span class="byline-legend-item"><span class="byline-mark byline-mark--dagger">†</span> Equal contribution</span>
+        </p>
+        <p class="hero-date reveal">KDD 2026 · AI for Sciences Track</p>
+        <div class="hero-cta reveal">
+          <a href="https://github.com/yicao-elina/aria" class="sub-nav__cta" target="_blank" rel="noopener">Code &amp; Data</a>
+          <a href="#problem" class="toggle-btn">Explore ↓</a>
+          <button type="button" id="tour-start-btn" class="toggle-btn tour-cta">Take a Tour</button>
         </div>
-      </details>
+        <div class="hero-lead">
+          <p class="reveal">
+            Naively augmenting LLMs with knowledge graph evidence can <em>degrade</em> performance—over-anchoring on correct-but-incomplete evidence. <strong>ARIA</strong> fixes this with a three-tier cascade that gates evidence on <em>causal completeness</em>.
+          </p>
+          <details class="detail-toggle glass-card glass-card--compact reveal hero-scene__card">
+            <summary>What you'll explore in this article</summary>
+            <div class="detail-toggle__body">
+              <ul>
+                <li>Why adding knowledge can hurt, and the failure mode we call <em>contextual tunneling</em></li>
+                <li>The Processing–Structure–Property (PSP) hierarchy and what makes a causal chain <em>complete</em></li>
+                <li>How ARIA's three-tier cascade decides <em>when</em> to use retrieved evidence</li>
+                <li>An auditable causal trace you can inspect end-to-end</li>
+              </ul>
+            </div>
+          </details>
+        </div>
+      </div>
     </div>
   </div>
 </section>
