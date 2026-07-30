@@ -1,61 +1,66 @@
 /* ==========================================================================
    hero-scene.css
-   Scroll-driven hero logo scene: two large, feathered halves of
-   ARIA-logo.svg sit inside a reserved "logo zone" placed directly above
-   the hero-lead paragraph ("Naively augmenting...") — an ordinary
-   in-flow, centered block, sized to exactly fit the merged logo, so it
-   can never overlap any text regardless of scroll position. As the
-   user scrolls through the 220vh track, the two halves translate
-   toward the zone's own center and simultaneously sharpen (blur → 0)
-   and grow more opaque (faint → solid) — a single continuous
-   interpolation, never fading to invisible — until they form the
-   complete logo, centered in the zone (and therefore centered on the
-   page, since the zone itself is centered the same way the rest of the
-   hero content is). All motion is driven by the single --scene-
-   progress custom property (0 at rest, 1 fully settled), set by
-   assets/js/hero-scene.js.
+   Scroll-pinned hero logo scene.
 
-   History (see git log for full detail): earlier iterations tried
-   positioning the halves against the viewport directly (flanking the
-   title, bleeding to the true screen edges). Two different techniques
-   for that both produced bugs that were only visible in an actual
-   browser (an off-center layout shift, then an overlap with the
-   hero-lead paragraph/card and an off-center merge point) — this
-   in-flow reserved-zone approach avoids that whole class of bug by
-   construction: nothing is positioned against the viewport, only
-   against this small, explicitly-sized zone.
+   Choreography (driven entirely by --scene-progress, 0..1, set by
+   assets/js/hero-scene.js):
+
+   1. On load the two feathered halves of ARIA-logo.svg already sit in
+      normal document flow, right where the layout puts them (below the
+      hero CTA row) — translucent and split apart. Nothing needs to
+      happen for them to be visible; there is no "rest state" hack.
+   2. As the user scrolls, the title/subtitle/byline/CTA block above the
+      logo scrolls up and off screen like ordinary content — the logo
+      zone scrolls right along with it, because it's still a normal
+      in-flow element at this point.
+   3. Only once scrolling has carried the logo zone's own top edge up to
+      the sticky offset does it lock in place on screen (position:
+      sticky). Because the zone sits after the title block in document
+      order, by construction that moment can only arrive after the title
+      block has already scrolled out of view — so the logo settles into
+      its pinned position exactly when the text above it is gone.
+   4. While pinned, the *only* motion is horizontal: the two halves
+      translate toward each other and simultaneously sharpen (blur → 0)
+      and solidify (translucent → opaque) as --scene-progress advances
+      from 0 to 1. No vertical movement happens during this phase.
+   5. --scene-progress reaches 1 exactly as the pin's scroll budget
+      (.hero-scene's extra height beyond the sticky element itself) runs
+      out — at that instant the logo is fully merged and fully sharp,
+      and position: sticky naturally releases, so further scrolling
+      carries the now-complete logo up together with .hero-lead below it,
+      like any other in-flow content.
+
+   --scene-progress is set on .tile__content (the common ancestor of both
+   #hero-scene and the .hero-scene__card details element it also drives),
+   not on #hero-scene itself, since the card now lives in .hero-lead, a
+   sibling of #hero-scene rather than a descendant of it.
    ========================================================================== */
 
+.tile--hero .tile__content {
+  --scene-progress: 0;   /* fallback so calc()s below stay valid pre-JS */
+}
+
 .hero-scene {
+  --logo-zone-height: 220px;   /* must match .hero-scene__logo-zone below */
+  --hero-scene-pin: 60vh;      /* scroll budget for the pin phase */
   position: relative;
-  height: 220vh;
-  --scene-progress: 0;
-  --logo-rest-opacity: 0.22;    /* opacity at progress 0 — stays visible, never fades to 0 */
-  --logo-rest-blur: 6px;        /* blur at progress 0 — sharpens to 0 at progress 1 */
+  height: calc(var(--logo-zone-height) + var(--hero-scene-pin));
 }
 
 .hero-scene__sticky {
   position: sticky;
-  top: 0;
-  min-height: 100vh;
-  height: auto;
+  top: 24px;                    /* small offset — see file header, step 3 */
+  height: var(--logo-zone-height);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-@media (max-height: 860px) {
-  .hero-scene__sticky {
-    position: static;
-  }
-}
-
 /* ---------- Logo zone ----------
    An ordinary in-flow block, centered the same way the rest of the
-   hero content is (.tile__content's own centering) — width and height
-   are sized so the fully-merged logo (420px wide, ~198px tall) fits
-   with a comfortable margin on every side; nothing here is positioned
-   against the viewport, only against this box. */
+   hero content is — width and height are sized so the fully-merged
+   logo (420px wide, ~198px tall) fits with a comfortable margin on
+   every side. */
 
 .hero-scene__logo-zone {
   --zone-width: min(90vw, 640px);
@@ -63,7 +68,6 @@
   position: relative;
   width: var(--zone-width);
   height: 220px;
-  margin: 0 auto 24px;
   overflow: hidden;
 }
 
@@ -94,8 +98,8 @@
   pointer-events: none;
   /* Sharpens and solidifies continuously as progress advances — never
      drops to 0 opacity, just gets clearer. */
-  opacity: calc(var(--logo-rest-opacity) + var(--scene-progress) * (1 - var(--logo-rest-opacity)));
-  filter: blur(calc(var(--logo-rest-blur) * (1 - var(--scene-progress))));
+  opacity: calc(var(--logo-rest-opacity, 0.35) + var(--scene-progress) * (1 - var(--logo-rest-opacity, 0.35)));
+  filter: blur(calc(var(--logo-rest-blur, 6px) * (1 - var(--scene-progress))));
   transition: transform 400ms cubic-bezier(.16, 1, .3, 1), filter 400ms ease, opacity 400ms ease;
   will-change: transform, filter, opacity;
 }
@@ -133,42 +137,33 @@
   transform: translateY(-50%) translateX(calc(var(--scene-progress) * (var(--zone-width) * 0.5 - var(--logo-half-width)) * -1));
 }
 
-/* ---------- Explore card settle position ----------
+/* ---------- Explore card ----------
    The open/close *state* is toggled by hero-scene.js once scroll
    progress passes 0.6 (via a real summary.click(), not the details.open
-   attribute — see hero-scene.js); this only adds the positional slide
-   so the card visibly moves right as it settles. The card also carries
-   .glass-card--no-float in the HTML (see glass.css) so the idle-float
-   keyframe animation doesn't override this transform — CSS animations
-   always win the cascade over a plain transform declaration. */
+   attribute — see hero-scene.js). No positional slide anymore — the
+   card stays in its normal centered position; the logo settles
+   centered above it now too (see .hero-scene__logo-zone), so there is
+   no off-to-the-side settled position for the card to pair with. The
+   card still carries .glass-card--no-float in the HTML (see glass.css)
+   so the idle-float keyframe animation doesn't fight its .reveal
+   entrance transition. */
 
 .hero-scene__card {
   /* This card also carries .reveal (mesh.css), which needs its own
      opacity/translate transition for its fade-and-slide-up entrance —
-     `transition` isn't additive across rules, so the later/same-
-     specificity rule here would otherwise silently replace .reveal's
-     transition list entirely and its entrance would snap instead of
-     animating. Both lists are included so both effects keep working. */
+     `transition` isn't additive across rules, so a rule here setting
+     `transition` would otherwise silently replace .reveal's transition
+     list entirely and its entrance would snap instead of animating. */
   transition:
-    transform 400ms cubic-bezier(.16, 1, .3, 1),
     opacity 700ms var(--ease-out-expo, cubic-bezier(.16, 1, .3, 1)),
     translate 800ms var(--ease-out-expo, cubic-bezier(.16, 1, .3, 1));
-  transform: translateX(calc(var(--scene-progress) * 6vw));
-}
-
-.hero-scene__card:hover,
-.hero-scene__card:focus-within {
-  transform: translateX(calc(var(--scene-progress) * 6vw)) translateY(-4px);
 }
 
 /* ---------- Reduced motion / explicit kill-switch ----------
-   Mirrors the body.no-motion convention already used in glass.css.
    hero-scene.js sets --scene-progress: 1 for prefers-reduced-motion,
    which alone already renders the fully-converged, fully-opaque,
-   fully-sharp logo (the zone's fixed height means nothing needs to
-   collapse or be hidden) — this block only removes the transition so
-   that settle is instant, and drops the scroll-pinned track since
-   there's nothing left to scroll-drive. */
+   fully-sharp logo — this block only drops the scroll-pinned track
+   (nothing left to scroll-drive) and makes the transition instant. */
 
 @media (prefers-reduced-motion: reduce) {
   .hero-scene {
@@ -176,7 +171,6 @@
   }
   .hero-scene__sticky {
     position: static;
-    min-height: 0;
     height: auto;
   }
   .hero-scene__logo-half {
@@ -189,7 +183,6 @@ body.no-motion .hero-scene {
 }
 body.no-motion .hero-scene__sticky {
   position: static;
-  min-height: 0;
   height: auto;
 }
 body.no-motion .hero-scene__logo-half {
