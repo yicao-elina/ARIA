@@ -93,7 +93,7 @@
 }
 
 .tile--hero .tile__content {
-  max-width: 880px;                              /* Wider hero text to fit title in 4 lines. No longer needs narrowing for the hero-scene logo — the logo now lives in its own reserved zone above the title (docs/assets/css/hero-scene.css), not beside/behind the text. */
+  max-width: 760px;                              /* Narrowed from 880px to clear the hero-scene logo halves flanking the text at common desktop widths (docs/assets/css/hero-scene.css) — verify visually and retune if still overlapping */
   position: relative;                             /* Lift hero text above ::before watermark */
   z-index: 1;
   margin-top: 104px;                             /* Reserve top space: pill header bottom (~72px) + 32px breathing room. Pushes the content below the fixed pill header. */
