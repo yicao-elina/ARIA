@@ -36,11 +36,20 @@
   top: 50%;
   width: 46vw;
   max-width: 560px;
-  aspect-ratio: 296 / 139.5; /* ARIA-logo.svg viewBox: 296.25 x 139.5 */
+  /* Half-image aspect ratio, NOT the full logo's ratio: this box shows
+     only half the logo (via background-size: 200% below), so its own
+     aspect ratio must be half of the full image's 296.25:139.5 ratio —
+     i.e. 148.125:139.5 — or the rendered image stretches ~2x. */
+  aspect-ratio: 148.125 / 139.5;
   background-image: url("../figures/ARIA-logo.svg");
   background-size: 200% 100%;
   background-repeat: no-repeat;
   pointer-events: none;
+  /* top: 50% alone only aligns this element's top edge to the container
+     midline (absolutely-positioned elements ignore the flex centering
+     on .hero-scene__sticky) — translateY(-50%) is required to actually
+     center it. */
+  transform: translateY(-50%);
 }
 
 .hero-scene__logo-half--left {
@@ -66,4 +75,5 @@
   width: 96px;
   pointer-events: none;
   opacity: 0;
+  transform: translateY(-50%);
 }
