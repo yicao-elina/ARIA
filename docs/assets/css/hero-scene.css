@@ -11,16 +11,25 @@
       sits at subtitle/byline height (hero-scene.js measures the actual
       rendered .hero-subtitle/.hero-authors-legend position and sets
       `top` from that, so it self-adjusts to however the title wraps).
-      The two feathered halves of ARIA-logo.svg sit translucent and
-      blurred at the true left/right screen edges, like wings — z-index
-      keeps them behind the hero text (.tile__content has z-index: 1).
+      The two feathered halves of ARIA-logo2.svg sit translucent and
+      blurred at the true left/right screen edges, like wings — and are
+      rendered ENLARGED (scale 2 via --logo-rest-scale, see
+      .hero-scene__logo-half) so the logo reads as a bold, oversized
+      hero mark that overflows its own layout-sized boxes toward the
+      screen edges. z-index keeps it all behind the hero text
+      (.tile__content has z-index: 1).
    2. As the page scrolls, #hero-scene stays glued to that same screen
       position (fixed), while --scene-progress (set on .tile__content by
       hero-scene.js, eased — slow at first, faster past roughly half the
-      scroll distance) drives the halves converging toward the center
-      and sharpening (blur → 0, translucent → opaque) — this is the only
-      motion during this phase; the *text* scrolls past beneath/around
-      the fixed overlay, not the other way round.
+      scroll distance) drives three things at once:
+        a) the halves converging toward the center,
+        b) sharpening (blur → 0, translucent → opaque),
+        c) and SHRINKING (--logo-scale interpolates 2 → 1, so the
+           oversized hero mark contracts to its true natural size as
+           it converges).
+      These run together so the logo feels like it "snaps into place"
+      in the reserved slot rather than just sliding. The *text* scrolls
+      past beneath/around the fixed overlay, not the other way round.
    3. #hero-scene-slot is a real, empty, in-flow spacer sized to fit the
       logo, placed right before .hero-lead — it reserves genuine layout
       height there (pushing .hero-lead down to clear it) but renders
@@ -32,8 +41,9 @@
       with `top` computed from the live viewport rects at that instant
       — landing it exactly where it already visually was, seamlessly.
       From that point on it scrolls normally with the rest of the page,
-      fully merged and 100% sharp (progress reaches 1 exactly at the
-      landing instant). Scrolling back up reverses the handoff.
+      fully merged, fully sharp, and at natural size (progress reaches
+      1 exactly at the landing instant, so --logo-scale = 1 too).
+      Scrolling back up reverses the handoff.
    ========================================================================== */
 
 .tile--hero {
@@ -86,32 +96,52 @@ body {
 .hero-scene__logo-zone {
   --zone-width: 100vw;
   --logo-half-width: min(30vw, 260px);
+  /* Now that the logo is enlarged at rest (scale 2 via --logo-rest-scale),
+     the previous 0.35-opacity/6px-blur rest state — designed for tiny
+     "wing" hints — would leave the bigger logo nearly invisible. Bump the
+     rest visibility so the enlarged logo reads on the hero: ~0.7 opacity
+     with a softer 2px blur. The halves still soften slightly more at the
+     seam edges via the mask, so they don't feel hard-edged. */
+  --logo-rest-opacity: 0.7;
+  --logo-rest-blur: 2px;
   position: relative;
   width: 100%;
   height: 100%;
 }
 
 /* ---------- Split logo halves ----------
-   Each half shows one side of the same ARIA-logo.svg: the element is
+   Each half shows one side of the same ARIA-logo2.svg: the element is
    --logo-half-width wide, background-size is 200% of the element's own
    width (= the logo's full natural width relative to a half-width
    box), and background-position picks which side is visible. At rest
    the two halves sit at the zone's own left/right edges (the true
-   viewport edges); as progress advances they translate toward the
-   zone's center by exactly enough to close the gap, so they meet with
-   no overlap and no leftover space, forming the complete logo centered
-   on the page. No transition on transform/filter/opacity — progress is
+   viewport edges), enlarged by --logo-scale (default 2 — see the .half
+   rule for the shrink choreography); as progress advances they both
+   translate toward the zone's center (closing the gap) AND scale down
+   to natural size, so they meet with no overlap and no leftover space,
+   forming the complete logo at its true size centered on the page.
+   No transition on transform/filter/opacity — progress is
    scroll-scrubbed every frame, so easing here would just add lag
    between the logo and the user's own scroll input. */
 
 .hero-scene__logo-half {
+  /* Logo display scale: starts enlarged at rest (overshooting the box,
+     so a chunk of the logo sits "outside" the layout-sized box — it's
+     allowed to clip past the viewport / be softly feathered into the
+     page on the outer edges), then shrinks 2→1 as progress reaches 1.
+     Eased by t*t just like --scene-progress itself, so the visible
+     shrink matches the convergence + sharpen curve. */
+  --logo-rest-scale: 2;
+  --logo-scale: calc(var(--logo-rest-scale) - (var(--logo-rest-scale) - 1) * var(--scene-progress));
   position: absolute;
   top: 50%;
   width: var(--logo-half-width);
   /* Half-image aspect ratio, NOT the full logo's ratio: this box shows
      only half the logo (via background-size: 200% below), so its own
-     aspect ratio must be half of the full image's 296.25:139.5 ratio —
-     i.e. 148.125:139.5 — or the rendered image stretches ~2x. */
+     aspect ratio must be half of the source image's natural ratio.
+     ARIA-logo.svg is 296.25×139.5 → half box is 148.125:139.5. If you
+     swap the image for one with a different aspect, update this in
+     lockstep or the rendered image will stretch ~2x. */
   aspect-ratio: 148.125 / 139.5;
   background-image: url("../figures/ARIA-logo.svg");
   background-size: 200% 100%;
@@ -166,8 +196,11 @@ body {
      we want that edge at the zone's own center (0.5 * zone-width), so
      translateX must cover the difference — this always lands exactly
      at the zone's center regardless of the specific knob values,
-     because both halves use the same zone-center target. */
-  transform: translateY(-50%) translateX(calc(var(--scene-progress) * (var(--zone-width) * 0.5 - var(--logo-half-width))));
+     because both halves use the same zone-center target. scale() is
+     applied from the box's own center (default transform-origin), so
+     the logo grows outward symmetrically, overflowing toward the screen
+     edge at rest and contracting to natural size at progress=1. */
+  transform: translateY(-50%) translateX(calc(var(--scene-progress) * (var(--zone-width) * 0.5 - var(--logo-half-width)))) scale(var(--logo-scale));
 }
 
 .hero-scene__logo-half--right {
@@ -186,8 +219,9 @@ body {
   /* Mirrors --left: at rest this box's left (seam) edge sits at
      (zone-width - logo-half-width), measured from the zone's left edge
      (since right:0). At progress 1 we want it at the zone's center
-     too, so it moves the same distance in the opposite direction. */
-  transform: translateY(-50%) translateX(calc(var(--scene-progress) * (var(--zone-width) * 0.5 - var(--logo-half-width)) * -1));
+     too, so it moves the same distance in the opposite direction.
+     See --left for the scale() rationale. */
+  transform: translateY(-50%) translateX(calc(var(--scene-progress) * (var(--zone-width) * 0.5 - var(--logo-half-width)) * -1)) scale(var(--logo-scale));
 }
 
 /* ---------- Explore card ----------
