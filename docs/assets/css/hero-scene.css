@@ -89,3 +89,14 @@
   transition: transform 400ms cubic-bezier(.16, 1, .3, 1), opacity 400ms ease;
   will-change: transform, opacity;
 }
+
+/* ---------- Explore card settle position ----------
+   The open/close *state* is toggled by hero-scene.js once scroll
+   progress passes 0.6 (see updateProgress()); this only adds the
+   positional slide so the card visibly moves right as it settles,
+   rather than just popping open in place. */
+
+.hero-scene__card {
+  transition: transform 400ms cubic-bezier(.16, 1, .3, 1);
+  transform: translateX(calc(var(--scene-progress) * 6vw));
+}
