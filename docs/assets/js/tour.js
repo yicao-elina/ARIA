@@ -208,29 +208,47 @@
       },
     },
     {
-      // Closing handoff. Pure completion screen — no mask, no
-      // auto-jump to GitHub, no interactive highlights. The panel
-      // body is the only thing the user sees: a short "you finished
-      // the tour" + the two long-term options (code/data on GitHub,
-      // citation via BibTeX). Clicking Finish (or End) here dismisses
-      // the tour without forcing a navigation.
+      // Tour handoff step. Highlights the BibTeX block + the GitHub
+      // link so the user can READ them (no auto-jump); advancing
+      // once reaches the closing "Tour complete" screen below.
+      id: "appendix",
+      title: "Where to go next",
+      body: "Code, KG JSON, and benchmark data live on GitHub. If ARIA helps your work, a citation is the best way to support future development — the BibTeX entry below is one click away.",
+      focusPoints: [
+        {
+          selector: '#bibtex-content',
+          label: "The BibTeX entry below — use the Copy button on the block to grab it for your paper.",
+        },
+      ],
+      actionPoint: {
+        selector: '#appendix a[href*="github.com/yicao-elina/aria"]',
+        label: "Code, data, and benchmark JSONs live on GitHub — star or fork to follow the work.",
+      },
+    },
+    {
+      // Pure completion screen. No mask, no holes, no auto-link —
+      // just a congratulations on the panel itself and a Finish
+      // button. Reached automatically after the user clicks Next
+      // past the handoff step above.
       id: "appendix",
       title: "Tour complete",
       // Panel-only prose (not the section `body`). Painted onto the
       // bottom-right panel itself so the user gets a clear "you
-      // finished" beat without being forced to navigate anywhere
-      // (no auto-link to GitHub, no auto-link to BibTeX).
+      // finished" beat without being forced to navigate anywhere.
       panelMessage:
         "Nice work — you've seen the whole causal-aware pipeline, from the problem ARIA solves, through the PSP reasoning backbone and auditable trace, to the benchmark results.\n\n" +
         "Two things for later:\n" +
         "• Code, KG JSON, and benchmark data → the GitHub link in this section's References paragraph.\n" +
         "• Citing the paper → the BibTeX block further down (the Copy button grabs it in one click).",
+      // Both stops share the same `id: "appendix"` so the closing
+      // one re-uses the section DOM already scrolled into view; no
+      // need to scroll again or paint a fresh canvas / mask.
       noScroll: true,
       noCanvas: true,
       // Marker for _panelState: swap the primary button text from
-      // "Next ▸" (which on the last stop ends the tour anyway) to
-      // "Finish ✓" so the action visibly matches a completion screen
-      // rather than a "forward to nowhere" affordance.
+      // "Next ▸" to "Finish ✓" so the action visibly matches a
+      // completion screen rather than a "forward to nowhere"
+      // affordance.
       isFinale: true,
     },
   ];
