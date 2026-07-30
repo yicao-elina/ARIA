@@ -19,8 +19,8 @@
           "edge1_confidence": 0.90,
           "edge2_confidence": 0.92,
           "path_confidence": 0.90,
-          "evidence1": "CVD growth at 750°C on SiO₂ substrate yields large-grain MoS₂ with improved crystallinity.",
-          "evidence2": "Improved crystallinity reduces charged impurity scattering, leading to carrier mobility exceeding 40 cm²/Vs."
+          "evidence1": "CVD at 750°C on SiO₂ → large-grain MoS₂ with higher crystallinity.",
+          "evidence2": "Higher crystallinity → less charged-impurity scattering → μ > 40 cm²/Vs."
         }
       ],
       "naive_kg_result": {
