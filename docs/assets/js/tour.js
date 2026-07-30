@@ -225,7 +225,7 @@
         },
         {
           selector: '#appendix a[href*="github.com/yicao-elina/aria"]',
-          label: "Code, data, and benchmark JSONs live on GitHub — click the link whenever you want; the tour won't open it for you.",
+          label: "Code, data, and benchmark JSONs live on GitHub — click the link whenever you want!",
         },
       ],
     },
