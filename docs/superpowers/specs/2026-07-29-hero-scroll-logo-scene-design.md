@@ -92,6 +92,27 @@ is soft):
 - Positioned `position: absolute`, left half anchored near `left: -6%`,
   right half near `right: -6%`, vertically centered on the sticky viewport.
 
+### Motion feel reference
+
+User pointed to anthropic.com's scroll behavior as the target feel. That site
+does not scroll-jack or hard-pin — it reveals content with smooth,
+unhurried opacity + translateY (and occasional scale) transitions timed to
+scroll position, generous durations (~600–900ms), soft cubic-bezier easing,
+and staggered element-by-element reveal rather than everything moving at
+once. This project already has that exact pattern half-built via
+`reveal.js`'s `.reveal` class (IntersectionObserver-driven fade/slide-up).
+
+Applying this to the hero scene means: the `--scene-progress`-driven
+transforms (logo halves converging, card sliding/expanding) should use the
+same unhurried, soft-eased quality — no snapping, no linear motion, no
+speed that reads as "scroll-jacking." Concretely: transitions on the
+interpolated properties use `transition: transform 400ms
+cubic-bezier(.16,1,.3,1), opacity 400ms ease` (matching `glass-card`'s
+existing easing curve) layered on top of the scroll-driven CSS variable, so
+motion is smoothed rather than 1:1 tied to raw scroll deltas; and the
+card's expand-on-settle reuses `reveal.js`'s existing fade/slide-up
+treatment instead of a new one-off animation.
+
 ### Scroll progress engine (`assets/js/hero-scene.js`, new, deferred)
 
 ```js
