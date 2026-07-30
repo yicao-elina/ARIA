@@ -1737,6 +1737,8 @@
 
     _fireHole(h, label, opts) {
       opts = opts || {};
+      const isAnchorHole =
+        h.el && h.el.matches && h.el.matches("a[href]");
       // If a specific label is passed, reveal its callout first
       // (the click target is the chip OR somewhere inside the hole).
       // If no label is passed (e.g. "Do it for me" sequence), the
@@ -1757,9 +1759,19 @@
           else if (h.action.kind === "change") utils.dispatchChange(h.el);
           else if (h.action.kind === "drag-range")
             utils.animateRange(h.el, opts.immediate ? 0 : CONSTANTS.RANGE_DRAG_MS);
+        } else if (isAnchorHole) {
+          // No-op on anchor holes (e.g. the GitHub link in the closing
+          // handoff). The hole is a read-only annotation: the user
+          // reads its callout, then chooses whether to open the link
+          // themselves. Re-dispatching a click here — even though the
+          // chip click / "Do it for me" path is the only one that
+          // normally hits it without `skipAction` — would call
+          // `el.click()` on the anchor, which the browser treats as a
+          // real user click and acts on (target=_blank opens GitHub).
+          // Settle the hole visually, but do NOT touch the anchor.
         } else {
-          // No action: still "settle" the hole so the user gets
-          // feedback that they did the right thing.
+          // No action, non-anchor: still "settle" the hole so the user
+          // gets feedback that they did the right thing.
           utils.dispatchClick(h.el);
         }
       }
