@@ -797,11 +797,15 @@ url={https://openreview.net/forum?id=7LFRS69byw}
 <script src="assets/js/theme.js" defer></script>
 <script src="assets/js/glass-card.js" defer></script>
 <script src="assets/js/header-tooltip.js" defer></script>
-<script src="assets/js/hero-scene.js" defer></script>
 <script src="assets/js/reveal.js" defer></script>
 <script src="assets/js/figure-viewer.js" defer></script>
 <script src="assets/js/paper-fig-preview.js" defer></script>
 <script src="assets/js/detail-toggle.js" defer></script>
+<!-- hero-scene.js calls summary.click() to auto-open the hero card
+     (see hero-scene.js) — it must load after detail-toggle.js, which
+     owns that click's actual open/close animation, or the click could
+     fire before detail-toggle.js's listener is registered. -->
+<script src="assets/js/hero-scene.js" defer></script>
 <script src="assets/js/term-tooltip.js" defer></script>
 <script src="assets/js/tour.js" defer></script>
 
