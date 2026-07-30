@@ -100,3 +100,8 @@
   transition: transform 400ms cubic-bezier(.16, 1, .3, 1);
   transform: translateX(calc(var(--scene-progress) * 6vw));
 }
+
+.hero-scene__card:hover,
+.hero-scene__card:focus-within {
+  transform: translateX(calc(var(--scene-progress) * 6vw)) translateY(-4px);
+}
