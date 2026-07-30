@@ -18,7 +18,21 @@
    ========================================================================== */
 
 .hero-scene {
+  /* Full-bleed breakout: .tile--hero is `display:flex; align-items:center`
+     (see sections.css), so without this, .hero-scene would only be as
+     wide as its own content (the narrow text column) — not the true
+     viewport — and left/right offsets on the logo halves below would be
+     measured from that narrow box's edges instead of the screen edges,
+     with overflow-x:hidden then clipping almost all of both halves down
+     to a thin sliver near the (wrong) center. This is the standard
+     "escape a centered container" trick: works because .tile centers
+     .hero-scene horizontally, so left:50% lands at the true viewport
+     center, and margin-left:-50vw pulls the left edge back out to the
+     true viewport's left edge regardless of the parent's own width. */
   position: relative;
+  left: 50%;
+  width: 100vw;
+  margin-left: -50vw;
   height: 220vh;
   --scene-progress: 0;
 
