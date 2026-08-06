@@ -6,6 +6,8 @@
 
 **A**utonomous **R**easoning **I**ntelligence for **A**tomics
 
+[![🌐 Website](https://img.shields.io/badge/🌐_Website-Live_Demo-brightgreen?style=for-the-badge)](https://yicao-elina.github.io/ARIA/)
+
 [![Paper](https://img.shields.io/badge/KDD_2026-Paper-blue)](https://github.com/yicao-elina/ARIA)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Python 3.9+](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org/downloads/)
