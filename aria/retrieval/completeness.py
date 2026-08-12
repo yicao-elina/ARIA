@@ -22,7 +22,7 @@ from typing import Dict, FrozenSet, List, Optional, Set, Tuple
 
 import networkx as nx
 
-from aria.kg.schema import classify_node_layer, classify_path_layers, psp_layers_covered
+from aria.kg.schema import classify_path_layers, psp_layers_covered
 
 logger = logging.getLogger(__name__)
 

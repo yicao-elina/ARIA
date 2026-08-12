@@ -9,8 +9,7 @@ Author: ARIA Team
 """
 
 import logging
-from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from aria.types import ReasoningTier
 

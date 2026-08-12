@@ -42,8 +42,9 @@ def _get_nlp():
         import spacy
         _nlp = spacy.load("en_core_web_sm")
     except OSError:
-        import spacy
         import os
+
+        import spacy
         os.system("python -m spacy download en_core_web_sm > /dev/null 2>&1")
         _nlp = spacy.load("en_core_web_sm")
     return _nlp

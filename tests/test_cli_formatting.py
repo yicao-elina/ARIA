@@ -1,26 +1,26 @@
 """Tests for aria.cli.formatting."""
 
-from aria.types import ARIAResult, ChainOfThought, ReasoningStep, ReasoningTier
 from aria.cli.formatting import format_diagnostics_report, format_explain, format_result_summary
+from aria.types import ARIAResult, ChainOfThought, ReasoningStep, ReasoningTier
 
 
 def _make_result(**overrides) -> ARIAResult:
-    defaults = dict(
-        answer={"carrier_mobility": "high"},
-        tier=ReasoningTier.DIRECT,
-        confidence=0.85,
-        reasoning_type="direct_path",
-        causal_trace=[],
-        missing_evidence=[],
-        kg_paths_used=2,
-        kg_paths=["A -> B -> C"],
-        literature_papers=[],
-        source_attribution={},
-        chain_of_thought=None,
-        mode="aria",
-        model="qwen2:7b",
-        latency_ms=123.4,
-    )
+    defaults = {
+        "answer": {"carrier_mobility": "high"},
+        "tier": ReasoningTier.DIRECT,
+        "confidence": 0.85,
+        "reasoning_type": "direct_path",
+        "causal_trace": [],
+        "missing_evidence": [],
+        "kg_paths_used": 2,
+        "kg_paths": ["A -> B -> C"],
+        "literature_papers": [],
+        "source_attribution": {},
+        "chain_of_thought": None,
+        "mode": "aria",
+        "model": "qwen2:7b",
+        "latency_ms": 123.4,
+    }
     defaults.update(overrides)
     return ARIAResult(**defaults)
 

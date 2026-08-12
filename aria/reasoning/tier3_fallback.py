@@ -12,13 +12,13 @@ import json
 import logging
 from typing import Any, Dict
 
-from aria.types import ReasoningTier
 from aria.reasoning.prompts import (
-    TIER3_FORWARD_PROMPT,
-    TIER3_INVERSE_PROMPT,
     BASELINE_FORWARD_PROMPT,
     BASELINE_INVERSE_PROMPT,
+    TIER3_FORWARD_PROMPT,
+    TIER3_INVERSE_PROMPT,
 )
+from aria.types import ReasoningTier
 
 logger = logging.getLogger(__name__)
 

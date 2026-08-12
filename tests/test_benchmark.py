@@ -3,8 +3,9 @@
 import json
 import os
 import tempfile
-import pytest
 from pathlib import Path
+
+import pytest
 
 from aria.evaluation.benchmark import BenchmarkRunner
 

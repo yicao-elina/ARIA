@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from typing import Dict, List, Optional, Set
 
-from aria.types import PSPRelationship, PSPType, _infer_psp_type
+from aria.types import PSPRelationship, PSPType
 
 __all__ = [
     "PSPRelationship",

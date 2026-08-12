@@ -19,11 +19,11 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 import networkx as nx
 
-from aria.types import PSPRelationship, _infer_psp_type, _infer_relation, _parse_confidence
+from aria.types import PSPRelationship
 
 logger = logging.getLogger(__name__)
 

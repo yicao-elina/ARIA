@@ -14,7 +14,12 @@ import typer
 
 from aria import __version__
 from aria.cli.formatting import format_diagnostics_report, format_explain, format_result_summary
-from aria.engine_factory import OllamaUnavailableError, build_engine, parse_kv_pairs, resolve_kg_path
+from aria.engine_factory import (
+    OllamaUnavailableError,
+    build_engine,
+    parse_kv_pairs,
+    resolve_kg_path,
+)
 
 app = typer.Typer(
     add_completion=False,

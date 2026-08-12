@@ -39,24 +39,19 @@ from typing import Any, Dict, List, Optional
 
 import networkx as nx
 
-from aria.types import ARIAResult, EngineMode, ReasoningTier
-from aria.kg.graph_store import load_kg, kg_stats
-from aria.retrieval.similarity import NodeMatcher
-from aria.retrieval.path_search import find_psp_paths, extract_mechanisms
+from aria.kg.graph_store import kg_stats, load_kg
+from aria.reasoning.literature import LiteratureSearcher
 from aria.reasoning.prompts import (
-    TIER3_FORWARD_PROMPT,
-    TIER3_INVERSE_PROMPT,
-    BASELINE_FORWARD_PROMPT,
-    BASELINE_INVERSE_PROMPT,
     NAIVE_KG_FORWARD_PROMPT,
     NAIVE_KG_INVERSE_PROMPT,
-    COT_REASONING_PROMPT,
 )
+from aria.reasoning.router import ReasoningRouter
 from aria.reasoning.tier1_direct import Tier1DirectReasoner
 from aria.reasoning.tier2_analogical import Tier2AnalogicalReasoner
 from aria.reasoning.tier3_fallback import Tier3FallbackReasoner
-from aria.reasoning.router import ReasoningRouter, RoutingDecision
-from aria.reasoning.literature import LiteratureSearcher
+from aria.retrieval.path_search import find_psp_paths
+from aria.retrieval.similarity import NodeMatcher
+from aria.types import ARIAResult, EngineMode, ReasoningTier
 
 logger = logging.getLogger(__name__)
 
@@ -302,7 +297,6 @@ class ARIAEngine:
         property_keywords = ["mobility", "conductivity", "carrier", "band gap", "property"]
 
         paths = find_psp_paths(self.kg, input_keywords, property_keywords)
-        mechanisms_raw = extract_mechanisms(self.kg, paths)
         # Format for the naive prompt
         formatted_mechs = "\n".join(
             f"  Path {i+1}: {' -> '.join(p)}"
@@ -338,7 +332,6 @@ class ARIAEngine:
         paths = find_psp_paths(self.kg, property_keywords, synthesis_keywords)
         fwd_paths = find_psp_paths(self.kg, synthesis_keywords, property_keywords)
         all_paths = paths + fwd_paths
-        mechanisms_raw = extract_mechanisms(self.kg, all_paths)
 
         formatted_mechs = "\n".join(
             f"  Path {i+1}: {' -> '.join(p)}"
@@ -421,7 +414,6 @@ class ARIAEngine:
         )
 
         # Perform literature search
-        input_keywords = self._extract_keywords(synthesis_inputs)
         search_queries = self._build_search_queries(synthesis_inputs, decision.paths, "forward")
         lit_results = self._search_literature(search_queries)
         lit_context = self._format_literature_context(lit_results)
@@ -719,8 +711,8 @@ class ARIAEngine:
                 from aria.types import ChainOfThought as CoT
                 try:
                     chain_of_thought = CoT(**cot_raw)
-                except Exception:
-                    pass
+                except Exception as exc:
+                    logger.debug("Failed to parse chain_of_thought: %s", exc)
 
         return ARIAResult(
             answer=answer,

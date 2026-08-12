@@ -79,8 +79,8 @@ def plot_kg(
         cycles = list(nx.simple_cycles(graph))
         if cycles:
             logger.warning("Graph has %d cycles; it is not a DAG.", len(cycles))
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.debug("Cycle detection failed: %s", exc)
 
     # ---- Layout ----
     fig, ax = plt.subplots(figsize=figsize)

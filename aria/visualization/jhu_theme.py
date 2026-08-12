@@ -9,11 +9,15 @@ matplotlib defaults.
 
 from __future__ import annotations
 
+import logging
+from typing import Dict, List
+
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.cycler import cycler
-from typing import Any, Dict, List, Optional, Sequence, Union
+
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # JHU Colour Palette  (RGB in 0-1 range)
@@ -71,8 +75,8 @@ except (ImportError, AttributeError, ValueError):
         mpl.cm.register_cmap(name="jhu", cmap=_jhu_cmap)
         mpl.cm.register_cmap(name="jhu_diverging", cmap=_jhu_diverging)
         mpl.cm.register_cmap(name="jhu_sequential", cmap=_jhu_sequential)
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.debug("Colormap registration failed: %s", exc)
 
 
 # ---------------------------------------------------------------------------
@@ -154,7 +158,6 @@ def show_jhu_palette() -> "plt.Figure":
 
     Returns the figure object for further customisation or saving.
     """
-    import numpy as np
 
     fig, ax = plt.subplots(figsize=(12, 8))
     sorted_colors = sorted(JHU_COLORS.items())
