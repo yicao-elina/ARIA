@@ -333,18 +333,33 @@
 
     function flashSuccess(btn) {
       if (!btn) return;
-      // Both buttons get a "copied" hook so CSS can flip the icon
-      // button to its green pill. The legacy text link is what the
-      // original swap-text path was written for.
-      var isIconBtn = btn.id === 'copy-bibtex-inline' || btn.querySelector('.bibtex-copy-btn__label');
-      var labelEl = btn.querySelector('.bibtex-copy-btn__label');
-      if (isIconBtn && labelEl) {
-        var prevText = labelEl.textContent;
+      // Three feedback styles, picked in order of specificity:
+      //   1. Floating icon button (#copy-bibtex-inline or any element
+      //      with the legacy .bibtex-copy-btn__label span) — flip to
+      //      a green "Copied!" pill via .copied / .is-copied classes
+      //      and swap the inline label.
+      //   2. Modern text label (any element with [data-copy-label] +
+      //      an inner [data-copy-text] span) — swap only the span
+      //      text, leave the icon untouched. Used by the .glass-pill
+      //      Copy BibTeX button in the References section.
+      //   3. Fallback — swap the button's whole textContent.
+      var legacyLabelEl = btn.querySelector('.bibtex-copy-btn__label');
+      var modernLabelEl = btn.querySelector('[data-copy-text]');
+      if (legacyLabelEl) {
+        var prevLegacy = legacyLabelEl.textContent;
         btn.classList.add('copied', 'is-copied');
-        labelEl.textContent = 'Copied!';
+        legacyLabelEl.textContent = 'Copied!';
         setTimeout(function () {
           btn.classList.remove('copied', 'is-copied');
-          labelEl.textContent = prevText;
+          legacyLabelEl.textContent = prevLegacy;
+        }, 1800);
+      } else if (modernLabelEl) {
+        var prevModern = modernLabelEl.textContent;
+        btn.classList.add('copied');
+        modernLabelEl.textContent = 'Copied!';
+        setTimeout(function () {
+          btn.classList.remove('copied');
+          modernLabelEl.textContent = prevModern;
         }, 1800);
       } else {
         var prev = btn.textContent;

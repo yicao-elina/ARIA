@@ -133,10 +133,22 @@
     <p class="hero-date reveal">KDD 2026 · AI for Sciences Track</p>
 
     <div class="hero-cta reveal">
-      <a href="https://dl.acm.org/doi/10.1145/3770855.3818954" class="sub-nav__cta" target="_blank" rel="noopener">Paper</a>
-      <a href="https://github.com/yicao-elina/aria" class="sub-nav__cta" target="_blank" rel="noopener">Code &amp; Data</a>
-      <a href="#problem" class="toggle-btn">Explore ↓</a>
-      <button type="button" id="tour-start-btn" class="toggle-btn tour-cta">Take a Tour</button>
+      <a class="glass-pill" href="https://dl.acm.org/doi/10.1145/3770855.3818954" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
+        <span>Paper</span>
+      </a>
+      <a class="glass-pill" href="https://github.com/yicao-elina/aria" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14" aria-hidden="true"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.1.79-.25.79-.55v-2.07c-3.2.7-3.88-1.37-3.88-1.37-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.78 1.2 1.78 1.2 1.03 1.78 2.72 1.27 3.38.97.1-.75.41-1.27.74-1.56-2.55-.29-5.24-1.28-5.24-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.47.11-3.06 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.8 0c2.21-1.49 3.18-1.18 3.18-1.18.63 1.59.23 2.77.11 3.06.74.81 1.19 1.84 1.19 3.1 0 4.43-2.69 5.4-5.25 5.69.42.37.8 1.1.8 2.22v3.29c0 .31.21.66.79.55C20.21 21.39 23.5 17.08 23.5 12 23.5 5.65 18.35.5 12 .5Z"/></svg>
+        <span>Code &amp; Data</span>
+      </a>
+      <a class="glass-pill" href="#problem">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" aria-hidden="true"><circle cx="12" cy="12" r="9"/><polyline points="8 12 12 16 16 12"/><line x1="12" y1="7" x2="12" y2="16"/></svg>
+        <span>Explore</span>
+      </a>
+      <button type="button" id="tour-start-btn" class="glass-pill tour-cta" data-tour-cta>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" aria-hidden="true"><circle cx="12" cy="12" r="9"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor"/></svg>
+        <span>Take a Tour</span>
+      </button>
     </div>
 
     <!-- Blank landing slot for #hero-scene above — real reserved flow
@@ -747,11 +759,20 @@
   <div class="tile__content">
     <h2 class="reveal">References &amp; Resources</h2>
 
-    <p>
-      <a href="https://github.com/yicao-elina/aria" target="_blank" rel="noopener">Code and Data (GitHub)</a>
-      &nbsp;·&nbsp;
-      <a href="#" id="copy-bibtex">Copy BibTeX</a>
-    </p>
+    <div class="glass-pill-row">
+      <a class="glass-pill" href="https://github.com/yicao-elina/aria" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14" aria-hidden="true"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.1.79-.25.79-.55v-2.07c-3.2.7-3.88-1.37-3.88-1.37-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.78 1.2 1.78 1.2 1.03 1.78 2.72 1.27 3.38.97.1-.75.41-1.27.74-1.56-2.55-.29-5.24-1.28-5.24-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.47.11-3.06 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.8 0c2.21-1.49 3.18-1.18 3.18-1.18.63 1.59.23 2.77.11 3.06.74.81 1.19 1.84 1.19 3.1 0 4.43-2.69 5.4-5.25 5.69.42.37.8 1.1.8 2.22v3.29c0 .31.21.66.79.55C20.21 21.39 23.5 17.08 23.5 12 23.5 5.65 18.35.5 12 .5Z"/></svg>
+        <span>Code and Data (GitHub)</span>
+      </a>
+      <a class="glass-pill" href="assets/bib/cao2026aria.bib" download="cao2026aria.bib">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>Download .bib</span>
+      </a>
+      <button class="glass-pill" type="button" id="copy-bibtex" data-copy-bibtex data-copy-label aria-label="Copy BibTeX to clipboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        <span data-copy-text>Copy BibTeX</span>
+      </button>
+    </div>
 
     <h3>BibTeX</h3>
     <div class="bibtex-wrap">
@@ -759,13 +780,22 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
         <span class="bibtex-copy-btn__label">Copy</span>
       </button>
-      <pre id="bibtex-content">@inproceedings{
-cao2026aria,
-title={{ARIA}: A Causal-Aware Framework for Rescuing {LLM} Reasoning in Materials Discovery},
-author={Yi Cao and Liaoyaqi Wang and Jieneng Chen and Benjamin Van Durme and Alan Yuille and Paulette Clancy},
-booktitle={32nd SIGKDD Conference on Knowledge Discovery and Data Mining - AI for Sciences Track},
-year={2026},
-url={https://openreview.net/forum?id=7LFRS69byw}
+      <pre id="bibtex-content">@inproceedings{10.1145/3770855.3818954,
+author = {Cao, Yi and Wang, Liaoyaqi and Chen, Jieneng and Van Durme, Benjamin and Yuille, Alan and Clancy, Paulette},
+title = {ARIA: A Causal-Aware Framework for Rescuing LLM Reasoning in Trustworthy Materials Discovery},
+year = {2026},
+isbn = {9798400722592},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3770855.3818954},
+doi = {10.1145/3770855.3818954},
+abstract = {Generative models have revolutionized the process of materials discovery, yet they often fail to satisfy underlying physical causality. Through an analysis of Large Language Models (LLMs) augmented with knowledge graphs derived from current literature, we uncover a phenomenon termed contextual tunneling, where models ''over-anchor'' on narrow, retrieved evidence while suppressing global physical reasoning. To address this problem, we introduce ARIA, a causal-aware framework that conditions knowledge use on mechanistic completeness. ARIA routes each query through a three-tier cascade: (i) direct causal reasoning when complete evidence chains of Process-Structure-Property (PSP) are available, (ii) physics-informed analogical transfer for sparse or novel material systems, and (iii) explicit parametric fallback when external evidence is incomplete. As a proof of concept, we construct a Knowledge Graph (KG) containing 2,839 extracted PSP relations from peer-reviewed articles in the materials literature and evaluate ARIA on forward prediction and inverse design tasks for two-dimensional (2D) materials. ARIA mitigates contextual tunneling, improves over unaugmented and naive KG-augmented baselines, and provides further gains when an online literature search is used for evidence enrichment. Crucially, ARIA produces auditable causal traces, enabling physically grounded and trustworthy AI-assisted materials discovery.},
+booktitle = {Proceedings of the 32nd ACM SIGKDD Conference on Knowledge Discovery and Data Mining V.2},
+pages = {10543–10554},
+numpages = {12},
+keywords = {scientific discovery, large language models, knowledge graphs, causal reasoning, materials science},
+location = {Republic of Korea},
+series = {KDD '26}
 }</pre>
     </div>
 
@@ -773,13 +803,20 @@ url={https://openreview.net/forum?id=7LFRS69byw}
     <p>
       Before the KDD submission, an early concept version of this work was prototyped at an LLM hackathon. These are kept here as historical context — they predate this paper and don't reflect its methodology or results.
     </p>
-    <p>
-      <a href="https://www.linkedin.com/posts/yi-cao-1368ab292_introducing-aria-autonomous-reasoning-activity-7372352361094193152-U6Jx?utm_source=share&amp;utm_medium=member_desktop&amp;rcm=ACoAAEb3tPoBgmt_8xQYwQpEY2DbQllFRcSwlU4" target="_blank" rel="noopener">Early concept promo animation (LinkedIn)</a>
-      &nbsp;·&nbsp;
-      <a href="https://www.linkedin.com/posts/yi-cao-1368ab292_github-yicao-elinallm4chem-explainable-synthesis-activity-7372331154709905408-1Hyq?utm_source=share&amp;utm_medium=member_desktop&amp;rcm=ACoAAEb3tPoBgmt_8xQYwQpEY2DbQllFRcSwlU4" target="_blank" rel="noopener">Hackathon project post (LinkedIn)</a>
-      &nbsp;·&nbsp;
-      <a href="https://arxiv.org/abs/2605.03205" target="_blank" rel="noopener">Hackathon compilation (arXiv)</a>
-    </p>
+    <div class="glass-pill-row">
+      <a class="glass-pill" href="https://www.linkedin.com/posts/yi-cao-1368ab292_introducing-aria-autonomous-reasoning-activity-7372352361094193152-U6Jx?utm_source=share&amp;utm_medium=member_desktop&amp;rcm=ACoAAEb3tPoBgmt_8xQYwQpEY2DbQllFRcSwlU4" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14" aria-hidden="true"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.13 1.45-2.13 2.94v5.67H9.36V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.72V1.72C24 .77 23.2 0 22.22 0z"/></svg>
+        <span>Early concept promo animation (LinkedIn)</span>
+      </a>
+      <a class="glass-pill" href="https://www.linkedin.com/posts/yi-cao-1368ab292_github-yicao-elinallm4chem-explainable-synthesis-activity-7372331154709905408-1Hyq?utm_source=share&amp;utm_medium=member_desktop&amp;rcm=ACoAAEb3tPoBgmt_8xQYwQpEY2DbQllFRcSwlU4" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14" aria-hidden="true"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.13 1.45-2.13 2.94v5.67H9.36V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.72V1.72C24 .77 23.2 0 22.22 0z"/></svg>
+        <span>Hackathon project post (LinkedIn)</span>
+      </a>
+      <a class="glass-pill" href="https://arxiv.org/abs/2605.03205" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <span>Hackathon compilation (arXiv)</span>
+      </a>
+    </div>
 
     <h3>Acknowledgments</h3>
     <p>
