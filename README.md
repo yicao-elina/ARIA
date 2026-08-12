@@ -10,7 +10,7 @@
   <img src="docs/figures/ARIA-website-first-page.png" alt="ARIA website — click to open" width="900"/>
 </a>
 
-[![Paper](https://img.shields.io/badge/KDD_2026-Paper-blue)](https://github.com/yicao-elina/ARIA)
+[![Paper](https://img.shields.io/badge/KDD_2026-Paper-blue)](https://dl.acm.org/doi/10.1145/3770855.3818954)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Python 3.9+](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org/downloads/)
 
@@ -297,13 +297,22 @@ We will further explore the possibility of using
 ## Citation
 
 ```bibtex
-@inproceedings{
-cao2026aria,
-title={{ARIA}: A Causal-Aware Framework for Rescuing {LLM} Reasoning in Trustworthy Materials Discovery},
-author={Yi Cao and Liaoyaqi Wang and Jieneng Chen and Benjamin Van Durme and Alan Yuille and Paulette Clancy},
-booktitle={32nd SIGKDD Conference on Knowledge Discovery and Data Mining - AI for Sciences Track},
-year={2026},
-url={https://openreview.net/forum?id=7LFRS69byw}
+@inproceedings{10.1145/3770855.3818954,
+author = {Cao, Yi and Wang, Liaoyaqi and Chen, Jieneng and Van Durme, Benjamin and Yuille, Alan and Clancy, Paulette},
+title = {ARIA: A Causal-Aware Framework for Rescuing LLM Reasoning in Trustworthy Materials Discovery},
+year = {2026},
+isbn = {9798400722592},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3770855.3818954},
+doi = {10.1145/3770855.3818954},
+abstract = {Generative models have revolutionized the process of materials discovery, yet they often fail to satisfy underlying physical causality. Through an analysis of Large Language Models (LLMs) augmented with knowledge graphs derived from current literature, we uncover a phenomenon termed contextual tunneling, where models ''over-anchor'' on narrow, retrieved evidence while suppressing global physical reasoning. To address this problem, we introduce ARIA, a causal-aware framework that conditions knowledge use on mechanistic completeness. ARIA routes each query through a three-tier cascade: (i) direct causal reasoning when complete evidence chains of Process-Structure-Property (PSP) are available, (ii) physics-informed analogical transfer for sparse or novel material systems, and (iii) explicit parametric fallback when external evidence is incomplete. As a proof of concept, we construct a Knowledge Graph (KG) containing 2,839 extracted PSP relations from peer-reviewed articles in the materials literature and evaluate ARIA on forward prediction and inverse design tasks for two-dimensional (2D) materials. ARIA mitigates contextual tunneling, improves over unaugmented and naive KG-augmented baselines, and provides further gains when an online literature search is used for evidence enrichment. Crucially, ARIA produces auditable causal traces, enabling physically grounded and trustworthy AI-assisted materials discovery.},
+booktitle = {Proceedings of the 32nd ACM SIGKDD Conference on Knowledge Discovery and Data Mining V.2},
+pages = {10543–10554},
+numpages = {12},
+keywords = {scientific discovery, large language models, knowledge graphs, causal reasoning, materials science},
+location = {Republic of Korea},
+series = {KDD '26}
 }
 ```
 
