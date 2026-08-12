@@ -189,9 +189,10 @@
 }
 
 .tile--hero .hero-cta {
-  display: inline-flex;
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   margin-top: 24px;
 }
 
