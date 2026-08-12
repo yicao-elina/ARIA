@@ -6,7 +6,9 @@
 
 **A**utonomous **R**easoning **I**ntelligence for **A**tomics
 
-[![🌐 Website](https://img.shields.io/badge/🌐_Website-Live_Demo-brightgreen?style=for-the-badge)](https://yicao-elina.github.io/ARIA/)
+<a href="https://yicao-elina.github.io/ARIA/" target="_blank" rel="noopener">
+  <img src="docs/figures/ARIA-website-first-page.png" alt="ARIA website — click to open" width="900"/>
+</a>
 
 [![Paper](https://img.shields.io/badge/KDD_2026-Paper-blue)](https://github.com/yicao-elina/ARIA)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
