@@ -7,14 +7,14 @@
 **A**utonomous **R**easoning **I**ntelligence for **A**tomics
 
 <a href="https://yicao-elina.github.io/ARIA/" target="_blank" rel="noopener">
-  <img src="docs/figures/ARIA-website-first-page.png" alt="ARIA website — click to open" width="900"/>
+  <img src="docs/figures/ARIA-website-first-page.png" alt="ARIA website. Click to open." width="900"/>
 </a>
 
 [![Paper](https://img.shields.io/badge/KDD_2026-Paper-blue)](https://dl.acm.org/doi/10.1145/3770855.3818954)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Python 3.9+](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org/downloads/)
 
-*When knowledge hurts — and how causal completeness rescues reasoning*
+*When knowledge hurts, and how causal completeness preserves reasoning*
 
 </div>
 
@@ -28,11 +28,11 @@
 More knowledge isn't always better. When you feed a language model everything a knowledge graph knows about a material, something counterintuitive happens: **performance drops**.
 
 > 📉 Naive KG+LLM scores **lower** than the baseline LLM with no KG at all.  
-> Forward prediction: 0.337 vs. 0.340. Interpretability: 0.350 vs. 0.877 — a **60% collapse**.
+> Forward prediction: 0.337 vs. 0.340. Interpretability: 0.350 vs. 0.877, a **60% drop**.
 
-We call this failure mode **contextual tunneling**: the model over-anchors on narrow, factually-correct but *causally incomplete* evidence, suppressing its own broader physical reasoning. A P→P shortcut like *"CVD temperature increases carrier mobility"* is true — but it skips the *structural mediator* (crystallinity) that explains *why*. The LLM gloms onto the shortcut and stops thinking.
+We call this failure mode **contextual tunneling**: the model over-anchors on narrow, factually-correct but *causally incomplete* evidence, suppressing its own broader physical reasoning. A P→P shortcut like *"CVD temperature increases carrier mobility"* is true, but it skips the *structural mediator* (crystallinity) that explains *why*. The LLM then over-relies on the shortcut in place of the full mechanism.
 
-**ARIA fixes this** by gating evidence activation on **causal completeness** — not retrieval confidence. It only lets KG evidence through when it forms a complete Processing → Structure → Property chain. Otherwise, it honestly falls back to parametric reasoning rather than misleading you with half-truths.
+**ARIA addresses this** by gating evidence activation on **causal completeness**, not retrieval confidence. KG evidence enters the prompt only when it forms a complete Processing → Structure → Property chain. When it does not, ARIA falls back to parametric reasoning rather than presenting the partial evidence as a complete answer.
 
 <div align="center">
 <img src="docs/figures/KDD-Fig1.svg" alt="ARIA architecture: three-tier causal cascade" width="700"/>
@@ -48,7 +48,7 @@ We call this failure mode **contextual tunneling**: the model over-anchors on na
 | No completeness check | PSP-Complete criterion: C(E,q) = \|L(E) ∩ L_req(q)\| / \|L_req(q)\| |
 | One-size-fits-all prompting | Three-tier adaptive routing |
 
-A PSP-complete path spans all required layers — Processing, Structure, Property. If you only have Processing → Property (a shortcut), you're missing the *mechanism*. ARIA detects this and handles it differently.
+A PSP-complete path spans all required layers: Processing, Structure, Property. If you only have Processing → Property (a shortcut), you are missing the *mechanism*. ARIA detects this and routes the query to a different tier.
 
 ## Results
 
@@ -77,27 +77,27 @@ A PSP-complete path spans all required layers — Processing, Structure, Propert
 
 ### The Three Tiers
 
-1. **Tier 1 — DIRECT** 🎯  
-   PSP-complete path found in the KG. Example: *"CVD at 750°C → increased crystallinity → higher carrier mobility"*.  
-   The LLM receives the full causal chain and generates a grounded prediction with high confidence.
+1. **Tier 1: DIRECT** 🎯
+   PSP-complete path found in the KG. Example: *"CVD at 750°C → increased crystallinity → higher carrier mobility"*.
+   The LLM receives the full causal chain and generates a grounded prediction with its reported confidence.
 
-2. **Tier 2 — ANALOGICAL** 🔄  
-   No direct path, but a *similar material* has one. Example: *"WS₂ is structurally similar to MoS₂; we transfer its crystallinity → mobility pathway with physical feasibility checks."*  
-   Confidence is discounted, and a disclaimer is prepended.
+2. **Tier 2: ANALOGICAL** 🔄
+   No direct path, but a *similar material* has one. Example: *"WS₂ is structurally similar to MoS₂; we transfer its crystallinity → mobility pathway with physical feasibility checks."*
+   Confidence is discounted and a disclaimer is attached to the output.
 
-3. **Tier 3 — FALLBACK** 🔦  
-   No KG evidence at all. The LLM reasons from parametric knowledge alone, and the output is *explicitly flagged* as ungrounded.  
-   This is epistemically honest: "I don't have verified evidence, so here's my best guess with low confidence."
+3. **Tier 3: FALLBACK** 🔦
+   No KG evidence at all. The LLM reasons from parametric knowledge alone, and the output is *explicitly flagged* as ungrounded.
+   This is transparent about its limits: "I don't have verified evidence, so this is a best-effort answer with low confidence."
 
 ### Why Naive KG Makes Things Worse
 
-Naive KG+LLM concatenates *all* retrieved paths into the prompt — shortcuts and complete chains alike. The LLM then over-anchors on the shortcut (which is shorter, more salient, and factually correct) while suppressing its own ability to reason about the missing structural mediator. This is **contextual tunneling**: factually accurate evidence that forms an *incomplete* causal chain.
+Naive KG+LLM concatenates *all* retrieved paths into the prompt, shortcuts and complete chains alike. The LLM then over-anchors on the shortcut (which is shorter, more salient, and factually correct) while suppressing its own ability to reason about the missing structural mediator. This is **contextual tunneling**: factually accurate evidence that forms an *incomplete* causal chain.
 
-ARIA prevents this by checking PSP-completeness *at inference time* — not at retrieval time. If the evidence doesn't span all required layers, it doesn't go into the prompt.
+ARIA prevents this by checking PSP-completeness *at inference time*, not at retrieval time. If the evidence does not span all required layers, it does not enter the prompt.
 
 ## Installation
 
-`aria-materials` is not yet published to PyPI — install from source:
+`aria-materials` is not yet published to PyPI; install from source:
 
 ```bash
 git clone https://github.com/yicao-elina/ARIA.git
@@ -181,8 +181,8 @@ The [end-to-end tutorial](examples/05_end_to_end_tutorial.ipynb) walks through:
 
 1. **Loading the KG** and exploring PSP structure
 2. **Running all modes** (baseline, naive_kg, aria) on the same query
-3. **Seeing naive KG fail** — the P→P shortcut "CVD 750°C → carrier mobility" bypasses crystallinity, causing the LLM to over-anchor
-4. **Seeing ARIA recover** — Tier 1 activates the complete P→S→P chain, restoring mechanistic reasoning
+3. **Seeing naive KG fail**: the P→P shortcut "CVD 750°C → carrier mobility" bypasses crystallinity, causing the LLM to over-anchor
+4. **Seeing ARIA recover**: Tier 1 activates the complete P→S→P chain, restoring mechanistic reasoning
 5. **Evaluating performance** with causal coherence and interpretability metrics
 
 ## Modes
@@ -190,8 +190,8 @@ The [end-to-end tutorial](examples/05_end_to_end_tutorial.ipynb) walks through:
 | Mode | Description | When to use |
 |:-----|:-----------|:-----------|
 | `baseline` | Pure LLM, no KG | Baseline comparison only |
-| `naive_kg` | Simple KG+LLM concatenation | Ablation control — **expect worse results** |
-| `aria` | Three-tier causal cascade | **Default — recommended** |
+| `naive_kg` | Simple KG+LLM concatenation | Ablation control; **expected to underperform** |
+| `aria` | Three-tier causal cascade | **Default; recommended** |
 | `aria_search` | + literature search (OpenAlex, Semantic Scholar) | Need external validation & citations |
 | `aria_full` | + chain-of-thought transparency | Full provenance tracking |
 
@@ -208,7 +208,7 @@ A curated **27-relationship** KG designed for the tutorial, featuring:
 
 ### Full KG (`data/aria_2d_kg_v1.json`)
 
-421 causal relationships over 777 nodes covering 2D electronic materials (MoS₂, WS₂, WSe₂, MoSe₂, etc.). Gitignored due to size — generate via `scripts/build_kg.py`.
+421 causal relationships over 777 nodes covering 2D electronic materials (MoS₂, WS₂, WSe₂, MoSe₂, etc.). Gitignored due to size; generate via `scripts/build_kg.py`.
 
 ### PSP Edge Schema
 
@@ -231,7 +231,7 @@ A curated **27-relationship** KG designed for the tutorial, featuring:
 }
 ```
 
-> ⚠️ **Format note**: `load_kg()` requires `cause_parameter` and `effect_on_doping` fields — these become graph node names. Always include them for compatibility.
+> ⚠️ **Format note**: `load_kg()` requires `cause_parameter` and `effect_on_doping` fields. These become graph node names, so always include them for compatibility.
 
 ## Tutorials
 
@@ -282,7 +282,7 @@ python scripts/run_benchmark.py --model qwen2:7b --task ood
 
 ## Honest Limitations
 
-ARIA is not a silver bullet. The paper identifies important caveats:
+ARIA has known limits. The paper identifies important caveats:
 
 - **KG coverage dependency**: Tier 1 only activates for queries with PSP-complete paths in the KG. For our CKG, that's 62.5% of forward queries and 0% of inverse queries.
 - **Inverse design bottleneck**: The CKG's P→S→P orientation creates a 3.4× forward/reverse reachability asymmetry, making inverse design primarily a Tier 3 task.
@@ -318,4 +318,4 @@ series = {KDD '26}
 
 ## License
 
-This project is licensed under the MIT License — see [LICENSE](LICENSE) for details.
+This project is licensed under the MIT License; see [LICENSE](LICENSE) for details.
