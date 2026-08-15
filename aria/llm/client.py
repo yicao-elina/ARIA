@@ -104,6 +104,7 @@ class OllamaClient:
                     capture_output=True,
                     text=True,
                     timeout=self.timeout,
+                    check=False,
                 )
 
                 if result.returncode == 0:

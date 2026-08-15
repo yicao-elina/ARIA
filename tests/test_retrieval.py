@@ -14,15 +14,10 @@ Covers:
 - similarity.NodeMatcher (basic init and interface)
 """
 
-import pytest
 import networkx as nx
+import pytest
 
 from aria.kg.schema import classify_node_layer
-from aria.retrieval.path_search import (
-    extract_mechanisms,
-    find_psp_paths,
-    find_paths_for_query,
-)
 from aria.retrieval.completeness import (
     PSPLayer,
     causal_completeness_score,
@@ -35,7 +30,11 @@ from aria.retrieval.evidence_ranker import (
     path_score_details,
     rank_paths_by_evidence,
 )
-
+from aria.retrieval.path_search import (
+    extract_mechanisms,
+    find_paths_for_query,
+    find_psp_paths,
+)
 
 # ==========================================================================
 # path_search: find_psp_paths
@@ -486,7 +485,7 @@ class TestNodeMatcher:
         The import of NodeMatcher itself never raises -- the ImportError
         is raised inside __init__.
         """
-        from aria.retrieval.similarity import NodeMatcher, _HAS_DEPS
+        from aria.retrieval.similarity import _HAS_DEPS, NodeMatcher
 
         if not _HAS_DEPS:
             pytest.skip("sentence-transformers or scikit-learn not installed")
@@ -497,7 +496,7 @@ class TestNodeMatcher:
 
     def test_init_without_dependencies_raises(self, tiny_kg):
         """NodeMatcher raises ImportError when dependencies are missing."""
-        from aria.retrieval.similarity import NodeMatcher, _HAS_DEPS
+        from aria.retrieval.similarity import _HAS_DEPS, NodeMatcher
 
         if _HAS_DEPS:
             pytest.skip("sentence-transformers is installed; cannot test ImportError")
@@ -508,7 +507,7 @@ class TestNodeMatcher:
     def test_precompute_and_find_similar(self, tiny_kg):
         """After precompute(), find_similar() returns results."""
         try:
-            from sentence_transformers import SentenceTransformer  # noqa: F401
+            from sentence_transformers import SentenceTransformer
         except ImportError:
             pytest.skip("sentence-transformers not installed")
 
@@ -529,7 +528,7 @@ class TestNodeMatcher:
     def test_find_most_similar(self, tiny_kg):
         """find_most_similar() returns the best match."""
         try:
-            from sentence_transformers import SentenceTransformer  # noqa: F401
+            from sentence_transformers import SentenceTransformer
         except ImportError:
             pytest.skip("sentence-transformers not installed")
 
@@ -547,7 +546,7 @@ class TestNodeMatcher:
     def test_find_similar_empty_candidates(self, tiny_kg):
         """find_similar() with non-matching candidates returns empty list."""
         try:
-            from sentence_transformers import SentenceTransformer  # noqa: F401
+            from sentence_transformers import SentenceTransformer
         except ImportError:
             pytest.skip("sentence-transformers not installed")
 
@@ -564,7 +563,7 @@ class TestNodeMatcher:
     def test_embedding_distance(self, tiny_kg):
         """embedding_distance() returns a value between 0 and 2."""
         try:
-            from sentence_transformers import SentenceTransformer  # noqa: F401
+            from sentence_transformers import SentenceTransformer
         except ImportError:
             pytest.skip("sentence-transformers not installed")
 
@@ -580,7 +579,7 @@ class TestNodeMatcher:
     def test_embedding_distance_empty_string(self, tiny_kg):
         """embedding_distance() returns 1.0 for empty strings."""
         try:
-            from sentence_transformers import SentenceTransformer  # noqa: F401
+            from sentence_transformers import SentenceTransformer
         except ImportError:
             pytest.skip("sentence-transformers not installed")
 

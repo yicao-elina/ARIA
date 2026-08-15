@@ -9,15 +9,15 @@ Author: ARIA Team
 
 import json
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
-from aria.types import ReasoningTier
 from aria.reasoning.prompts import (
     TIER2_FORWARD_PROMPT,
     TIER2_INVERSE_PROMPT,
     TIER3_FORWARD_PROMPT,
     TIER3_INVERSE_PROMPT,
 )
+from aria.types import ReasoningTier
 
 logger = logging.getLogger(__name__)
 

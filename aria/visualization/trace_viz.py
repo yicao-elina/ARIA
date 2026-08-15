@@ -8,14 +8,14 @@ ARIAResult objects, and comparison plots across engine modes / tiers.
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
-import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 
-from aria.types import ARIAResult, CausalTraceStep
+from aria.types import ARIAResult
 from aria.visualization.jhu_theme import get_jhu_color, setup_jhu_colors
 
 logger = logging.getLogger(__name__)
@@ -49,8 +49,8 @@ def _layer_color(layer: str) -> str:
             )
         elif c:
             return str(c)
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.debug("Layer colour lookup failed: %s", exc)
     return _LAYER_COLORS_FALLBACK.get(layer, "#888888")
 
 
@@ -196,12 +196,12 @@ def plot_tier_comparison(
     color1 = _layer_color("Processing")
     color2 = _layer_color("Structure")
 
-    bars1 = ax1.bar(x - width / 2, confidences, width, label="Confidence", color=color1, alpha=0.85)
+    ax1.bar(x - width / 2, confidences, width, label="Confidence", color=color1, alpha=0.85)
     ax1.set_ylabel("Confidence", fontsize=12)
     ax1.set_ylim(0, 1.05)
 
     ax2 = ax1.twinx()
-    bars2 = ax2.bar(x + width / 2, kg_paths, width, label="KG Paths", color=color2, alpha=0.85)
+    ax2.bar(x + width / 2, kg_paths, width, label="KG Paths", color=color2, alpha=0.85)
     ax2.set_ylabel("KG Paths Used", fontsize=12)
 
     ax1.set_xticks(x)

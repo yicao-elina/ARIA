@@ -6,9 +6,9 @@ Every engine mode returns the same ARIAResult type,
 enabling consistent comparison and evaluation.
 """
 
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from enum import Enum
-from typing import Dict, List, Optional, Any
+from typing import Any, Dict, List, Optional
 
 
 class ReasoningTier(Enum):

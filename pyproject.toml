@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "ARIA: Causal-Aware Reasoning for Materials Discovery"
 readme = "README.md"
 license = {text = "MIT"}
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 authors = [
     {name = "ARIA Team"},
 ]
@@ -18,7 +18,6 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -34,14 +33,14 @@ dependencies = [
     "sentence-transformers>=2.2",
     "requests>=2.31",
     "typer>=0.12",
-    "mcp>=1.2",
+    "mcp>=1.2,<2.0",
 ]
 
 [project.optional-dependencies]
 openai = ["openai>=1.0"]
 eval = ["spacy>=3.0"]
 viz = ["matplotlib>=3.7", "plotly>=5.0"]
-dev = ["pytest>=7.0", "pytest-cov", "ruff", "mypy", "jupyter"]
+dev = ["pytest>=7.0", "pytest-cov", "ruff==0.16.2", "mypy", "jupyter"]
 all = ["aria-materials[openai,eval,viz,dev]"]
 
 [project.scripts]
@@ -65,3 +64,30 @@ markers = [
 [tool.ruff]
 line-length = 100
 target-version = "py310"
+
+[tool.ruff.lint]
+# Project policy: keep lint focused on bug-class and formatter-class rules.
+# pyupgrade (UP*) and broad style (BLE/PLR/SIM/FURB) rules are deferred to
+# dedicated refactor PRs; pinning ruff==0.16.2 keeps CI stable across releases.
+extend-select = ["I"]
+extend-ignore = [
+    "UP006",  # List[X] -> list[X]
+    "UP007",  # Union[X, Y] -> X | Y
+    "UP015",  # redundant-open-modes
+    "UP032",  # f-string
+    "UP035",  # deprecated-import
+    "UP037",  # quoted-annotation
+    "UP045",  # Optional[X] -> X | None
+    "BLE001", # blind-except
+    "E501",   # line-too-long (39 hits; many in docstrings/URLs)
+    "PLR0911", "PLR0912", "PLR0913", "PLR0915",  # too-many-*
+    "PLR2004", # magic-value-comparison
+    "SIM102", "SIM105", "SIM108",               # style if-else folds
+    "B007", "B008",                             # loop var / default arg call
+    "RUF022",  # unsorted-dunder-all
+    "FURB122", "FURB167",                       # micro modernizations
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Test files legitimately import helpers for future use and inside functions.
+"tests/**" = ["F401", "PLC0415"]

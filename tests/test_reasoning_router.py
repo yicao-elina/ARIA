@@ -14,7 +14,6 @@ import pytest
 from aria.reasoning.router import ReasoningRouter, RoutingDecision
 from aria.types import ReasoningTier
 
-
 # ==========================================================================
 # RoutingDecision
 # ==========================================================================

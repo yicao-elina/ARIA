@@ -11,7 +11,6 @@ from __future__ import annotations
 import argparse
 import json
 import logging
-import sys
 import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence
@@ -19,8 +18,8 @@ from typing import Any, Dict, List, Optional, Sequence
 import numpy as np
 import pandas as pd
 
-from aria.evaluation.metrics import MetricsComputer
 from aria.evaluation.judge import LLMJudge
+from aria.evaluation.metrics import MetricsComputer
 from aria.types import ARIAResult, EngineMode
 
 logger = logging.getLogger(__name__)

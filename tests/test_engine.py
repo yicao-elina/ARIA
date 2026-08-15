@@ -8,13 +8,12 @@ pytest.mark.skip.
 """
 
 import json
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import networkx as nx
 import pytest
 
 from aria.types import ARIAResult, EngineMode, ReasoningTier
-
 
 # ==========================================================================
 # Helper: create a mock LLM client
@@ -74,8 +73,9 @@ def _create_engine_with_mock_llm(kg=None, mode="aria", **kwargs):
 
     mock_llm = _mock_llm_client()
 
-    with patch.object(ARIAEngine, "_create_llm_client", return_value=mock_llm):
-        with patch("aria.engine.NodeMatcher") as MockMatcher:
+    with patch.object(ARIAEngine, "_create_llm_client", return_value=mock_llm), patch(
+        "aria.engine.NodeMatcher"
+    ) as MockMatcher:
             mock_matcher_instance = MagicMock()
             MockMatcher.return_value = mock_matcher_instance
             if kg is not None or mode == "baseline":
@@ -104,8 +104,9 @@ class TestARIAEngineInit:
         from aria.engine import ARIAEngine
 
         mock_llm = _mock_llm_client()
-        with patch.object(ARIAEngine, "_create_llm_client", return_value=mock_llm):
-            with patch("aria.engine.NodeMatcher"):
+        with patch.object(ARIAEngine, "_create_llm_client", return_value=mock_llm), patch(
+            "aria.engine.NodeMatcher"
+        ):
                 engine = ARIAEngine(kg=tiny_kg, mode="aria")
         assert engine.kg is tiny_kg
         assert engine.mode == EngineMode.ARIA
@@ -125,8 +126,10 @@ class TestARIAEngineInit:
         from aria.engine import ARIAEngine
 
         mock_llm = _mock_llm_client()
-        with patch.object(ARIAEngine, "_create_llm_client", return_value=mock_llm):
-            with pytest.raises(ValueError, match="requires a knowledge graph"):
+        with (
+            patch.object(ARIAEngine, "_create_llm_client", return_value=mock_llm),
+            pytest.raises(ValueError, match="requires a knowledge graph"),
+        ):
                 ARIAEngine(mode="aria")
 
     def test_init_requires_kg_for_naive_kg_mode(self):
@@ -134,8 +137,10 @@ class TestARIAEngineInit:
         from aria.engine import ARIAEngine
 
         mock_llm = _mock_llm_client()
-        with patch.object(ARIAEngine, "_create_llm_client", return_value=mock_llm):
-            with pytest.raises(ValueError, match="requires a knowledge graph"):
+        with (
+            patch.object(ARIAEngine, "_create_llm_client", return_value=mock_llm),
+            pytest.raises(ValueError, match="requires a knowledge graph"),
+        ):
                 ARIAEngine(mode="naive_kg")
 
     def test_init_sets_model_name(self, tiny_kg):
@@ -143,8 +148,9 @@ class TestARIAEngineInit:
         from aria.engine import ARIAEngine
 
         mock_llm = _mock_llm_client()
-        with patch.object(ARIAEngine, "_create_llm_client", return_value=mock_llm):
-            with patch("aria.engine.NodeMatcher"):
+        with patch.object(ARIAEngine, "_create_llm_client", return_value=mock_llm), patch(
+            "aria.engine.NodeMatcher"
+        ):
                 engine = ARIAEngine(kg=tiny_kg, model="test-model", mode="aria")
         assert engine.model == "test-model"
 
@@ -153,8 +159,10 @@ class TestARIAEngineInit:
         from aria.engine import ARIAEngine
 
         mock_llm = _mock_llm_client()
-        with patch.object(ARIAEngine, "_create_llm_client", return_value=mock_llm):
-            with pytest.raises(ValueError):
+        with (
+            patch.object(ARIAEngine, "_create_llm_client", return_value=mock_llm),
+            pytest.raises(ValueError),
+        ):
                 ARIAEngine(kg=tiny_kg, mode="nonexistent_mode")
 
 
@@ -196,8 +204,9 @@ class TestDiagnoseKg:
         from aria.engine import ARIAEngine
 
         mock_llm = _mock_llm_client()
-        with patch.object(ARIAEngine, "_create_llm_client", return_value=mock_llm):
-            with patch("aria.engine.NodeMatcher"):
+        with patch.object(ARIAEngine, "_create_llm_client", return_value=mock_llm), patch(
+            "aria.engine.NodeMatcher"
+        ):
                 engine = ARIAEngine(kg=tiny_kg, mode="aria")
 
         stats = engine.diagnose_kg()
@@ -234,8 +243,9 @@ class TestForwardPredict:
         from aria.engine import ARIAEngine
 
         mock_llm = _mock_llm_client()
-        with patch.object(ARIAEngine, "_create_llm_client", return_value=mock_llm):
-            with patch("aria.engine.NodeMatcher"):
+        with patch.object(ARIAEngine, "_create_llm_client", return_value=mock_llm), patch(
+            "aria.engine.NodeMatcher"
+        ):
                 engine = ARIAEngine(kg=tiny_kg, mode="aria")
                 engine.matcher = MagicMock()
                 engine.matcher.precompute = MagicMock()
@@ -310,8 +320,9 @@ class TestForwardPredict:
             "kg_paths_used": 1,
         }
 
-        with patch.object(ARIAEngine, "_create_llm_client", return_value=mock_llm):
-            with patch("aria.engine.NodeMatcher"):
+        with patch.object(ARIAEngine, "_create_llm_client", return_value=mock_llm), patch(
+            "aria.engine.NodeMatcher"
+        ):
                 engine = ARIAEngine(kg=tiny_kg, mode="naive_kg")
                 engine.matcher = MagicMock()
                 engine.matcher.precompute = MagicMock()
@@ -342,8 +353,9 @@ class TestInverseDesign:
         mock_llm = _mock_llm_client()
         mock_llm.generate_json.return_value = _mock_llm_inverse_response()
 
-        with patch.object(ARIAEngine, "_create_llm_client", return_value=mock_llm):
-            with patch("aria.engine.NodeMatcher"):
+        with patch.object(ARIAEngine, "_create_llm_client", return_value=mock_llm), patch(
+            "aria.engine.NodeMatcher"
+        ):
                 engine = ARIAEngine(kg=tiny_kg, mode="aria")
                 engine.matcher = MagicMock()
                 engine.matcher.precompute = MagicMock()

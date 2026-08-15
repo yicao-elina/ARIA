@@ -1,7 +1,9 @@
 """Tests for aria.evaluation.metrics module."""
 
 import json
+
 import pytest
+
 from aria.evaluation.metrics import MetricsComputer
 
 

@@ -151,7 +151,7 @@ Configure via `.env` file (see `.env.example`):
 
 ## Style and Conventions
 
-- Python 3.9+ compatibility required
+- Python 3.10+ compatibility required (the `mcp` dependency has no Python 3.9 release)
 - Ruff formatting with line length 100
 - All modules use type hints; `mypy --ignore-missing-imports` for type checking
 - Test fixtures in `tests/conftest.py` use a tiny KG mock; sentence-transformer tests have `@pytest.mark.slow` skip markers

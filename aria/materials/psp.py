@@ -11,7 +11,6 @@ from __future__ import annotations
 import re
 from typing import List, Set, Tuple
 
-
 # ---------------------------------------------------------------------------
 # Keyword sets for layer classification
 # ---------------------------------------------------------------------------

@@ -20,7 +20,7 @@ Typical usage::
 from __future__ import annotations
 
 import logging
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Set
 
 import networkx as nx
 

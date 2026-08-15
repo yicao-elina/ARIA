@@ -48,8 +48,8 @@ def test_parse_kv_pairs_rejects_empty_key():
         parse_kv_pairs(["=value"])
 
 
-from aria.engine_factory import OllamaUnavailableError, build_engine
 from aria.engine import ARIAEngine
+from aria.engine_factory import OllamaUnavailableError, build_engine
 
 
 def test_build_engine_rejects_unknown_mode(tmp_path):
